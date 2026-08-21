@@ -1,0 +1,55 @@
+{% extends "base.html" %} {% block title %}Panel Profesional - RespiraKids{%
+endblock %} {% block content %}
+<h2>Panel del Profesional Sanitario</h2>
+<p>Bienvenido/a, {{ usuario.nombre }} ({{ usuario.especialidad }})</p>
+
+<h5 class="mt-4">Pacientes autorizados</h5>
+{% if autorizaciones %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Última evaluación</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in autorizaciones %} {% set ultima_eval =
+      a.nino.evaluaciones|sort(attribute='fecha')|last if a.nino.evaluaciones
+      else None %}
+      <tr>
+        <td>{{ a.nino.nombre_ficticio }}</td>
+        <td>
+          {% if ultima_eval %} {% set colores = {'verde': 'success', 'amarillo':
+          'warning', 'rojo': 'danger'} %} {% set emojis = {'verde': '🟢',
+          'amarillo': '🟡', 'rojo': '🔴'} %}
+          <span class="badge bg-{{ colores[ultima_eval.nivel_riesgo] }}">
+            {{ emojis[ultima_eval.nivel_riesgo] }} {{
+            ultima_eval.nivel_riesgo|capitalize }}
+          </span>
+          <small class="text-muted"
+            >{{ ultima_eval.fecha.strftime('%d/%m/%Y') }}</small
+          >
+          {% else %}
+          <span class="text-muted">Sin registros aún</span>
+          {% endif %}
+        </td>
+        <td>
+          <a
+            href="{{ url_for('dashboard.ver_paciente', nino_id=a.nino.id) }}"
+            class="btn btn-sm btn-outline-primary"
+            >Ver detalle</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted">
+  Aún no tienes pacientes autorizados. El cuidador debe otorgarte acceso desde
+  su panel.
+</p>
+{% endif %} {% endblock %}

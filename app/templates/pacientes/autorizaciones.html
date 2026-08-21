@@ -1,0 +1,54 @@
+{% extends "base.html" %} {% block title %}Autorizaciones - RespiraKids{%
+endblock %} {% block content %}
+<h2>Autorizaciones de acceso</h2>
+<p class="text-muted">Paciente: {{ nino.nombre_ficticio }}</p>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Autorizar a un profesional</h5>
+    <form method="POST" class="row g-2">
+      <div class="col-md-8">
+        <input
+          type="email"
+          name="correo_profesional"
+          class="form-control"
+          placeholder="Correo del profesional"
+          required
+        />
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Autorizar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<h5>Profesionales autorizados</h5>
+{% if autorizaciones %}
+<ul class="list-group">
+  {% for a in autorizaciones %}
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+      <strong>{{ a.profesional.nombre }}</strong>
+      <span class="text-muted">({{ a.profesional.especialidad }})</span>
+    </div>
+    <form
+      method="POST"
+      action="{{ url_for('pacientes.revocar_autorizacion', nino_id=nino.id, autorizacion_id=a.id) }}"
+      onsubmit="return confirm('¿Revocar acceso a este profesional?');"
+    >
+      <button type="submit" class="btn btn-sm btn-outline-danger">
+        Revocar
+      </button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted">Aún no has autorizado a ningún profesional.</p>
+{% endif %}
+
+<a href="{{ url_for('pacientes.listar') }}" class="btn btn-link mt-3"
+  >← Volver a mis pacientes</a
+>
+{% endblock %}

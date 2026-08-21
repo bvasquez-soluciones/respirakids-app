@@ -1,0 +1,16 @@
+{% extends "base.html" %} {% block title %}Panel Cuidador - RespiraKids{%
+endblock %} {% block content %}
+<h2>Panel del Cuidador</h2>
+<p>Hola, {{ usuario.nombre }} 👋</p>
+<p class="text-muted">
+  Aquí verás a tus niños registrados y sus síntomas (próximamente).
+</p>
+<div class="d-flex gap-2">
+  <a href="{{ url_for('pacientes.listar') }}" class="btn btn-primary"
+    >Ver mis pacientes</a
+  >
+  <a href="{{ url_for('asistente.chat') }}" class="btn btn-outline-primary"
+    >🤖 Asistente IA</a
+  >
+</div>
+{% endblock %}

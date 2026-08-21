@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Editar Paciente - RespiraKids{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Editar Paciente</h3>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre ficticio</label>
+                        <input type="text" name="nombre_ficticio" class="form-control" value="{{ nino.nombre_ficticio }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" class="form-control" value="{{ nino.fecha_nacimiento }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sexo</label>
+                        <select name="sexo" class="form-select" required>
+                            <option value="M" {{ 'selected' if nino.sexo == 'M' }}>Masculino</option>
+                            <option value="F" {{ 'selected' if nino.sexo == 'F' }}>Femenino</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Guardar cambios</button>
+                    <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link w-100">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

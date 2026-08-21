@@ -1,0 +1,76 @@
+{% extends "base.html" %} {% block title %}Mis Pacientes - RespiraKids{%
+endblock %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Mis Pacientes</h2>
+  <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary"
+    >+ Registrar Paciente</a
+  >
+</div>
+
+{% if ninos %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Fecha de nacimiento</th>
+        <th>Sexo</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for nino in ninos %}
+      <tr>
+        <td>{{ nino.nombre_ficticio }}</td>
+        <td>{{ nino.fecha_nacimiento.strftime('%d/%m/%Y') }}</td>
+        <td>{{ 'Masculino' if nino.sexo == 'M' else 'Femenino' }}</td>
+        <td>
+          <span
+            class="badge bg-{{ 'success' if nino.estado == 'activo' else 'secondary' }}"
+          >
+            {{ nino.estado }}
+          </span>
+        </td>
+        <td>
+          <a
+            href="{{ url_for('sintomas.listar', nino_id=nino.id) }}"
+            class="btn btn-sm btn-outline-info"
+            >Ver síntomas</a
+          >
+          <a
+            href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}"
+            class="btn btn-sm btn-outline-success"
+            >Mensajes</a
+          >
+          <a
+            href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}"
+            class="btn btn-sm btn-outline-secondary"
+            >Autorizaciones</a
+          >
+          <a
+            href="{{ url_for('pacientes.editar', nino_id=nino.id) }}"
+            class="btn btn-sm btn-outline-primary"
+            >Editar</a
+          >
+          <form
+            method="POST"
+            action="{{ url_for('pacientes.eliminar', nino_id=nino.id) }}"
+            class="d-inline"
+            onsubmit="
+              return confirm('¿Seguro que deseas desactivar este paciente?');
+            "
+          >
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              Eliminar
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted">Aún no has registrado ningún paciente.</p>
+{% endif %} {% endblock %}

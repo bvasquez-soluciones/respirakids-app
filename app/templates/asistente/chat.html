@@ -1,0 +1,78 @@
+{% extends "base.html" %} {% block title %}Asistente IA - RespiraKids{% endblock
+%} {% block content %}
+<h2>🤖 Asistente RespiraKids</h2>
+<div class="alert alert-info small">
+  Este asistente ofrece información general de prevención y cuidados.
+  <strong
+    >No diagnostica, no prescribe medicamentos y no reemplaza a un profesional
+    de la salud.</strong
+  >
+  Ante síntomas de alarma, busca atención médica.
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body" id="chat-box" style="height: 400px; overflow-y: auto">
+    <div class="text-muted small">
+      Escribe tu pregunta sobre prevención o cuidados básicos...
+    </div>
+  </div>
+</div>
+
+<form id="form-chat" class="input-group">
+  <input
+    type="text"
+    id="input-pregunta"
+    class="form-control"
+    placeholder="Escribe tu pregunta..."
+    autocomplete="off"
+    required
+  />
+  <button type="submit" class="btn btn-primary" id="btn-enviar">Enviar</button>
+</form>
+
+<script>
+  const chatBox = document.getElementById("chat-box");
+  const form = document.getElementById("form-chat");
+  const input = document.getElementById("input-pregunta");
+  const btnEnviar = document.getElementById("btn-enviar");
+
+  function agregarMensaje(texto, esUsuario) {
+    const div = document.createElement("div");
+    div.className = "mb-3 " + (esUsuario ? "text-end" : "");
+    div.innerHTML = `<div class="d-inline-block p-2 rounded ${esUsuario ? "bg-primary text-white" : "bg-light"}" style="max-width: 80%;">${texto}</div>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pregunta = input.value.trim();
+    if (!pregunta) return;
+
+    agregarMensaje(pregunta, true);
+    input.value = "";
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = "Pensando...";
+
+    try {
+      const res = await fetch("/asistente/preguntar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pregunta: pregunta }),
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        agregarMensaje("⚠️ " + data.error, false);
+      } else {
+        agregarMensaje(data.respuesta, false);
+      }
+    } catch (err) {
+      agregarMensaje("⚠️ Error de conexión. Intenta de nuevo.", false);
+    }
+
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = "Enviar";
+  });
+</script>
+{% endblock %}

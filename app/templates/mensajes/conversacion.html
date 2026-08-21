@@ -1,0 +1,53 @@
+{% extends "base.html" %} {% block title %}Mensajes - RespiraKids{% endblock %}
+{% block content %}
+<h2>Conversación</h2>
+<p class="text-muted">Paciente: {{ nino.nombre_ficticio }}</p>
+
+<div class="card shadow-sm mb-3" style="max-height: 400px; overflow-y: auto">
+  <div class="card-body">
+    {% if mensajes %} {% for m in mensajes %}
+    <div
+      class="mb-3 {{ 'text-end' if m.autor_tipo == current_user.rol or (m.autor_tipo == 'cuidador' and current_user.rol in ('cuidador','admin')) else '' }}"
+    >
+      <div
+        class="d-inline-block p-2 rounded {{ 'bg-primary text-white' if (m.autor_tipo == 'cuidador' and current_user.rol in ('cuidador','admin')) or (m.autor_tipo == 'profesional' and current_user.rol == 'profesional') else 'bg-light' }}"
+        style="max-width: 75%"
+      >
+        <div class="small fw-bold">{{ m.nombre_autor() }}</div>
+        <div>{{ m.contenido }}</div>
+        <div class="small text-muted">
+          {{ m.fecha.strftime('%d/%m/%Y %H:%M') }}
+        </div>
+      </div>
+    </div>
+    {% endfor %} {% else %}
+    <p class="text-muted mb-0">Aún no hay mensajes. Escribe el primero.</p>
+    {% endif %}
+  </div>
+</div>
+
+<form method="POST">
+  <div class="input-group">
+    <input
+      type="text"
+      name="contenido"
+      class="form-control"
+      placeholder="Escribe un mensaje..."
+      required
+      autocomplete="off"
+    />
+    <button type="submit" class="btn btn-primary">Enviar</button>
+  </div>
+</form>
+
+{% if current_user.rol == 'profesional' %}
+<a
+  href="{{ url_for('dashboard.ver_paciente', nino_id=nino.id) }}"
+  class="btn btn-link mt-3"
+  >← Volver al detalle del paciente</a
+>
+{% else %}
+<a href="{{ url_for('pacientes.listar') }}" class="btn btn-link mt-3"
+  >← Volver a mis pacientes</a
+>
+{% endif %} {% endblock %}

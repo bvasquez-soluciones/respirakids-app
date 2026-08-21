@@ -1,0 +1,77 @@
+{% extends "base.html" %} {% block title %}Síntomas - RespiraKids{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2>Historial de Síntomas</h2>
+    <p class="text-muted mb-0">Paciente: {{ nino.nombre_ficticio }}</p>
+  </div>
+  <a
+    href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}"
+    class="btn btn-primary"
+    >+ Nuevo registro</a
+  >
+</div>
+
+{% if registros %} {% for r in registros %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h6 class="card-subtitle mb-2 text-muted">
+        {{ r.fecha.strftime('%d/%m/%Y %H:%M') }}
+      </h6>
+      {% if r.evaluacion %} {% set colores = {'verde': 'success', 'amarillo':
+      'warning', 'rojo': 'danger'} %} {% set emojis = {'verde': '🟢',
+      'amarillo': '🟡', 'rojo': '🔴'} %}
+      <span class="badge bg-{{ colores[r.evaluacion.nivel_riesgo] }}"
+        >{{ emojis[r.evaluacion.nivel_riesgo] }} {{
+        r.evaluacion.nivel_riesgo|capitalize }}</span
+      >
+      {% endif %}
+    </div>
+
+    {% if r.temperatura %}
+    <p class="mb-1"><strong>Temperatura:</strong> {{ r.temperatura }}°C</p>
+    {% endif %}
+
+    <p class="mb-1">
+      {% if r.tos %}<span class="badge bg-warning text-dark me-1">Tos</span>{%
+      endif %} {% if r.dificultad_respiratoria %}<span
+        class="badge bg-danger me-1"
+        >Dificultad respiratoria</span
+      >{% endif %} {% if r.respiracion_rapida %}<span
+        class="badge bg-danger me-1"
+        >Respiración rápida</span
+      >{% endif %} {% if r.congestion_nasal %}<span
+        class="badge bg-warning text-dark me-1"
+        >Congestión nasal</span
+      >{% endif %} {% if r.secrecion_nasal %}<span
+        class="badge bg-warning text-dark me-1"
+        >Secreción nasal</span
+      >{% endif %} {% if r.dolor_garganta %}<span
+        class="badge bg-warning text-dark me-1"
+        >Dolor de garganta</span
+      >{% endif %} {% if r.decaimiento %}<span
+        class="badge bg-warning text-dark me-1"
+        >Decaimiento</span
+      >{% endif %} {% if r.perdida_apetito %}<span
+        class="badge bg-warning text-dark me-1"
+        >Pérdida de apetito</span
+      >{% endif %} {% if r.vomito %}<span
+        class="badge bg-warning text-dark me-1"
+        >Vómito</span
+      >{% endif %} {% if r.diarrea %}<span
+        class="badge bg-warning text-dark me-1"
+        >Diarrea</span
+      >{% endif %}
+    </p>
+
+    {% if r.otros_sintomas %}
+    <p class="mb-1"><strong>Otros:</strong> {{ r.otros_sintomas }}</p>
+    {% endif %} {% if r.observaciones %}
+    <p class="mb-0"><strong>Observaciones:</strong> {{ r.observaciones }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endfor %} {% else %}
+<p class="text-muted">Aún no hay registros de síntomas para este paciente.</p>
+{% endif %} {% endblock %}

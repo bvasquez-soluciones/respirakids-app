@@ -1,0 +1,43 @@
+{% extends "base.html" %} {% block title %}Resultado - RespiraKids{% endblock %}
+{% block content %} {% set colores = {'verde': 'success', 'amarillo': 'warning',
+'rojo': 'danger'} %} {% set emojis = {'verde': '🟢', 'amarillo': '🟡', 'rojo':
+'🔴'} %} {% set titulos = {'verde': 'Seguimiento y medidas preventivas',
+'amarillo': 'Mayor vigilancia recomendada', 'rojo': 'Posibles señales de
+alarma'} %}
+
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow-sm border-{{ colores[evaluacion.nivel_riesgo] }}">
+      <div class="card-body text-center">
+        <div style="font-size: 4rem">{{ emojis[evaluacion.nivel_riesgo] }}</div>
+        <h3 class="mt-2">{{ titulos[evaluacion.nivel_riesgo] }}</h3>
+        <p class="text-muted">
+          Paciente: {{ evaluacion.nino.nombre_ficticio }}
+        </p>
+
+        <div
+          class="alert alert-{{ colores[evaluacion.nivel_riesgo] }} text-start mt-4"
+        >
+          <strong>Motivo:</strong> {{ evaluacion.motivo }}
+        </div>
+
+        <div class="alert alert-secondary text-start">
+          <strong>Recomendación:</strong> {{ evaluacion.recomendaciones }}
+        </div>
+
+        <div class="alert alert-light border text-start small">
+          ℹ️ Esta clasificación es una herramienta de orientación y no
+          constituye un diagnóstico médico. Ante cualquier duda, consulta con un
+          profesional de la salud.
+        </div>
+
+        <a
+          href="{{ url_for('sintomas.listar', nino_id=evaluacion.nino.id) }}"
+          class="btn btn-primary mt-2"
+          >Ver historial completo</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
