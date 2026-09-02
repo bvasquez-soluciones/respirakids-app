@@ -1,11 +1,222 @@
-{% extends "base.html" %} {% block title %}Inicio - RespiraKids{% endblock %} {%
-block content %}
-<div class="text-center py-5">
-  <h1 class="display-5 fw-bold">🫁 RespiraKids</h1>
-  <p class="lead">
-    Prevención, monitoreo y alerta temprana de enfermedades respiratorias en
-    niños.
-  </p>
-  <p class="text-muted">Aplicación en construcción 🚧</p>
+{% extends "base.html" %} {% block title %}RespiraKids - Bienvenido{% endblock
+%} {% block extra_css %}
+<link
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+  rel="stylesheet"
+/>
+
+<style>
+  /* Ocultar la barra de navegación de base.html para esta vista */
+  nav,
+  header.navbar,
+  .navbar {
+    display: none !important;
+  }
+
+  body {
+    background-color: #eaf5fb !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px 0;
+  }
+
+  /* Tarjeta estilo pantalla de teléfono */
+  .app-screen-container {
+    width: 100%;
+    max-width: 380px;
+    background: linear-gradient(180deg, #ffffff 0%, #ebf7ff 60%, #e1f3ff 100%);
+    border-radius: 40px;
+    box-shadow: 0 20px 50px rgba(0, 103, 127, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 35px 25px 30px 25px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Logo superior */
+  .app-logo-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+  .app-logo-header img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* Imagen central */
+  .app-hero-image-container {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 45px;
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+    background-color: #f0f0f0;
+  }
+  .app-hero-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Textos */
+  .app-text-content {
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+  }
+  .app-text-content h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #004b5c;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  .app-text-content p {
+    font-size: 14px;
+    color: #4a5d65;
+    line-height: 1.45;
+    padding: 0 10px;
+    margin: 0;
+  }
+
+  /* Botones */
+  .app-buttons-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .btn-app-primary {
+    width: 100%;
+    background-color: #00d5ff;
+    color: #003643;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 30px;
+    padding: 15px;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(0, 213, 255, 0.35);
+    transition: all 0.2s ease;
+  }
+  .btn-app-primary:hover {
+    background-color: #00bce2;
+    color: #003643;
+  }
+  .btn-app-secondary {
+    width: 100%;
+    background-color: transparent;
+    color: #004b5c;
+    font-size: 15px;
+    font-weight: 700;
+    border: 2px solid #004b5c;
+    border-radius: 30px;
+    padding: 13px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s ease;
+  }
+  .btn-app-secondary:hover {
+    background-color: rgba(0, 75, 92, 0.06);
+    color: #004b5c;
+  }
+
+  /* Disclaimer inferior */
+  .app-disclaimer {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 25px;
+    box-sizing: border-box;
+  }
+  .app-disclaimer span {
+    color: #5c6f78;
+    font-size: 18px;
+  }
+  .app-disclaimer p {
+    font-size: 11px;
+    color: #5c6f78;
+    line-height: 1.35;
+    margin: 0;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="app-screen-container">
+  <!-- Logo en PNG -->
+  <div class="app-logo-header">
+    <img
+      src="{{ url_for('static', filename='img/logo.png') }}"
+      alt="RespiraKids"
+    />
+  </div>
+
+  <!-- Imagen del niño en PNG -->
+  <div class="app-hero-image-container">
+    <img
+      src="{{ url_for('static', filename='img/portada.png') }}"
+      alt="Salud Infantil"
+    />
+  </div>
+
+  <!-- Título y descripción -->
+  <div class="app-text-content">
+    <h1>Cuidamos cada respiro de los más pequeños</h1>
+    <p>
+      Plataforma inteligente para la prevención y monitoreo de la salud
+      respiratoria infantil.
+    </p>
+  </div>
+
+  <!-- Botones de navegación -->
+  <div class="app-buttons-container">
+    {% if not current_user.is_authenticated %}
+    <a href="{{ url_for('auth.registro') }}" class="btn-app-primary">
+      Empezar ahora
+      <span class="material-symbols-outlined">arrow_forward</span>
+    </a>
+    <a href="{{ url_for('auth.login') }}" class="btn-app-secondary">
+      Iniciar sesión
+    </a>
+    {% else %} {% if current_user.rol == 'profesional' %}
+    <a href="{{ url_for('dashboard.profesional') }}" class="btn-app-primary">
+      Ir a mi Panel
+      <span class="material-symbols-outlined">dashboard</span>
+    </a>
+    {% else %}
+    <a href="{{ url_for('dashboard.cuidador') }}" class="btn-app-primary">
+      Ir a mi Panel
+      <span class="material-symbols-outlined">dashboard</span>
+    </a>
+    {% endif %} {% endif %}
+  </div>
+
+  <!-- Mensaje informativo -->
+  <div class="app-disclaimer">
+    <span class="material-symbols-outlined">info</span>
+    <p>
+      RespiraKids es una herramienta de apoyo, no sustituye el diagnóstico
+      médico profesional.
+    </p>
+  </div>
 </div>
 {% endblock %}

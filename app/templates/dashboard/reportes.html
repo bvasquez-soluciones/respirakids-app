@@ -1,0 +1,124 @@
+{% extends "base.html" %} {% block title %}Reportes - RespiraKids{% endblock %}
+{% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/professional.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+<div class="rk-pro-wrap">
+  <div
+    class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"
+  >
+    <div>
+      <h4 class="mb-0">📊 Reportes</h4>
+      <p class="text-muted small mb-0">
+        Resumen de tus {{ total_pacientes }} pacientes autorizados
+      </p>
+    </div>
+    <a
+      href="{{ url_for('dashboard.exportar_pdf') }}"
+      class="btn btn-outline-dark btn-sm"
+      >⬇ Exportar PDF</a
+    >
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="rk-chart-panel h-100">
+        <h6 class="mb-3">Distribución de riesgo actual</h6>
+        <canvas id="grafico-riesgo" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="rk-chart-panel h-100">
+        <h6 class="mb-3">Síntomas más reportados</h6>
+        {% if sintomas_labels != '[]' %}
+        <canvas id="grafico-sintomas" height="200"></canvas>
+        {% else %}
+        <p class="text-muted small mb-0">
+          Aún no hay suficientes registros de síntomas para este reporte.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="rk-panel">
+    <h6 class="mb-3">Resumen por paciente</h6>
+    {% if filas_tabla %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Edad</th>
+            <th>Estado actual</th>
+            <th>Última evaluación</th>
+            <th>Total registros</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set b =
+          {'verde':'success','amarillo':'warning','rojo':'danger','neutro':'secondary'}
+          %} {% set e = {'verde':'🟢','amarillo':'🟡','rojo':'🔴','neutro':'⚪'}
+          %} {% for fila in filas_tabla %}
+          <tr>
+            <td>{{ fila.nombre }}</td>
+            <td>{{ fila.edad }}</td>
+            <td>
+              <span class="badge bg-{{ b[fila.nivel] }}"
+                >{{ e[fila.nivel] }} {{ fila.nivel|capitalize }}</span
+              >
+            </td>
+            <td class="small text-muted">{{ fila.fecha_ultima }}</td>
+            <td>{{ fila.total_registros }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted small mb-0">Aún no tienes pacientes autorizados.</p>
+    {% endif %}
+  </div>
+
+  <a href="{{ url_for('dashboard.profesional') }}" class="btn btn-link mt-3"
+    >← Volver a mis pacientes</a
+  >
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  new Chart(document.getElementById('grafico-riesgo'), {
+      type: 'doughnut',
+      data: {
+          labels: {{ riesgo_labels|safe }},
+          datasets: [{
+              data: {{ riesgo_data|safe }},
+              backgroundColor: ['#2e7d32', '#f9a825', '#c62828', '#dfe6e1'],
+              borderWidth: 0
+          }]
+      },
+      options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+  });
+
+  {% if sintomas_labels != '[]' %}
+  new Chart(document.getElementById('grafico-sintomas'), {
+      type: 'bar',
+      data: {
+          labels: {{ sintomas_labels|safe }},
+          datasets: [{
+              data: {{ sintomas_data|safe }},
+              backgroundColor: '#1B4B43',
+              borderRadius: 6
+          }]
+      },
+      options: {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: { x: { ticks: { stepSize: 1 } } }
+      }
+  });
+  {% endif %}
+</script>
+{% endblock %}

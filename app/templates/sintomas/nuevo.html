@@ -1,161 +1,288 @@
 {% extends "base.html" %} {% block title %}Registrar Síntomas - RespiraKids{%
-endblock %} {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-7">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title mb-1">Registrar Síntomas</h3>
-        <p class="text-muted mb-4">Paciente: {{ nino.nombre_ficticio }}</p>
+endblock %} {% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+<div class="rk-dash-wrap">
+  <h4 class="mb-1">Registrar Síntomas</h4>
+  <p class="text-muted mb-4">Paciente: {{ nino.nombre_ficticio }}</p>
 
-        <form method="POST">
-          <div class="mb-3">
-            <label class="form-label">Temperatura (°C)</label>
-            <input
-              type="number"
-              step="0.1"
-              name="temperatura"
-              class="form-control"
-              placeholder="Ej. 37.5"
-            />
-          </div>
-
-          <label class="form-label">Síntomas presentes</label>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="tos"
-                  id="tos"
-                />
-                <label class="form-check-label" for="tos">Tos</label>
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="dificultad_respiratoria"
-                  id="dificultad_respiratoria"
-                />
-                <label class="form-check-label" for="dificultad_respiratoria"
-                  >Dificultad respiratoria</label
-                >
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="respiracion_rapida"
-                  id="respiracion_rapida"
-                />
-                <label class="form-check-label" for="respiracion_rapida"
-                  >Respiración rápida</label
-                >
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="congestion_nasal"
-                  id="congestion_nasal"
-                />
-                <label class="form-check-label" for="congestion_nasal"
-                  >Congestión nasal</label
-                >
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="secrecion_nasal"
-                  id="secrecion_nasal"
-                />
-                <label class="form-check-label" for="secrecion_nasal"
-                  >Secreción nasal</label
-                >
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="dolor_garganta"
-                  id="dolor_garganta"
-                />
-                <label class="form-check-label" for="dolor_garganta"
-                  >Dolor de garganta</label
-                >
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="decaimiento"
-                  id="decaimiento"
-                />
-                <label class="form-check-label" for="decaimiento"
-                  >Decaimiento</label
-                >
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="perdida_apetito"
-                  id="perdida_apetito"
-                />
-                <label class="form-check-label" for="perdida_apetito"
-                  >Pérdida de apetito</label
-                >
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="vomito"
-                  id="vomito"
-                />
-                <label class="form-check-label" for="vomito">Vómito</label>
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="diarrea"
-                  id="diarrea"
-                />
-                <label class="form-check-label" for="diarrea">Diarrea</label>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Otros síntomas (opcional)</label>
-            <input type="text" name="otros_sintomas" class="form-control" />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Observaciones (opcional)</label>
-            <textarea
-              name="observaciones"
-              class="form-control"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100">
-            Guardar registro
-          </button>
-          <a
-            href="{{ url_for('sintomas.listar', nino_id=nino.id) }}"
-            class="btn btn-link w-100"
-            >Cancelar</a
-          >
-        </form>
-      </div>
+  <div class="rk-wizard-progress">
+    <div class="rk-wizard-step-col">
+      <div class="rk-wizard-step-dot active" id="dot-1">1</div>
+      <div class="rk-wizard-step-label active" id="label-1">Síntomas</div>
+    </div>
+    <div class="rk-wizard-line" id="line-1"></div>
+    <div class="rk-wizard-step-col">
+      <div class="rk-wizard-step-dot" id="dot-2">2</div>
+      <div class="rk-wizard-step-label" id="label-2">Detalles</div>
+    </div>
+    <div class="rk-wizard-line" id="line-2"></div>
+    <div class="rk-wizard-step-col">
+      <div class="rk-wizard-step-dot" id="dot-3">3</div>
+      <div class="rk-wizard-step-label" id="label-3">Contexto</div>
     </div>
   </div>
+
+  <form method="POST" id="form-sintomas">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    <!-- PASO 1: SÍNTOMAS -->
+    <div class="rk-wizard-panel active" id="panel-1">
+      <h5>¿Qué síntomas presenta?</h5>
+      <p class="text-muted small mb-3">
+        Selecciona todos los que apliquen para llevar un registro preciso.
+      </p>
+
+      <div class="rk-symptom-grid">
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="tos" />
+          <div class="icon">🌬️</div>
+          <div class="label">Tos seca</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="fiebre_flag" id="fiebre_flag" />
+          <div class="icon">🌡️</div>
+          <div class="label">Fiebre</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="dificultad_respiratoria" />
+          <div class="icon">😮‍💨</div>
+          <div class="label">Dificultad respiratoria</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="congestion_nasal" />
+          <div class="icon">👃</div>
+          <div class="label">Congestión</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="estornudos" />
+          <div class="icon">🤧</div>
+          <div class="label">Estornudos</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="irritabilidad" />
+          <div class="icon">😣</div>
+          <div class="label">Irritabilidad</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="respiracion_rapida" />
+          <div class="icon">💨</div>
+          <div class="label">Respiración rápida</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="secrecion_nasal" />
+          <div class="icon">💧</div>
+          <div class="label">Secreción nasal</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="dolor_garganta" />
+          <div class="icon">🗣️</div>
+          <div class="label">Dolor de garganta</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="decaimiento" />
+          <div class="icon">😴</div>
+          <div class="label">Decaimiento</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="perdida_apetito" />
+          <div class="icon">🍽️</div>
+          <div class="label">Pérdida de apetito</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="vomito" />
+          <div class="icon">🤢</div>
+          <div class="label">Vómito</div>
+        </label>
+        <label class="rk-symptom-card" data-card>
+          <input type="checkbox" name="diarrea" />
+          <div class="icon">🚽</div>
+          <div class="label">Diarrea</div>
+        </label>
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn-rk-primary" onclick="irAPaso(2)">
+          Continuar →
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 2: DETALLES -->
+    <div class="rk-wizard-panel" id="panel-2">
+      <h5>Detalles del malestar</h5>
+      <p class="text-muted small mb-3">Ayúdanos a entender la intensidad.</p>
+
+      <div class="rk-severity-box">
+        <label class="fw-bold small">Nivel de severidad general</label>
+        <input
+          type="range"
+          name="severidad"
+          id="severidad"
+          min="1"
+          max="10"
+          value="5"
+        />
+        <div class="rk-severity-labels">
+          <span>Leve</span><span>Moderado</span><span>Severo</span>
+        </div>
+        <span class="rk-severity-badge" id="severidad-badge"
+          >Moderado (5/10)</span
+        >
+      </div>
+
+      <div class="rk-severity-box" id="box-temperatura" style="display: none">
+        <label class="fw-bold small">Temperatura registrada (°C)</label>
+        <input
+          type="number"
+          step="0.1"
+          name="temperatura"
+          class="form-control mt-2"
+          placeholder="Ej. 38.5"
+        />
+      </div>
+
+      <div class="rk-severity-box">
+        <label class="fw-bold small mb-2 d-block"
+          >¿Desde cuándo presenta síntomas?</label
+        >
+        <div class="rk-pill-group">
+          <label class="rk-pill-option selected" data-pill>
+            <input type="radio" name="inicio_sintomas" value="hoy" checked />
+            Hoy
+          </label>
+          <label class="rk-pill-option" data-pill>
+            <input type="radio" name="inicio_sintomas" value="ayer" /> Ayer
+          </label>
+          <label class="rk-pill-option" data-pill>
+            <input type="radio" name="inicio_sintomas" value="2_3_dias" /> Hace
+            2-3 días
+          </label>
+          <label class="rk-pill-option" data-pill>
+            <input type="radio" name="inicio_sintomas" value="mas_3_dias" /> Más
+            de 3 días
+          </label>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-link" onclick="irAPaso(1)">
+          ← Atrás
+        </button>
+        <button type="button" class="btn-rk-primary" onclick="irAPaso(3)">
+          Continuar →
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 3: CONTEXTO -->
+    <div class="rk-wizard-panel" id="panel-3">
+      <h5>Condiciones Previas</h5>
+      <p class="text-muted small mb-3">
+        Esta información ayuda a personalizar las recomendaciones.
+      </p>
+
+      <label class="rk-condition-card" data-card>
+        <input type="checkbox" name="condicion_asma" />
+        <div>
+          <div class="title">Asma diagnosticada</div>
+          <div class="desc">El niño/a tiene un diagnóstico previo de asma.</div>
+        </div>
+      </label>
+      <label class="rk-condition-card" data-card>
+        <input type="checkbox" name="condicion_alergias" />
+        <div>
+          <div class="title">Alergias respiratorias</div>
+          <div class="desc">Sensibilidad a polvo, polen, ácaros u otros.</div>
+        </div>
+      </label>
+
+      <div class="mt-3 mb-3">
+        <label class="fw-bold small mb-2 d-block"
+          >Notas adicionales (opcional)</label
+        >
+        <textarea
+          name="observaciones"
+          class="form-control"
+          rows="3"
+          placeholder="Ej. Ha estado expuesto a humo, no ha querido comer..."
+        ></textarea>
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-link" onclick="irAPaso(2)">
+          ← Atrás
+        </button>
+        <button type="submit" class="btn-rk-primary">Guardar Registro ✓</button>
+      </div>
+    </div>
+  </form>
 </div>
+
+<script>
+  function irAPaso(n) {
+    document
+      .querySelectorAll(".rk-wizard-panel")
+      .forEach((p) => p.classList.remove("active"));
+    document.getElementById("panel-" + n).classList.add("active");
+
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById("dot-" + i);
+      const label = document.getElementById("label-" + i);
+      dot.classList.remove("active", "done");
+      label.classList.remove("active");
+      if (i < n) dot.classList.add("done");
+      if (i === n) {
+        dot.classList.add("active");
+        label.classList.add("active");
+      }
+    }
+    for (let i = 1; i <= 2; i++) {
+      document.getElementById("line-" + i).classList.toggle("done", i < n);
+    }
+  }
+
+  // Tarjetas seleccionables (síntomas y condiciones)
+  document.querySelectorAll("[data-card]").forEach((card) => {
+    card.addEventListener("click", () => {
+      const input = card.querySelector("input");
+      setTimeout(() => card.classList.toggle("selected", input.checked), 0);
+    });
+  });
+
+  // Pills de "desde cuándo"
+  document.querySelectorAll("[data-pill]").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      document
+        .querySelectorAll("[data-pill]")
+        .forEach((p) => p.classList.remove("selected"));
+      pill.classList.add("selected");
+    });
+  });
+
+  // Slider de severidad
+  const severidadInput = document.getElementById("severidad");
+  const badge = document.getElementById("severidad-badge");
+  function actualizarSeveridad() {
+    const v = parseInt(severidadInput.value);
+    let texto = "Leve";
+    if (v >= 4 && v <= 7) texto = "Moderado";
+    if (v >= 8) texto = "Severo";
+    badge.textContent = `${texto} (${v}/10)`;
+  }
+  severidadInput.addEventListener("input", actualizarSeveridad);
+  actualizarSeveridad();
+
+  // Mostrar campo de temperatura si se marcó "Fiebre" en el paso 1
+  document
+    .getElementById("fiebre_flag")
+    .addEventListener("change", function () {
+      document.getElementById("box-temperatura").style.display = this.checked
+        ? "block"
+        : "none";
+    });
+</script>
 {% endblock %}

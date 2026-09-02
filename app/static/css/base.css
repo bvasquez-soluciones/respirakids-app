@@ -1,0 +1,337 @@
+:root {
+  --rk-bg: #f3faff;
+  --rk-ink: #071e27;
+  --rk-deep: #00677f;
+  --rk-deep-dark: #004e60;
+  --rk-coral: #00d1ff;
+  --rk-coral-dark: #00b8e0;
+  --rk-coral-ink: #00566a;
+  --rk-mint: #7fe3c9;
+  --rk-mint-soft: #e0f7f4;
+  --rk-font-display: "Plus Jakarta Sans", sans-serif;
+  --rk-font-body: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  background: var(--rk-bg);
+  font-family: var(--rk-font-body);
+  color: var(--rk-ink);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+.display-4 {
+  font-family: var(--rk-font-display);
+}
+
+/* ---- Navbar ---- */
+.rk-navbar {
+  background: var(--rk-deep);
+  padding: 0.9rem 0;
+  border-bottom: 3px solid var(--rk-coral);
+}
+.rk-navbar .navbar-brand {
+  font-family: var(--rk-font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: white !important;
+}
+.rk-logo-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+.rk-navbar .btn-outline-light {
+  border-radius: 999px;
+  border-color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+}
+.rk-navbar .btn-outline-light:hover {
+  background: var(--rk-coral);
+  border-color: var(--rk-coral);
+  color: var(--rk-coral-ink);
+}
+.rk-navbar .text-white {
+  opacity: 0.9;
+}
+
+.rk-pro-brand-badge {
+  background: var(--rk-coral);
+  color: var(--rk-coral-ink);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+
+/* ---- Botones reutilizables ---- */
+.btn-rk-primary {
+  background: var(--rk-coral);
+  border-color: var(--rk-coral);
+  color: var(--rk-coral-ink);
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-rk-primary:hover {
+  background: var(--rk-coral-dark);
+  border-color: var(--rk-coral-dark);
+  color: var(--rk-coral-ink);
+}
+
+.btn-rk-secondary {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  color: white;
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-rk-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border-color: white;
+}
+
+.rk-cta-pill {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: var(--rk-coral);
+  color: var(--rk-coral-ink);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.9rem;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+}
+.rk-cta-pill:hover {
+  background: var(--rk-coral-dark);
+  color: var(--rk-coral-ink);
+}
+
+.rk-disclaimer {
+  background: var(--rk-mint-soft);
+  border: 1px solid var(--rk-mint);
+  border-radius: 14px;
+  color: var(--rk-deep-dark);
+}
+
+/* ---- Wrap / paneles genéricos reutilizados en varias páginas ---- */
+.rk-dash-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 90px;
+}
+@media (min-width: 768px) {
+  .rk-dash-wrap {
+    max-width: 900px;
+    padding-bottom: 20px;
+  }
+}
+
+.rk-panel {
+  background: white;
+  border-radius: 18px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: 0 8px 20px rgba(7, 30, 39, 0.06);
+}
+.rk-panel h6 {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  color: var(--rk-deep);
+}
+
+/* ---- Navegación inferior (móvil) ---- */
+.rk-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid #e3e8e4;
+  display: flex;
+  justify-content: space-around;
+  padding: 0.6rem 0;
+  z-index: 1030;
+}
+@media (min-width: 768px) {
+  .rk-bottom-nav {
+    display: none;
+  }
+}
+.rk-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.72rem;
+  color: #8a9a92;
+  text-decoration: none;
+  font-weight: 600;
+}
+.rk-nav-item.active,
+.rk-nav-item:hover {
+  color: var(--rk-deep);
+}
+.rk-nav-item .rk-nav-icon {
+  font-size: 1.2rem;
+}
+
+/* ---- Menú hamburguesa (escritorio) ---- */
+.rk-hamburger-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-direction: column;
+  cursor: pointer;
+}
+.rk-hamburger-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.rk-hamburger-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+.rk-hamburger-btn[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.rk-hamburger-btn[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+.rk-hamburger-btn[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.rk-hamburger-menu {
+  border-radius: 14px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(7, 30, 39, 0.12);
+  padding: 0.5rem;
+  min-width: 200px;
+}
+.rk-hamburger-menu .dropdown-item {
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-weight: 600;
+  color: var(--rk-ink);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.rk-hamburger-menu .dropdown-item:hover {
+  background: var(--rk-mint-soft);
+  color: var(--rk-deep);
+}
+
+/* ---- Animación al hacer scroll (usada en landing) ---- */
+.rk-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.rk-reveal.rk-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rk-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---- Navbar profesional: menú + notificaciones ---- */
+.rk-pro-nav-links {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: 1.5rem;
+}
+.rk-pro-nav-link {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+}
+.rk-pro-nav-link:hover,
+.rk-pro-nav-link.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+}
+
+.rk-bell-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+.rk-bell-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: var(--rk-coral);
+  color: var(--rk-coral-ink);
+  font-size: 0.62rem;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--rk-deep);
+}
+
+.rk-navbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+}

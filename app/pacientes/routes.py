@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app.pacientes import pacientes_bp
 from app.decorators import rol_requerido
-from app.models import Nino, Autorizacion, Profesional
+from app.models import Nino, Autorizacion, Profesional, PatologiaBase
 from app import db
 
 
@@ -123,3 +123,52 @@ def revocar_autorizacion(nino_id, autorizacion_id):
 
     flash('Autorización revocada.', 'info')
     return redirect(url_for('pacientes.autorizaciones', nino_id=nino.id))
+
+
+@pacientes_bp.route('/<int:nino_id>/patologias', methods=['GET', 'POST'])
+@login_required
+@rol_requerido('cuidador', 'admin')
+def patologias(nino_id):
+    nino = Nino.query.get_or_404(nino_id)
+    if nino.cuidador_id != current_user.id:
+        abort(403)
+
+    if request.method == 'POST':
+        nombre = request.form.get('nombre', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        fecha_diagnostico = request.form.get('fecha_diagnostico')
+
+        if not nombre:
+            flash('Debes indicar el nombre de la condición o patología.', 'danger')
+            return redirect(url_for('pacientes.patologias', nino_id=nino.id))
+
+        nueva_patologia = PatologiaBase(
+            nino_id=nino.id,
+            nombre=nombre,
+            descripcion=descripcion or None,
+            fecha_diagnostico=datetime.strptime(fecha_diagnostico, '%Y-%m-%d').date() if fecha_diagnostico else None
+        )
+        db.session.add(nueva_patologia)
+        db.session.commit()
+
+        flash('Condición de base registrada.', 'success')
+        return redirect(url_for('pacientes.patologias', nino_id=nino.id))
+
+    lista_patologias = PatologiaBase.query.filter_by(nino_id=nino.id, activa=True).order_by(PatologiaBase.fecha_registro.desc()).all()
+    return render_template('pacientes/patologias.html', nino=nino, patologias=lista_patologias)
+
+
+@pacientes_bp.route('/<int:nino_id>/patologias/<int:patologia_id>/eliminar', methods=['POST'])
+@login_required
+@rol_requerido('cuidador', 'admin')
+def eliminar_patologia(nino_id, patologia_id):
+    nino = Nino.query.get_or_404(nino_id)
+    if nino.cuidador_id != current_user.id:
+        abort(403)
+
+    patologia = PatologiaBase.query.get_or_404(patologia_id)
+    patologia.activa = False
+    db.session.commit()
+
+    flash('Condición de base eliminada.', 'info')
+    return redirect(url_for('pacientes.patologias', nino_id=nino.id))

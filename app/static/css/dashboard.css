@@ -1,0 +1,288 @@
+/* ==================================================== */
+/* VARIABLES GLOBALES Y CONFIGURACIÓN BASE               */
+/* ==================================================== */
+:root {
+  --rk-bg: #f8faf9;
+  --rk-deep: #1b4b43;
+  --rk-coral: #f2765a;
+  --rk-coral-dark: #d95b3f;
+  --rk-ink: #2c3e50;
+}
+
+/* ---- Tarjeta de estado actual ---- */
+.rk-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1.5px solid #dfe6e1;
+  border-radius: 20px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.2rem;
+}
+.rk-status-card--verde {
+  border-color: #bfe3c8;
+  background: #f2fbf4;
+}
+.rk-status-card--amarillo {
+  border-color: #f3dba0;
+  background: #fffaf0;
+}
+.rk-status-card--rojo {
+  border-color: #f0b8ae;
+  background: #fef4f2;
+}
+.rk-status-card--neutral {
+  border-color: #dfe6e1;
+  background: white;
+}
+
+.rk-status-emoji {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 10px rgba(22, 48, 42, 0.08);
+}
+
+/* ---- Botón CTA Principal ---- */
+.rk-cta-pill {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0.85rem 1.2rem;
+  background-color: var(--rk-coral);
+  color: #ffffff;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 12px rgba(242, 118, 90, 0.25);
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.rk-cta-pill:hover {
+  background-color: var(--rk-coral-dark);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ---- Grid de paneles ---- */
+.rk-dash-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+@media (min-width: 768px) {
+  .rk-dash-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.rk-sintoma-item {
+  background: var(--rk-bg);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.6rem;
+}
+.rk-sintoma-item:last-child {
+  margin-bottom: 0;
+}
+.rk-sintoma-item .nino-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--rk-deep);
+}
+.rk-sintoma-item .fecha {
+  font-size: 0.8rem;
+  color: #6b7d75;
+}
+
+/* ==================================================== */
+/* WIZARD DE SÍNTOMAS                                   */
+/* ==================================================== */
+
+.rk-wizard-progress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.rk-wizard-step-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #dfe6e1;
+  color: #6b7d75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.rk-wizard-step-dot.active,
+.rk-wizard-step-dot.done {
+  background: var(--rk-coral);
+  color: white;
+}
+.rk-wizard-step-label {
+  font-size: 0.72rem;
+  text-align: center;
+  color: #6b7d75;
+  margin-top: 4px;
+}
+.rk-wizard-step-label.active {
+  color: var(--rk-deep);
+  font-weight: 700;
+}
+.rk-wizard-line {
+  flex: 1;
+  height: 2px;
+  background: #dfe6e1;
+  margin: 0 6px;
+  align-self: flex-start;
+  margin-top: 15px;
+}
+.rk-wizard-line.done {
+  background: var(--rk-coral);
+}
+.rk-wizard-step-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rk-wizard-panel {
+  display: none;
+}
+.rk-wizard-panel.active {
+  display: block;
+}
+
+.rk-symptom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 500px) {
+  .rk-symptom-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.rk-symptom-card {
+  border: 1.5px solid #e3e8e4;
+  border-radius: 16px;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: white;
+}
+.rk-symptom-card .icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+.rk-symptom-card .label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--rk-ink);
+}
+.rk-symptom-card.selected {
+  border-color: var(--rk-coral);
+  background: #fff2ee;
+}
+.rk-symptom-card input {
+  display: none;
+}
+
+.rk-severity-box {
+  background: white;
+  border: 1.5px solid #e3e8e4;
+  border-radius: 16px;
+  padding: 1.4rem;
+  margin-bottom: 1.2rem;
+}
+.rk-severity-box input[type="range"] {
+  width: 100%;
+  accent-color: var(--rk-coral);
+}
+.rk-severity-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #6b7d75;
+  margin-top: 0.2rem;
+}
+.rk-severity-badge {
+  display: block;
+  width: fit-content;
+  margin: 0.8rem auto 0;
+  background: #fff2ee;
+  color: var(--rk-coral-dark);
+  border-radius: 999px;
+  padding: 0.3rem 1rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.rk-pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.rk-pill-option {
+  border: 1.5px solid #e3e8e4;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--rk-ink);
+  background: white;
+}
+.rk-pill-option.selected {
+  background: var(--rk-coral);
+  border-color: var(--rk-coral);
+  color: white;
+}
+.rk-pill-option input {
+  display: none;
+}
+
+.rk-condition-card {
+  border: 1.5px solid #e3e8e4;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+.rk-condition-card.selected {
+  border-color: var(--rk-coral);
+  background: #fff2ee;
+}
+.rk-condition-card input {
+  margin-top: 3px;
+}
+.rk-condition-card .title {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.rk-condition-card .desc {
+  font-size: 0.78rem;
+  color: #6b7d75;
+}
+
+.rk-panel-ia-tint {
+  background: linear-gradient(135deg, var(--rk-mint-soft) 0%, #eaf9ff 100%);
+}

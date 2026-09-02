@@ -34,6 +34,9 @@ def clasificar_riesgo(registro):
     if registro.decaimiento and registro.perdida_apetito:
         señales_alarma_rojo.append('decaimiento marcado junto con pérdida de apetito')
 
+    if registro.severidad is not None and registro.severidad >= 8:
+        señales_alarma_rojo.append(f'severidad reportada muy alta ({registro.severidad}/10)')
+
     # --- Señales de mayor vigilancia (nivel AMARILLO) ---
     if registro.temperatura is not None and 38.0 <= registro.temperatura < 39.0:
         señales_alerta_amarillo.append(f'fiebre moderada ({registro.temperatura}°C)')
@@ -52,6 +55,18 @@ def clasificar_riesgo(registro):
 
     if registro.vomito or registro.diarrea:
         señales_alerta_amarillo.append('síntomas gastrointestinales (vómito/diarrea)')
+
+    if registro.severidad is not None and 5 <= registro.severidad < 8:
+        señales_alerta_amarillo.append(f'severidad moderada reportada ({registro.severidad}/10)')
+
+    if registro.inicio_sintomas == 'mas_3_dias':
+        señales_alerta_amarillo.append('síntomas presentes desde hace más de 3 días')
+
+    if registro.estornudos:
+        señales_alerta_amarillo.append('estornudos frecuentes')
+
+    if registro.irritabilidad:
+        señales_alerta_amarillo.append('irritabilidad')
 
     # --- Decisión final ---
     if señales_alarma_rojo:

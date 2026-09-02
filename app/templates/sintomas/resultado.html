@@ -25,6 +25,18 @@ alarma'} %}
           <strong>Recomendación:</strong> {{ evaluacion.recomendaciones }}
         </div>
 
+        {% if evaluacion.ml_nivel_riesgo %}
+        <div class="alert alert-secondary text-start small">
+          <strong>🤖 Modelo de Machine Learning (complementario):</strong>
+          Sugiere nivel
+          <strong>{{ evaluacion.ml_nivel_riesgo|capitalize }}</strong> con {{
+          evaluacion.ml_confianza }}% de confianza. <br /><em
+            >Modelo entrenado con datos sintéticos, sin validación clínica —
+            resultado de apoyo, no determinante.</em
+          >
+        </div>
+        {% endif %}
+
         <div class="alert alert-light border text-start small">
           ℹ️ Esta clasificación es una herramienta de orientación y no
           constituye un diagnóstico médico. Ante cualquier duda, consulta con un
@@ -34,8 +46,9 @@ alarma'} %}
         <a
           href="{{ url_for('sintomas.listar', nino_id=evaluacion.nino.id) }}"
           class="btn btn-primary mt-2"
-          >Ver historial completo</a
         >
+          Ver historial completo
+        </a>
       </div>
     </div>
   </div>

@@ -1,0 +1,405 @@
+/* ==================================================== */
+/* LAYOUT DOS COLUMNAS: sidebar + contenido             */
+/* ==================================================== */
+
+.rk-pro-layout {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.rk-pro-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(22, 48, 42, 0.06);
+  padding: 1.2rem;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.rk-pro-sidebar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  flex-shrink: 0;
+}
+
+.rk-pro-sidebar-list {
+  overflow-y: auto;
+  margin-top: 0.8rem;
+  padding-right: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  flex: 1;
+}
+.rk-pro-sidebar-list::-webkit-scrollbar {
+  width: 6px;
+}
+.rk-pro-sidebar-list::-webkit-scrollbar-thumb {
+  background: #dfe6e1;
+  border-radius: 999px;
+}
+
+.rk-pro-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rk-pro-empty-state {
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(22, 48, 42, 0.06);
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+/* Tarjetas dentro del sidebar: ancho uniforme, altura consistente */
+.rk-pro-sidebar-list .rk-patient-card {
+  width: 100%;
+  min-height: 92px;
+  box-sizing: border-box;
+  margin: 0;
+}
+.rk-patient-selected {
+  border: 2px solid var(--rk-deep);
+  box-shadow: 0 4px 14px rgba(27, 75, 67, 0.15);
+}
+
+/* Responsive: en tablet/móvil, sidebar arriba y apilado */
+@media (max-width: 991px) {
+  .rk-pro-layout {
+    flex-direction: column;
+  }
+  .rk-pro-sidebar {
+    width: 100%;
+    position: static;
+    max-height: 420px;
+  }
+}
+
+.rk-pro-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.rk-pro-header {
+  margin-bottom: 1.5rem;
+}
+.rk-pro-header h4 {
+  margin: 0;
+}
+
+.rk-pro-search-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+.rk-pro-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--rk-mint-soft);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rk-deep);
+  font-size: 0.95rem;
+}
+
+.rk-search-bar {
+  display: none;
+  margin-top: 0.8rem;
+}
+.rk-search-bar.rk-search-open {
+  display: block;
+}
+.rk-search-bar input {
+  width: 100%;
+  border: 1.5px solid #e3e8e4;
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.88rem;
+  outline: none;
+}
+.rk-search-bar input:focus {
+  border-color: var(--rk-mint);
+}
+
+.rk-no-results {
+  text-align: center;
+  color: #6b7d75;
+  font-size: 0.85rem;
+  padding: 1.5rem 0;
+  display: none;
+}
+
+.rk-patient-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.rk-patient-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  background: white;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 6px 16px rgba(22, 48, 42, 0.05);
+  text-decoration: none;
+  color: var(--rk-ink);
+  border-left: 5px solid #dfe6e1;
+}
+.rk-patient-card:hover {
+  transform: translateX(2px);
+  transition: transform 0.15s ease;
+}
+.rk-patient-card.rk-hidden {
+  display: none;
+}
+.rk-patient-card.riesgo-rojo {
+  border-left-color: #c62828;
+}
+.rk-patient-card.riesgo-amarillo {
+  border-left-color: #f9a825;
+}
+.rk-patient-card.riesgo-verde {
+  border-left-color: #2e7d32;
+}
+.rk-patient-card .rk-patient-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.rk-patient-card .name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+.rk-patient-card .meta {
+  font-size: 0.78rem;
+  color: #6b7d75;
+}
+.rk-patient-card .rk-status-icon {
+  font-size: 1.1rem;
+}
+.rk-patient-card .rk-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.rk-patient-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.rk-tag-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+.rk-tag-pill.rojo {
+  background: #fdecea;
+  color: #c62828;
+}
+.rk-tag-pill.amarillo {
+  background: #fef6e0;
+  color: #a06b00;
+}
+.rk-tag-pill.verde {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.rk-tag-pill.neutro {
+  background: #eef1ef;
+  color: #6b7d75;
+}
+
+.rk-patient-header-card {
+  background: white;
+  border-radius: 18px;
+  padding: 1.4rem 1.6rem;
+  box-shadow: 0 8px 20px rgba(22, 48, 42, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.rk-patient-header-card.riesgo-rojo {
+  border: 1.5px solid #f0b8ae;
+}
+.rk-patient-header-card .info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.rk-patient-header-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  border: 2px solid var(--rk-mint);
+}
+
+.rk-chart-panel {
+  background: white;
+  border-radius: 18px;
+  padding: 1.4rem;
+  box-shadow: 0 8px 20px rgba(22, 48, 42, 0.06);
+  margin-bottom: 1.2rem;
+}
+.rk-chart-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.rk-chart-range-pill {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--rk-mint-soft);
+  color: var(--rk-deep);
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+}
+
+.rk-symptom-log-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #eef1ef;
+}
+.rk-symptom-log-item:last-child {
+  border-bottom: none;
+}
+.rk-symptom-log-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.rk-symptom-log-dot.rojo {
+  background: #fdecea;
+}
+.rk-symptom-log-dot.amarillo {
+  background: #fef6e0;
+}
+.rk-symptom-log-dot.verde {
+  background: #e8f5e9;
+}
+.rk-symptom-log-item .title {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.rk-symptom-log-item .sub {
+  font-size: 0.78rem;
+  color: #6b7d75;
+}
+
+.rk-filter-bar {
+  display: none;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+.rk-filter-bar.rk-filter-open {
+  display: flex;
+}
+.rk-filter-chip {
+  border: 1.5px solid #e3e8e4;
+  background: white;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--rk-ink);
+}
+.rk-filter-chip.active {
+  background: var(--rk-deep);
+  border-color: var(--rk-deep);
+  color: white;
+}
+
+/* ---- Responsive: tablet y móvil ---- */
+@media (max-width: 991px) {
+  .rk-patient-header-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .rk-patient-header-card .info {
+    width: 100%;
+  }
+}
+@media (max-width: 576px) {
+  .rk-pro-wrap {
+    padding: 0 0.3rem;
+  }
+  .rk-patient-header-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 1.3rem;
+  }
+}
+
+.rk-chart-range-select {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--rk-mint-soft);
+  color: var(--rk-deep);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Estilos del avatar */
+.rk-avatar-preview {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  overflow: hidden;
+  border: 2px solid var(--rk-mint);
+}
+
+.rk-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

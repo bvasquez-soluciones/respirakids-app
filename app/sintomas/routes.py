@@ -4,6 +4,7 @@ from app.sintomas import sintomas_bp
 from app.decorators import rol_requerido
 from app.models import Nino, RegistroSintomas, Evaluacion
 from app.semaforo import clasificar_riesgo
+from app.ml_model import predecir_riesgo_ml
 from app import db
 
 
@@ -45,6 +46,12 @@ def nuevo(nino_id):
             perdida_apetito='perdida_apetito' in request.form,
             vomito='vomito' in request.form,
             diarrea='diarrea' in request.form,
+            estornudos='estornudos' in request.form,
+            irritabilidad='irritabilidad' in request.form,
+            severidad=request.form.get('severidad') or None,
+            inicio_sintomas=request.form.get('inicio_sintomas') or None,
+            condicion_asma='condicion_asma' in request.form,
+            condicion_alergias='condicion_alergias' in request.form,
             otros_sintomas=request.form.get('otros_sintomas'),
             observaciones=request.form.get('observaciones'),
         )
@@ -52,14 +59,18 @@ def nuevo(nino_id):
         db.session.add(registro)
         db.session.commit()
 
+        # Clasificación por reglas de semáforo y predicción por ML
         nivel, motivo, recomendaciones = clasificar_riesgo(registro)
+        ml_nivel, ml_confianza = predecir_riesgo_ml(registro, nino)
 
         evaluacion = Evaluacion(
             nino_id=nino.id,
             registro_sintomas_id=registro.id,
             nivel_riesgo=nivel,
             motivo=motivo,
-            recomendaciones=recomendaciones
+            recomendaciones=recomendaciones,
+            ml_nivel_riesgo=ml_nivel,
+            ml_confianza=ml_confianza
         )
         db.session.add(evaluacion)
         db.session.commit()

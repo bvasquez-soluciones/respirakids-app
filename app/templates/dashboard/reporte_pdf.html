@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Helvetica, sans-serif;
+        color: #16302a;
+        font-size: 11px;
+      }
+      h1 {
+        color: #1b4b43;
+        font-size: 20px;
+        margin-bottom: 2px;
+      }
+      .subtitulo {
+        color: #666;
+        font-size: 10px;
+        margin-bottom: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th {
+        background-color: #1b4b43;
+        color: white;
+        padding: 8px;
+        text-align: left;
+        font-size: 10px;
+      }
+      td {
+        padding: 7px 8px;
+        border-bottom: 1px solid #e3e8e4;
+        font-size: 10px;
+      }
+      .nivel-rojo {
+        color: #c62828;
+        font-weight: bold;
+      }
+      .nivel-amarillo {
+        color: #a06b00;
+        font-weight: bold;
+      }
+      .nivel-verde {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+      .nivel-sin {
+        color: #888;
+      }
+      .footer {
+        margin-top: 25px;
+        font-size: 8px;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🫁 RespiraKids — Reporte de Pacientes</h1>
+    <p class="subtitulo">
+      Profesional: {{ usuario.nombre }} ({{ usuario.especialidad or 'Profesional
+      de la salud' }})<br />
+      Generado el: {{ fecha_generacion }}
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Edad</th>
+          <th>Estado actual</th>
+          <th>Última evaluación</th>
+          <th>Total registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in filas %}
+        <tr>
+          <td>{{ fila.nombre }}</td>
+          <td>{{ fila.edad }}</td>
+          <td
+            class="nivel-{{ fila.nivel if fila.nivel != 'sin registros' else 'sin' }}"
+          >
+            {{ fila.nivel|capitalize }}
+          </td>
+          <td>{{ fila.fecha }}</td>
+          <td>{{ fila.total }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="footer">
+      Este reporte es generado automáticamente por RespiraKids con fines de
+      orientación y seguimiento. No constituye un documento de diagnóstico
+      médico.
+    </p>
+  </body>
+</html>

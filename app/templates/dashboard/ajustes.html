@@ -1,0 +1,132 @@
+{% extends "base.html" %} {% block title %}Ajustes - RespiraKids{% endblock %}
+{% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/professional.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+<div class="rk-pro-wrap" style="max-width: 640px">
+  <h4 class="mb-4">⚙️ Ajustes</h4>
+
+  <div class="rk-panel mb-4">
+    <h6 class="mb-3">Perfil profesional</h6>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="hidden" name="accion" value="actualizar_perfil" />
+
+      <div class="mb-3 text-center">
+        <div class="rk-avatar-preview mx-auto mb-2">
+          {% if usuario.foto %}
+          <img
+            src="{{ url_for('static', filename=usuario.foto) }}"
+            alt="Foto de perfil"
+          />
+          {% else %}
+          <span>👩‍⚕️</span>
+          {% endif %}
+        </div>
+        <label class="form-label small fw-bold d-block">Foto de perfil</label>
+        <input
+          type="file"
+          name="foto"
+          accept="image/jpeg,image/png,image/webp"
+          class="form-control form-control-sm"
+        />
+        <div class="form-text">JPG, PNG o WEBP. Máximo 3 MB.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Nombre</label>
+        <input
+          type="text"
+          name="nombre"
+          class="form-control"
+          value="{{ usuario.nombre }}"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Correo</label>
+        <input
+          type="email"
+          class="form-control"
+          value="{{ usuario.correo }}"
+          disabled
+        />
+        <div class="form-text">
+          El correo no se puede modificar por seguridad.
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Especialidad</label>
+        <input
+          type="text"
+          name="especialidad"
+          class="form-control"
+          value="{{ usuario.especialidad or '' }}"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Número de licencia</label>
+        <input
+          type="text"
+          name="numero_licencia"
+          class="form-control"
+          value="{{ usuario.numero_licencia or '' }}"
+        />
+      </div>
+
+      <button type="submit" class="btn-rk-primary">Guardar cambios</button>
+    </form>
+  </div>
+
+  <div class="rk-panel">
+    <h6 class="mb-3">Cambiar contraseña</h6>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="hidden" name="accion" value="cambiar_password" />
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Contraseña actual</label>
+        <input
+          type="password"
+          name="password_actual"
+          class="form-control"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Nueva contraseña</label>
+        <input
+          type="password"
+          name="password_nueva"
+          class="form-control"
+          minlength="8"
+          required
+        />
+        <div class="form-text">Mínimo 8 caracteres.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-bold"
+          >Confirmar nueva contraseña</label
+        >
+        <input
+          type="password"
+          name="password_confirmar"
+          class="form-control"
+          minlength="8"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn-rk-primary">
+        Actualizar contraseña
+      </button>
+    </form>
+  </div>
+
+  <a href="{{ url_for('dashboard.profesional') }}" class="btn btn-link mt-3"
+    >← Volver a mis pacientes</a
+  >
+</div>
+{% endblock %}

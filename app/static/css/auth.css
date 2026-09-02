@@ -1,0 +1,185 @@
+.rk-auth-page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.rk-auth-card {
+  position: relative;
+  overflow: hidden;
+  max-width: 420px;
+  width: 100%;
+  background: white;
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(0, 103, 127, 0.1);
+  padding: 2.2rem 2rem;
+  border: 1px solid #e3eef2;
+}
+
+.rk-auth-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(35px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+.rk-auth-blob.a {
+  width: 130px;
+  height: 130px;
+  background: var(--rk-coral);
+  top: -30px;
+  right: -30px;
+}
+.rk-auth-blob.b {
+  width: 160px;
+  height: 160px;
+  background: var(--rk-mint);
+  bottom: -50px;
+  left: -40px;
+}
+
+.rk-auth-header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 1.6rem;
+}
+.rk-auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 0.8rem;
+}
+.rk-auth-header h1 {
+  color: var(--rk-deep);
+  font-size: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+.rk-auth-header p {
+  color: #5b6b70;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.rk-auth-form {
+  position: relative;
+  z-index: 2;
+}
+
+.rk-input-group {
+  margin-bottom: 1rem;
+}
+.rk-input-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5b6b70;
+  margin-bottom: 0.35rem;
+  margin-left: 0.4rem;
+}
+.rk-input-wrap {
+  position: relative;
+}
+.rk-input-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  opacity: 0.6;
+}
+.rk-input-wrap input {
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid #dde8eb;
+  border-radius: 999px;
+  padding: 0 2.6rem;
+  font-size: 0.92rem;
+  outline: none;
+  background: #fbfdfe;
+}
+.rk-input-wrap input:focus {
+  border-color: var(--rk-coral);
+  box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.15);
+}
+.rk-toggle-password {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1rem;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.rk-auth-forgot {
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--rk-deep);
+  margin: 0.3rem 0.4rem 0;
+  text-decoration: none;
+}
+.rk-auth-forgot:hover {
+  text-decoration: underline;
+}
+
+.rk-auth-submit {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 999px;
+  background: var(--rk-coral);
+  color: var(--rk-coral-ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.rk-auth-submit:hover {
+  background: var(--rk-coral-dark);
+}
+
+.rk-auth-footer {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-top: 1.2rem;
+  font-size: 0.85rem;
+  color: #5b6b70;
+}
+.rk-auth-footer a {
+  color: var(--rk-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+.rk-auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.rk-auth-links {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #8a9a9e;
+}
+.rk-auth-links a {
+  color: #8a9a9e;
+  text-decoration: none;
+  margin: 0 0.4rem;
+}
+.rk-auth-links a:hover {
+  color: var(--rk-deep);
+}

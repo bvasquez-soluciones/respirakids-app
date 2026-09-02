@@ -36,16 +36,24 @@ def login():
         correo = request.form.get('correo')
         password = request.form.get('password')
 
+        # 1. Buscar primero entre cuidadores/admin
         cuidador = Cuidador.query.filter_by(correo=correo).first()
-
         if cuidador and cuidador.check_password(password):
             login_user(cuidador)
             flash('Bienvenido/a de nuevo.', 'success')
             if cuidador.rol == 'admin':
                 return redirect(url_for('dashboard.admin'))
             return redirect(url_for('dashboard.cuidador'))
-        else:
-            flash('Correo o contraseña incorrectos.', 'danger')
+
+        # 2. Si no coincide, buscar entre profesionales
+        profesional = Profesional.query.filter_by(correo=correo).first()
+        if profesional and profesional.check_password(password):
+            login_user(profesional)
+            flash('Bienvenido/a, profesional.', 'success')
+            return redirect(url_for('dashboard.profesional'))
+
+        # 3. Ninguno coincidió
+        flash('Correo o contraseña incorrectos.', 'danger')
 
     return render_template('auth/login.html')
 
@@ -60,17 +68,4 @@ def logout():
 
 @auth_bp.route('/login-profesional', methods=['GET', 'POST'])
 def login_profesional():
-    if request.method == 'POST':
-        correo = request.form.get('correo')
-        password = request.form.get('password')
-
-        profesional = Profesional.query.filter_by(correo=correo).first()
-
-        if profesional and profesional.check_password(password):
-            login_user(profesional)
-            flash('Bienvenido/a, profesional.', 'success')
-            return redirect(url_for('dashboard.profesional'))
-        else:
-            flash('Correo o contraseña incorrectos.', 'danger')
-
-    return render_template('auth/login_profesional.html')
+    return redirect(url_for('auth.login'))

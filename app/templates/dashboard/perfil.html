@@ -1,0 +1,18 @@
+{% extends "base.html" %} {% block title %}Mi Perfil - RespiraKids{% endblock %}
+{% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+<div class="rk-dash-wrap">
+  <div class="rk-panel mb-3">
+    <h6>👤 Mi Perfil</h6>
+    <p class="mb-1"><strong>Nombre:</strong> {{ usuario.nombre }}</p>
+    <p class="mb-1"><strong>Correo:</strong> {{ usuario.correo }}</p>
+    <p class="mb-1"><strong>Teléfono:</strong> {{ usuario.telefono or '—' }}</p>
+    <p class="mb-0"><strong>Rol:</strong> {{ usuario.rol|capitalize }}</p>
+  </div>
+  <a href="{{ url_for('auth.logout') }}" class="rk-cta-pill">Cerrar sesión</a>
+</div>
+{% endblock %}

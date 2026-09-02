@@ -1,0 +1,354 @@
+/* ---- Hero ---- */
+.rk-hero {
+  position: relative;
+  background: linear-gradient(160deg, #1b4b43 0%, #123832 55%, #0d2b26 100%);
+  border-radius: 28px;
+  overflow: hidden;
+  padding: 4.5rem 2rem;
+  color: white;
+}
+.rk-breath-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  height: 520px;
+  pointer-events: none;
+}
+.rk-breath-rings span {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  animation: rk-breathe 6s ease-in-out infinite;
+}
+.rk-breath-rings span:nth-child(2) {
+  inset: 60px;
+  animation-delay: -1.5s;
+}
+.rk-breath-rings span:nth-child(3) {
+  inset: 120px;
+  animation-delay: -3s;
+}
+.rk-breath-rings span:nth-child(4) {
+  inset: 180px;
+  animation-delay: -4.5s;
+}
+
+@keyframes rk-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.rk-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: rk-float 8s ease-in-out infinite;
+}
+.rk-glow.coral {
+  width: 260px;
+  height: 260px;
+  background: var(--rk-coral);
+  top: -60px;
+  right: -40px;
+}
+.rk-glow.mint {
+  width: 220px;
+  height: 220px;
+  background: var(--rk-mint);
+  bottom: -60px;
+  left: -30px;
+  animation-delay: -3s;
+}
+
+@keyframes rk-float {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+.rk-particle {
+  position: absolute;
+  font-size: 1.6rem;
+  opacity: 0.35;
+  animation: rk-particle-float 7s ease-in-out infinite;
+  pointer-events: none;
+}
+.rk-particle:nth-child(3) {
+  top: 18%;
+  left: 8%;
+}
+.rk-particle:nth-child(4) {
+  top: 70%;
+  left: 14%;
+  animation-delay: -2s;
+  font-size: 1.2rem;
+}
+.rk-particle:nth-child(5) {
+  top: 25%;
+  right: 10%;
+  animation-delay: -4s;
+}
+.rk-particle:nth-child(6) {
+  top: 68%;
+  right: 16%;
+  animation-delay: -1s;
+  font-size: 1.3rem;
+}
+
+@keyframes rk-particle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.rk-hero-content {
+  position: relative;
+  z-index: 2;
+}
+.rk-hero-content > * {
+  opacity: 0;
+  animation: rk-fade-up 0.7s ease forwards;
+}
+.rk-hero-content .rk-eyebrow {
+  animation-delay: 0.05s;
+}
+.rk-hero-content h1 {
+  animation-delay: 0.2s;
+}
+.rk-hero-content p.lead {
+  animation-delay: 0.35s;
+}
+.rk-hero-content .d-flex {
+  animation-delay: 0.5s;
+}
+
+@keyframes rk-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rk-hero-content > *,
+  .rk-glow,
+  .rk-particle,
+  .rk-breath-rings span {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.rk-eyebrow {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+.rk-hero h1 {
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 600;
+}
+.rk-hero p.lead {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---- Barra de confianza ---- */
+.rk-trust-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.2rem;
+  margin: -2.2rem auto 3.5rem;
+  max-width: 900px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(22, 48, 42, 0.08);
+  padding: 1.6rem 2rem;
+  position: relative;
+  z-index: 3;
+}
+.rk-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--rk-deep);
+}
+.rk-trust-item .rk-trust-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* ---- Tarjetas de características ---- */
+.rk-feature-card {
+  border: none;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(22, 48, 42, 0.06);
+  padding: 1.8rem;
+  height: 100%;
+  transition: transform 0.2s ease;
+}
+.rk-feature-card:hover {
+  transform: translateY(-4px);
+}
+.rk-feature-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: var(--rk-mint-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+}
+
+/* ---- Encabezados de sección ---- */
+.rk-section-title {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.rk-section-title h2 {
+  font-weight: 600;
+  margin-top: 0.6rem;
+}
+.rk-section-title p {
+  color: #5b6b64;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* ---- Pasos numerados ---- */
+.rk-steps {
+  counter-reset: rk-step;
+}
+.rk-step {
+  position: relative;
+  padding-left: 3.8rem;
+  margin-bottom: 2rem;
+}
+.rk-step:last-child {
+  margin-bottom: 0;
+}
+.rk-step::before {
+  counter-increment: rk-step;
+  content: counter(rk-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: var(--rk-mint-soft);
+  color: var(--rk-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--rk-font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  border: 2px solid var(--rk-mint);
+}
+.rk-step h5 {
+  margin-bottom: 0.3rem;
+}
+.rk-step p {
+  color: #5b6b64;
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+/* ---- Tarjetas del semáforo ---- */
+.rk-semaforo-card {
+  border-radius: 18px;
+  padding: 1.8rem;
+  background: white;
+  box-shadow: 0 8px 24px rgba(22, 48, 42, 0.06);
+  height: 100%;
+  border-top: 5px solid var(--c, var(--rk-mint));
+}
+.rk-semaforo-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* ---- Tarjetas de audiencia ---- */
+.rk-audience-card {
+  border-radius: 20px;
+  padding: 2.2rem;
+  height: 100%;
+}
+.rk-audience-card.cuidador {
+  background: var(--rk-deep);
+  color: white;
+}
+.rk-audience-card.profesional {
+  background: white;
+  border: 1.5px solid var(--rk-mint);
+  color: var(--rk-ink);
+}
+.rk-audience-card ul {
+  padding-left: 1.2rem;
+  margin-bottom: 0;
+}
+.rk-audience-card li {
+  margin-bottom: 0.5rem;
+}
+.rk-audience-card .rk-audience-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* ---- CTA final ---- */
+.rk-cta-final {
+  background: linear-gradient(
+    135deg,
+    var(--rk-deep) 0%,
+    var(--rk-deep-dark) 100%
+  );
+  border-radius: 28px;
+  padding: 3.5rem 2rem;
+  color: white;
+  text-align: center;
+}

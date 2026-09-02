@@ -1,0 +1,92 @@
+{% extends "base.html" %} {% block title %}Condiciones de base - RespiraKids{%
+endblock %} {% block content %}
+<h2>Condiciones o patologías de base</h2>
+<p class="text-muted">Paciente: {{ nino.nombre_ficticio }}</p>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Registrar nueva condición</h5>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="row g-2">
+        <div class="col-md-4">
+          <input
+            type="text"
+            name="nombre"
+            class="form-control"
+            placeholder="Ej. Asma, Rinitis alérgica..."
+            required
+          />
+        </div>
+        <div class="col-md-3">
+          <input
+            type="date"
+            name="fecha_diagnostico"
+            class="form-control"
+            placeholder="Fecha de diagnóstico (opcional)"
+          />
+        </div>
+        <div class="col-md-3">
+          <input
+            type="text"
+            name="descripcion"
+            class="form-control"
+            placeholder="Notas (opcional)"
+          />
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Agregar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<h5>Condiciones registradas</h5>
+{% if patologias %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Fecha diagnóstico</th>
+        <th>Notas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patologias %}
+      <tr>
+        <td>{{ p.nombre }}</td>
+        <td>
+          {{ p.fecha_diagnostico.strftime('%d/%m/%Y') if p.fecha_diagnostico
+          else '—' }}
+        </td>
+        <td>{{ p.descripcion or '—' }}</td>
+        <td>
+          <form
+            method="POST"
+            action="{{ url_for('pacientes.eliminar_patologia', nino_id=nino.id, patologia_id=p.id) }}"
+            onsubmit="return confirm('¿Eliminar esta condición registrada?');"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              Eliminar
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted">
+  Este paciente no tiene condiciones de base registradas.
+</p>
+{% endif %}
+
+<a href="{{ url_for('pacientes.listar') }}" class="btn btn-link mt-3"
+  >← Volver a mis pacientes</a
+>
+{% endblock %}

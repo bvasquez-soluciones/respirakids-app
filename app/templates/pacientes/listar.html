@@ -49,6 +49,11 @@ endblock %} {% block content %}
             >Autorizaciones</a
           >
           <a
+            href="{{ url_for('pacientes.patologias', nino_id=nino.id) }}"
+            class="btn btn-sm btn-outline-dark"
+            >Condiciones de base</a
+          >
+          <a
             href="{{ url_for('pacientes.editar', nino_id=nino.id) }}"
             class="btn btn-sm btn-outline-primary"
             >Editar</a
@@ -61,6 +66,7 @@ endblock %} {% block content %}
               return confirm('¿Seguro que deseas desactivar este paciente?');
             "
           >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button type="submit" class="btn btn-sm btn-outline-danger">
               Eliminar
             </button>

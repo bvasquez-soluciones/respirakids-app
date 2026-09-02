@@ -7,6 +7,7 @@ endblock %} {% block content %}
   <div class="card-body">
     <h5 class="card-title">Autorizar a un profesional</h5>
     <form method="POST" class="row g-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="col-md-8">
         <input
           type="email"
@@ -37,6 +38,7 @@ endblock %} {% block content %}
       action="{{ url_for('pacientes.revocar_autorizacion', nino_id=nino.id, autorizacion_id=a.id) }}"
       onsubmit="return confirm('¿Revocar acceso a este profesional?');"
     >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <button type="submit" class="btn btn-sm btn-outline-danger">
         Revocar
       </button>

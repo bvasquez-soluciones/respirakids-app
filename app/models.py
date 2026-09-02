@@ -39,6 +39,7 @@ class Profesional(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
     especialidad = db.Column(db.String(100), nullable=True)
     numero_licencia = db.Column(db.String(50), nullable=True)
+    foto = db.Column(db.String(255), nullable=True)
     rol = db.Column(db.String(20), default='profesional', nullable=False)
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -70,6 +71,44 @@ class Nino(db.Model):
     def __repr__(self):
         return f'<Nino {self.nombre_ficticio}>'
 
+    def edad_texto(self):
+        from datetime import date
+        hoy = date.today()
+        años = hoy.year - self.fecha_nacimiento.year
+        meses = hoy.month - self.fecha_nacimiento.month
+        if hoy.day < self.fecha_nacimiento.day:
+            meses -= 1
+        if meses < 0:
+            años -= 1
+            meses += 12
+        if meses == 0:
+            return f"{años} años"
+        return f"{años} años, {meses} meses"
+
+    def ultima_actualizacion_texto(self):
+        ultimo = None
+        if self.evaluaciones:
+            ultimo = sorted(self.evaluaciones, key=lambda e: e.fecha)[-1].fecha
+        elif self.registros_sintomas:
+            ultimo = sorted(self.registros_sintomas, key=lambda r: r.fecha)[-1].fecha
+        
+        if not ultimo:
+            return None
+            
+        from datetime import datetime
+        diff = datetime.utcnow() - ultimo
+        minutos = int(diff.total_seconds() // 60)
+        
+        if minutos < 1:
+            return "Ahora mismo"
+        if minutos < 60:
+            return f"Hace {minutos}m"
+        horas = minutos // 60
+        if horas < 24:
+            return f"Hace {horas}h"
+        dias = horas // 24
+        return f"Hace {dias}d"
+
 
 class RegistroSintomas(db.Model):
     __tablename__ = 'registros_sintomas'
@@ -92,6 +131,13 @@ class RegistroSintomas(db.Model):
     otros_sintomas = db.Column(db.Text, nullable=True)
     observaciones = db.Column(db.Text, nullable=True)
 
+    severidad = db.Column(db.Integer, nullable=True)  # 1 a 10
+    inicio_sintomas = db.Column(db.String(20), nullable=True)  # 'hoy', 'ayer', '2_3_dias', 'mas_3_dias'
+    estornudos = db.Column(db.Boolean, default=False)
+    irritabilidad = db.Column(db.Boolean, default=False)
+    condicion_asma = db.Column(db.Boolean, default=False)
+    condicion_alergias = db.Column(db.Boolean, default=False)
+
     nino = db.relationship('Nino', backref='registros_sintomas')
 
     def __repr__(self):
@@ -109,8 +155,12 @@ class Evaluacion(db.Model):
     motivo = db.Column(db.Text, nullable=True)
     recomendaciones = db.Column(db.Text, nullable=True)
 
+    # Campos de Machine Learning
+    ml_nivel_riesgo = db.Column(db.String(10), nullable=True)
+    ml_confianza = db.Column(db.Float, nullable=True)
+
     nino = db.relationship('Nino', backref='evaluaciones')
-    registro_sintomas = db.relationship('RegistroSintomas', backref='evaluacion', uselist=False)
+    registro_sintomas = db.relationship('RegistroSintomas', backref=db.backref('evaluacion', uselist=False))
 
     def __repr__(self):
         return f'<Evaluacion Nino#{self.nino_id} {self.nivel_riesgo}>'
@@ -158,3 +208,21 @@ class Mensaje(db.Model):
 
     def __repr__(self):
         return f'<Mensaje Nino#{self.nino_id} por {self.autor_tipo}>'
+
+
+class PatologiaBase(db.Model):
+    __tablename__ = 'patologias_base'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nino_id = db.Column(db.Integer, db.ForeignKey('ninos.id'), nullable=False)
+
+    nombre = db.Column(db.String(150), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    fecha_diagnostico = db.Column(db.Date, nullable=True)
+    activa = db.Column(db.Boolean, default=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+
+    nino = db.relationship('Nino', backref='patologias_base')
+
+    def __repr__(self):
+        return f'<PatologiaBase {self.nombre} - Nino#{self.nino_id}>'

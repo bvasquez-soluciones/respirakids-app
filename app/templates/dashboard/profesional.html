@@ -1,55 +1,248 @@
-{% extends "base.html" %} {% block title %}Panel Profesional - RespiraKids{%
-endblock %} {% block content %}
-<h2>Panel del Profesional Sanitario</h2>
-<p>Bienvenido/a, {{ usuario.nombre }} ({{ usuario.especialidad }})</p>
+{% extends "base.html" %}
+{% block title %}Panel Profesional - RespiraKids{% endblock %}
 
-<h5 class="mt-4">Pacientes autorizados</h5>
-{% if autorizaciones %}
-<div class="table-responsive">
-  <table class="table table-hover align-middle">
-    <thead>
-      <tr>
-        <th>Paciente</th>
-        <th>Última evaluación</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for a in autorizaciones %} {% set ultima_eval =
-      a.nino.evaluaciones|sort(attribute='fecha')|last if a.nino.evaluaciones
-      else None %}
-      <tr>
-        <td>{{ a.nino.nombre_ficticio }}</td>
-        <td>
-          {% if ultima_eval %} {% set colores = {'verde': 'success', 'amarillo':
-          'warning', 'rojo': 'danger'} %} {% set emojis = {'verde': '🟢',
-          'amarillo': '🟡', 'rojo': '🔴'} %}
-          <span class="badge bg-{{ colores[ultima_eval.nivel_riesgo] }}">
-            {{ emojis[ultima_eval.nivel_riesgo] }} {{
-            ultima_eval.nivel_riesgo|capitalize }}
-          </span>
-          <small class="text-muted"
-            >{{ ultima_eval.fecha.strftime('%d/%m/%Y') }}</small
-          >
-          {% else %}
-          <span class="text-muted">Sin registros aún</span>
-          {% endif %}
-        </td>
-        <td>
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/professional.css') }}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="rk-pro-layout">
+  <!-- PANEL IZQUIERDO -->
+  <aside class="rk-pro-sidebar">
+    <div class="rk-pro-sidebar-head">
+      <h5 class="mb-0">Mis Pacientes</h5>
+      <div class="rk-pro-search-icons">
+        <button type="button" class="rk-pro-icon-btn" title="Filtrar" id="btn-toggle-filter">
+          ⚲
+        </button>
+        <button type="button" class="rk-pro-icon-btn" title="Buscar" id="btn-toggle-search">
+          🔍
+        </button>
+      </div>
+    </div>
+
+    <div class="rk-search-bar" id="search-bar">
+      <input type="text" id="input-buscar-paciente" placeholder="Buscar paciente por nombre..." />
+    </div>
+    <div class="rk-filter-bar" id="filter-bar">
+      <button type="button" class="rk-filter-chip active" data-filtro="todos">
+        Todos
+      </button>
+      <button type="button" class="rk-filter-chip" data-filtro="rojo">
+        🔴
+      </button>
+      <button type="button" class="rk-filter-chip" data-filtro="amarillo">
+        🟡
+      </button>
+      <button type="button" class="rk-filter-chip" data-filtro="verde">
+        🟢
+      </button>
+    </div>
+
+    <div class="rk-pro-sidebar-list">
+      {% if autorizaciones %}
+        {% for a in autorizaciones %}
+          {% set ultima_eval = a.nino.evaluaciones|sort(attribute='fecha')|last if a.nino.evaluaciones else None %}
+          {% set nivel = ultima_eval.nivel_riesgo if ultima_eval else 'neutro' %}
+          {% set iconos = {'rojo': '🔴', 'amarillo': '🟡', 'verde': '🟢', 'neutro': '⚪'} %}
+          {% set tag_texto = {'rojo': 'Requiere atención', 'amarillo': 'En vigilancia', 'verde': 'Estable', 'neutro': 'Sin registros'} %}
+          {% set patologias_activas = a.nino.patologias_base|selectattr('activa')|list %}
+          {% set seleccionado = nino_seleccionado and nino_seleccionado.id == a.nino.id %}
           <a
-            href="{{ url_for('dashboard.ver_paciente', nino_id=a.nino.id) }}"
-            class="btn btn-sm btn-outline-primary"
-            >Ver detalle</a
+            href="{{ url_for('dashboard.profesional', paciente=a.nino.id, rango=rango_actual) }}"
+            class="rk-patient-card riesgo-{{ nivel }} {{ 'rk-patient-selected' if seleccionado }}"
+            data-nombre="{{ a.nino.nombre_ficticio|lower }}"
+            data-riesgo="{{ nivel }}"
           >
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+            <div class="rk-patient-top">
+              <div class="d-flex align-items-center gap-2">
+                <div class="rk-patient-avatar">🧒</div>
+                <div>
+                  <div class="name">{{ a.nino.nombre_ficticio }}</div>
+                  <div class="meta">
+                    {{ a.nino.edad_texto() }}{% if patologias_activas %} · {{ patologias_activas[0].nombre }}{% endif %}
+                  </div>
+                </div>
+              </div>
+              <span class="rk-status-icon">{{ iconos[nivel] }}</span>
+            </div>
+            <div class="rk-tags">
+              <span class="rk-tag-pill {{ nivel }}">{{ tag_texto[nivel] }}</span>
+            </div>
+          </a>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted small px-2">Aún no tienes pacientes autorizados.</p>
+      {% endif %}
+      <p class="rk-no-results" id="no-results">No se encontraron pacientes.</p>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="rk-pro-main">
+    {% if nino_seleccionado %}
+      {% set nino = nino_seleccionado %}
+      <div class="rk-patient-header-card riesgo-{{ nivel_actual }}">
+        <div class="info">
+          <div class="rk-patient-header-avatar">🧒</div>
+          <div>
+            <h4 class="mb-0">{{ nino.nombre_ficticio }}</h4>
+            <p class="text-muted small mb-0">
+              ID #{{ nino.id }} · {{ nino.edad_texto() }} · {{ 'Masculino' if nino.sexo == 'M' else 'Femenino' }}
+            </p>
+          </div>
+        </div>
+        <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn-rk-primary">
+          💬 Contactar cuidador
+        </a>
+      </div>
+
+      {% set patologias_activas = nino.patologias_base|selectattr('activa')|list %}
+      {% if patologias_activas %}
+        <div class="alert alert-warning">
+          <strong>⚠️ Condiciones de base:</strong>
+          {% for p in patologias_activas %}
+            <span class="badge bg-dark me-1">{{ p.nombre }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="rk-chart-panel">
+        <div class="rk-chart-panel-head">
+          <h6 class="mb-0">📈 Evolución de severidad</h6>
+          <select class="rk-chart-range-select" id="select-rango" onchange="cambiarRango(this.value)">
+            <option value="7" {{ 'selected' if rango_actual == '7' }}>Últimos 7 días</option>
+            <option value="30" {{ 'selected' if rango_actual == '30' }}>Últimos 30 días</option>
+            <option value="90" {{ 'selected' if rango_actual == '90' }}>Últimos 90 días</option>
+            <option value="todo" {{ 'selected' if rango_actual == 'todo' }}>Todo el historial</option>
+          </select>
+        </div>
+        {% if chart_data != '[]' %}
+          <canvas id="grafico-evolucion" height="90"></canvas>
+        {% else %}
+          <p class="text-muted small mb-0 mt-2">
+            Aún no hay suficientes registros con nivel de severidad para graficar en este periodo.
+          </p>
+        {% endif %}
+      </div>
+
+      <div class="rk-panel">
+        <h6>🕐 Historial de síntomas</h6>
+        {% if registros %}
+          {% for r in registros %}
+            {% set nivel_item = r.evaluacion.nivel_riesgo if r.evaluacion else 'neutro' %}
+            {% set icono_item = {'rojo': '🔴', 'amarillo': '🟡', 'verde': '🟢', 'neutro': '⚪'} %}
+            <div class="rk-symptom-log-item">
+              <div class="rk-symptom-log-dot {{ nivel_item }}">
+                {{ icono_item[nivel_item] }}
+              </div>
+              <div class="flex-grow-1">
+                <div class="title">
+                  {% if r.tos %}Tos{% elif r.dificultad_respiratoria %}Dificultad respiratoria{% elif r.temperatura %}Fiebre{% else %}Registro de síntomas{% endif %}
+                </div>
+                <div class="sub">
+                  {{ r.fecha.strftime('%d/%m/%Y, %H:%M') }} · Reportado por cuidador
+                </div>
+                {% if r.temperatura %}
+                  <div class="small mt-1">Temperatura: {{ r.temperatura }}°C</div>
+                {% endif %}
+                {% if r.evaluacion %}
+                  <div class="small text-muted">{{ r.evaluacion.motivo }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small mb-0">
+            Este paciente aún no tiene registros de síntomas.
+          </p>
+        {% endif %}
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+      <script>
+        {% if chart_data != '[]' %}
+        new Chart(document.getElementById('grafico-evolucion'), {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Severidad (1-10)',
+                    data: {{ chart_data|safe }},
+                    borderColor: '#1B4B43',
+                    backgroundColor: 'rgba(168,213,186,0.4)',
+                    fill: true, tension: 0.45,
+                    pointRadius: 5, pointBackgroundColor: '#F2765A',
+                    pointBorderColor: 'white', pointBorderWidth: 2
+                }]
+            },
+            options: {
+                scales: { y: { min: 0, max: 10, grid: { color: '#eef1ef' } }, x: { grid: { display: false } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+        {% endif %}
+      </script>
+    {% else %}
+      <div class="rk-pro-empty-state">
+        <div style="font-size: 3rem">🧒</div>
+        <h5 class="mt-2">Selecciona un paciente</h5>
+        <p class="text-muted small">
+          Elige un paciente del panel izquierdo para ver su información detallada.
+        </p>
+      </div>
+    {% endif %}
+  </main>
 </div>
-{% else %}
-<p class="text-muted">
-  Aún no tienes pacientes autorizados. El cuidador debe otorgarte acceso desde
-  su panel.
-</p>
-{% endif %} {% endblock %}
+
+<script>
+  function cambiarRango(valor) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('rango', valor);
+      window.location.search = params.toString();
+  }
+
+  document.getElementById("btn-toggle-search").addEventListener("click", () => {
+    document.getElementById("search-bar").classList.toggle("rk-search-open");
+  });
+  document.getElementById("btn-toggle-filter").addEventListener("click", () => {
+    document.getElementById("filter-bar").classList.toggle("rk-filter-open");
+  });
+
+  const tarjetas = document.querySelectorAll(".rk-patient-card");
+  const noResults = document.getElementById("no-results");
+  let filtroActivo = "todos";
+
+  function aplicarFiltros() {
+    const q = document
+      .getElementById("input-buscar-paciente")
+      .value.trim()
+      .toLowerCase();
+    let visibles = 0;
+    tarjetas.forEach((card) => {
+      const nombre = card.dataset.nombre || "";
+      const coincideTexto = nombre.includes(q);
+      const coincideFiltro =
+        filtroActivo === "todos" || card.dataset.riesgo === filtroActivo;
+      const visible = coincideTexto && coincideFiltro;
+      card.classList.toggle("rk-hidden", !visible);
+      if (visible) visibles++;
+    });
+    noResults.style.display = visibles === 0 ? "block" : "none";
+  }
+
+  document
+    .getElementById("input-buscar-paciente")
+    .addEventListener("input", aplicarFiltros);
+  document.querySelectorAll(".rk-filter-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document
+        .querySelectorAll(".rk-filter-chip")
+        .forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+      filtroActivo = chip.dataset.filtro;
+      aplicarFiltros();
+    });
+  });
+</script>
+{% endblock %}

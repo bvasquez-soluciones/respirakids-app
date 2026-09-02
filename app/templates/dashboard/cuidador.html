@@ -1,16 +1,88 @@
 {% extends "base.html" %} {% block title %}Panel Cuidador - RespiraKids{%
-endblock %} {% block content %}
-<h2>Panel del Cuidador</h2>
-<p>Hola, {{ usuario.nombre }} 👋</p>
-<p class="text-muted">
-  Aquí verás a tus niños registrados y sus síntomas (próximamente).
-</p>
-<div class="d-flex gap-2">
-  <a href="{{ url_for('pacientes.listar') }}" class="btn btn-primary"
-    >Ver mis pacientes</a
+endblock %} {% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %} {% set mapa_emoji = {'verde': '🙂',
+'amarillo': '😐', 'rojo': '😟'} %} {% set mapa_texto = {'verde': 'Todo bajo
+control', 'amarillo': 'Requiere vigilancia', 'rojo': 'Posible señal de alarma'}
+%}
+
+<div class="rk-dash-wrap">
+  <div
+    class="rk-status-card rk-status-card--{{ ultima_evaluacion.nivel_riesgo if ultima_evaluacion else 'neutral' }}"
   >
-  <a href="{{ url_for('asistente.chat') }}" class="btn btn-outline-primary"
-    >🤖 Asistente IA</a
+    <div>
+      <div class="text-muted small">Estado Actual</div>
+      {% if ultima_evaluacion %}
+      <div class="fw-bold">
+        {{ mapa_texto[ultima_evaluacion.nivel_riesgo] }}
+      </div>
+      <div class="small text-muted">
+        {{ ultima_evaluacion.nino.nombre_ficticio }} · {{
+        ultima_evaluacion.fecha.strftime('%d/%m %H:%M') }}
+      </div>
+      {% else %}
+      <div class="fw-bold">Sin registros aún</div>
+      <div class="small text-muted">
+        Registra el primer síntoma para ver el estado
+      </div>
+      {% endif %}
+    </div>
+    <div class="rk-status-emoji">
+      {{ mapa_emoji[ultima_evaluacion.nivel_riesgo] if ultima_evaluacion else
+      '🫁' }}
+    </div>
+  </div>
+
+  {% if ninos %} {% if ninos|length == 1 %}
+  <a
+    href="{{ url_for('sintomas.nuevo', nino_id=ninos[0].id) }}"
+    class="rk-cta-pill"
+    >+ Registrar Nuevos Síntomas</a
   >
+  {% else %}
+  <a href="{{ url_for('pacientes.listar') }}" class="rk-cta-pill"
+    >+ Registrar Nuevos Síntomas</a
+  >
+  {% endif %} {% else %}
+  <a href="{{ url_for('pacientes.nuevo') }}" class="rk-cta-pill"
+    >+ Registrar tu primer paciente</a
+  >
+  {% endif %}
+
+  <div class="rk-dash-grid">
+    <div class="rk-panel">
+      <h6>🕐 Últimos Síntomas</h6>
+      {% if ultimos_sintomas %} {% for r in ultimos_sintomas %}
+      <div class="rk-sintoma-item">
+        <div class="nino-name">{{ r.nino.nombre_ficticio }}</div>
+        <div class="fecha">{{ r.fecha.strftime('%d/%m %H:%M') }}</div>
+        {% if r.evaluacion %} {% set b = {'verde': 'success', 'amarillo':
+        'warning', 'rojo': 'danger'} %}
+        <span class="badge bg-{{ b[r.evaluacion.nivel_riesgo] }} mt-1"
+          >{{ r.evaluacion.nivel_riesgo|capitalize }}</span
+        >
+        {% endif %}
+      </div>
+      {% endfor %} {% else %}
+      <p class="text-muted small mb-0">Aún no hay síntomas registrados.</p>
+      {% endif %}
+    </div>
+
+    <div class="rk-panel">
+      <h6>🤖 Asistente IA</h6>
+      <p class="text-muted small">
+        Resuelve dudas sobre prevención y cuidados generales, sin reemplazar a
+        un profesional de salud.
+      </p>
+      <a
+        href="{{ url_for('asistente.chat') }}"
+        class="btn btn-outline-primary btn-sm w-100"
+        >Hablar con el asistente</a
+      >
+    </div>
+  </div>
 </div>
 {% endblock %}

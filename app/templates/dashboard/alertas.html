@@ -1,0 +1,39 @@
+{% extends "base.html" %} {% block title %}Alertas - RespiraKids{% endblock %}
+{% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/professional.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+<div class="rk-pro-wrap">
+  <h4 class="mb-3">🔔 Alertas activas</h4>
+  {% if pacientes_rojo %}
+  <div class="rk-patient-list">
+    {% for nino, eval in pacientes_rojo %}
+    <a
+      href="{{ url_for('dashboard.ver_paciente', nino_id=nino.id) }}"
+      class="rk-patient-card riesgo-rojo"
+    >
+      <div class="rk-patient-top">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rk-patient-avatar">🧒</div>
+          <div>
+            <div class="name">{{ nino.nombre_ficticio }}</div>
+            <div class="meta">{{ eval.motivo }}</div>
+          </div>
+        </div>
+        <span class="rk-status-icon">🔴</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted">
+    No tienes pacientes con alertas activas en este momento.
+  </p>
+  {% endif %}
+  <a href="{{ url_for('dashboard.profesional') }}" class="btn btn-link mt-3"
+    >← Volver a mis pacientes</a
+  >
+</div>
+{% endblock %}

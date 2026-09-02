@@ -9,6 +9,7 @@ endblock %} {% block content %}
           ⚠️ Recuerda: usa únicamente datos ficticios de prueba.
         </div>
         <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <div class="mb-3">
             <label class="form-label">Nombre ficticio</label>
             <input
