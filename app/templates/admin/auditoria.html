@@ -1,0 +1,63 @@
+{% extends "admin/_layout.html" %}
+{% from "macros/paginacion.html" import paginacion %}
+{% block title %}Auditoría - Administración{% endblock %}
+{% block admin %}
+<form method="GET" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <div>
+    <label class="form-label small mb-0" for="tipo">Registro</label>
+    <select class="form-select form-select-sm" id="tipo" name="tipo" onchange="this.form.evento.value=''; this.form.submit()">
+      <option value="seguridad" {{ 'selected' if tipo == 'seguridad' }}>Seguridad (accesos, sesiones)</option>
+      <option value="actividad" {{ 'selected' if tipo == 'actividad' }}>Actividad sobre datos</option>
+    </select>
+  </div>
+  <div>
+    <label class="form-label small mb-0" for="evento">Evento</label>
+    <select class="form-select form-select-sm" id="evento" name="evento">
+      <option value="">Todos</option>
+      {% for e in eventos %}<option value="{{ e }}" {{ 'selected' if evento == e }}>{{ e }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="form-label small mb-0" for="usuario_tipo">Usuario</label>
+    <select class="form-select form-select-sm" id="usuario_tipo" name="usuario_tipo">
+      <option value="">Todos</option>
+      <option value="cuidador" {{ 'selected' if usuario_tipo == 'cuidador' }}>Cuidadores</option>
+      <option value="profesional" {{ 'selected' if usuario_tipo == 'profesional' }}>Profesionales</option>
+    </select>
+  </div>
+  <div>
+    <label class="form-label small mb-0" for="desde">Desde</label>
+    <input type="date" class="form-control form-control-sm" id="desde" name="desde" value="{{ desde }}" />
+  </div>
+  <button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button>
+</form>
+
+<div class="rk-panel">
+  {% if pagina.items %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-2 small">
+      <thead><tr><th>Fecha</th><th>Usuario</th><th>Evento</th><th>Detalle</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for r in pagina.items %}
+        <tr>
+          <td class="text-nowrap">{{ r.timestamp|fecha_hora }}</td>
+          <td>{{ r.usuario_tipo ~ ' #' ~ r.usuario_id if r.usuario_id else '—' }}</td>
+          <td><code>{{ r.accion if tipo == 'actividad' else r.evento }}</code></td>
+          <td>
+            {% if tipo == 'actividad' %}{{ r.recurso or '' }}{% if r.recurso_id %} #{{ r.recurso_id }}{% endif %}
+              {% if r.detalles %}<br /><span class="text-muted">{{ r.detalles|truncate(120) }}</span>{% endif %}
+            {% else %}{{ r.descripcion or '' }}{% endif %}
+          </td>
+          <td>{{ r.ip or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(pagina, 'admin.auditoria', tipo=tipo, evento=evento, usuario_tipo=usuario_tipo, desde=desde) }}
+  {% else %}
+  <p class="text-muted mb-0">No hay registros con estos filtros.</p>
+  {% endif %}
+</div>
+<p class="rk-nota-fuente">Los registros de auditoría son de solo lectura: no se pueden editar ni borrar desde la aplicación.</p>
+{% endblock %}

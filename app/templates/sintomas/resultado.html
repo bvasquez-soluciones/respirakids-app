@@ -1,56 +1,102 @@
-{% extends "base.html" %} {% block title %}Resultado - RespiraKids{% endblock %}
-{% block content %} {% set colores = {'verde': 'success', 'amarillo': 'warning',
-'rojo': 'danger'} %} {% set emojis = {'verde': '🟢', 'amarillo': '🟡', 'rojo':
-'🔴'} %} {% set titulos = {'verde': 'Seguimiento y medidas preventivas',
-'amarillo': 'Mayor vigilancia recomendada', 'rojo': 'Posibles señales de
-alarma'} %}
-
-<div class="row justify-content-center">
-  <div class="col-md-7">
-    <div class="card shadow-sm border-{{ colores[evaluacion.nivel_riesgo] }}">
-      <div class="card-body text-center">
-        <div style="font-size: 4rem">{{ emojis[evaluacion.nivel_riesgo] }}</div>
-        <h3 class="mt-2">{{ titulos[evaluacion.nivel_riesgo] }}</h3>
-        <p class="text-muted">
-          Paciente: {{ evaluacion.nino.nombre_ficticio }}
-        </p>
-
-        <div
-          class="alert alert-{{ colores[evaluacion.nivel_riesgo] }} text-start mt-4"
-        >
-          <strong>Motivo:</strong> {{ evaluacion.motivo }}
-        </div>
-
-        <div class="alert alert-secondary text-start">
-          <strong>Recomendación:</strong> {{ evaluacion.recomendaciones }}
-        </div>
-
-        {% if evaluacion.ml_nivel_riesgo %}
-        <div class="alert alert-secondary text-start small">
-          <strong>🤖 Modelo de Machine Learning (complementario):</strong>
-          Sugiere nivel
-          <strong>{{ evaluacion.ml_nivel_riesgo|capitalize }}</strong> con {{
-          evaluacion.ml_confianza }}% de confianza. <br /><em
-            >Modelo entrenado con datos sintéticos, sin validación clínica —
-            resultado de apoyo, no determinante.</em
-          >
-        </div>
-        {% endif %}
-
-        <div class="alert alert-light border text-start small">
-          ℹ️ Esta clasificación es una herramienta de orientación y no
-          constituye un diagnóstico médico. Ante cualquier duda, consulta con un
-          profesional de la salud.
-        </div>
-
-        <a
-          href="{{ url_for('sintomas.listar', nino_id=evaluacion.nino.id) }}"
-          class="btn btn-primary mt-2"
-        >
-          Ver historial completo
-        </a>
-      </div>
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Resultado de la evaluación - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+{% set nino = evaluacion.nino %}
+{% set info = nivel_info(evaluacion.nivel_riesgo) %}
+<div class="rk-detalle">
+  <header class="rk-detalle__cabecera">
+    {{ avatar(nino, evaluacion.nivel_riesgo, 72) }}
+    <div>
+      <p class="text-muted small mb-0">Evaluación del {{ evaluacion.fecha|fecha_hora }}</p>
+      <h1 class="h4 mb-0">{{ nino.nombre_completo }}</h1>
     </div>
+  </header>
+
+  <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }} rk-estado--grande" role="status">
+    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+    <div>
+      <p class="rk-estado__titulo">
+        <span class="visually-hidden">Clasificación {{ info.nombre }}: </span>{{ info.titulo }}
+      </p>
+      <p class="rk-estado__detalle">{{ info.resumen }}</p>
+    </div>
+  </section>
+
+  {% set rojas = senales|selectattr('nivel', 'equalto', 'rojo')|list %}
+  {% set amarillas = senales|selectattr('nivel', 'equalto', 'amarillo')|list %}
+  {% if rojas or amarillas %}
+  <section class="rk-panel">
+    <h2 class="h6">Posibles señales identificadas</h2>
+    <p class="small text-muted">
+      Con base en lo que registraste, se identificaron signos o síntomas descritos en la fuente clínica.
+      Esto no es un diagnóstico.
+    </p>
+    {% for titulo, grupo in (('🔴 Posibles señales de alarma', rojas), ('🟡 Señales que requieren valoración', amarillas)) if grupo %}
+    <p class="small fw-bold mb-1">{{ titulo }}</p>
+    <ul class="rk-lista-senales mb-3">
+      {% for s in grupo %}
+      <li>
+        {{ s.texto }}
+        {% if s.origen == 'salvaguarda' %}
+        <span class="badge text-bg-light border">Regla de seguridad de RespiraKids</span>
+        {% elif s.fuente and s.fuente.url %}
+        <span class="rk-nota-fuente d-block">Fuente: <a href="{{ s.fuente.url }}" target="_blank" rel="noopener">{{ s.fuente.nombre }}</a></span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if avisos %}
+  <section class="rk-panel">
+    <h2 class="h6">Para tener en cuenta</h2>
+    <ul class="rk-lista-senales mb-0">{% for a in avisos %}<li>{{ a }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <section class="rk-panel">
+    <h2 class="h6">Orientación</h2>
+    <p class="mb-0">{{ evaluacion.recomendaciones }}</p>
+  </section>
+
+  <section class="rk-panel">
+    <h2 class="h6">Lo que registraste</h2>
+    {% if hallazgos %}
+    <ul class="rk-lista-senales mb-2">{% for h in hallazgos %}<li>{{ h }}</li>{% endfor %}</ul>
+    {% else %}
+    <p class="small text-muted mb-2">No marcaste síntomas en este registro.</p>
+    {% endif %}
+    {% if complementarios %}
+    <dl class="rk-datos mb-0">
+      {% for etiqueta, valor in complementarios %}<dt>{{ etiqueta }}</dt><dd>{{ valor }}</dd>{% endfor %}
+    </dl>
+    {% endif %}
+    {% if registro.observaciones %}<p class="small mt-2 mb-0"><strong>Notas:</strong> {{ registro.observaciones }}</p>{% endif %}
+  </section>
+
+
+  <p class="rk-nota-fuente">
+    {{ AVISO_NO_DIAGNOSTICO }}
+    {% if evaluacion.version_reglas_efectiva == 'v1-aiepi' %}
+    Clasificación generada con criterios de la Herramienta Clínica de primera infancia (AIEPI) del Ministerio de
+    Salud y Protección Social; la forma de convertirlos en colores está pendiente de validación por un profesional de salud.
+    {% else %}
+    Clasificación generada con reglas provisionales anteriores, pendientes de validación clínica.
+    {% endif %}
+    Ante cualquier duda o si los síntomas empeoran, consulta a un profesional de salud.
+  </p>
+
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-primary">Ver historial</a>
+    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary">Escribir a un profesional</a>
+    <a href="{{ url_for('asistente.chat', evaluacion=evaluacion.id) }}" class="btn btn-outline-secondary">Preguntar al asistente sobre esta evaluación</a>
+    <a href="{{ url_for('dashboard.cuidador') }}" class="btn btn-link">Volver al inicio</a>
   </div>
 </div>
 {% endblock %}

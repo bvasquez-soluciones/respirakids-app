@@ -2,22 +2,23 @@
 Módulo de clasificación de riesgo (Sistema de Semáforo) - RespiraKids
 
 ⚠️ IMPORTANTE:
-Las reglas de este archivo son PROVISIONALES, con fines de prototipo académico.
+Las reglas de este archivo son PROVISIONALES (versión v0), con fines de prototipo.
 Deben ser revisadas, ajustadas y validadas por un profesional de la salud
-antes de cualquier uso con pacientes reales.
+antes de cualquier uso con pacientes reales. Su comportamiento está fijado por
+las pruebas de caracterización en tests/test_semaforo_v0.py.
 
 Este sistema NO diagnostica enfermedades. Es una herramienta de orientación
 y alerta temprana, no un reemplazo del criterio médico profesional.
 """
 
+VERSION_REGLAS = 'v0-provisional'
 
-def clasificar_riesgo(registro):
-    """
-    Recibe un objeto RegistroSintomas y devuelve una tupla:
-    (nivel_riesgo, motivo, recomendaciones)
-    nivel_riesgo puede ser: 'verde', 'amarillo', 'rojo'
-    """
 
+def identificar_senales(registro):
+    """
+    Aplica las reglas a un RegistroSintomas y devuelve las posibles señales identificadas:
+    {'rojo': [texto, ...], 'amarillo': [texto, ...]}
+    """
     señales_alarma_rojo = []
     señales_alerta_amarillo = []
 
@@ -68,17 +69,28 @@ def clasificar_riesgo(registro):
     if registro.irritabilidad:
         señales_alerta_amarillo.append('irritabilidad')
 
+    return {'rojo': señales_alarma_rojo, 'amarillo': señales_alerta_amarillo}
+
+
+def clasificar_riesgo(registro):
+    """
+    Recibe un objeto RegistroSintomas y devuelve una tupla:
+    (nivel_riesgo, motivo, recomendaciones)
+    nivel_riesgo puede ser: 'verde', 'amarillo', 'rojo'
+    """
+    señales = identificar_senales(registro)
+
     # --- Decisión final ---
-    if señales_alarma_rojo:
-        motivo = 'Se identificaron posibles señales de alarma: ' + ', '.join(señales_alarma_rojo) + '.'
+    if señales['rojo']:
+        motivo = 'Se identificaron posibles señales de alarma: ' + ', '.join(señales['rojo']) + '.'
         recomendaciones = (
             'Se recomienda buscar atención médica oportunamente. '
             'Esta clasificación es orientativa y no reemplaza la evaluación de un profesional de la salud.'
         )
         return 'rojo', motivo, recomendaciones
 
-    elif señales_alerta_amarillo:
-        motivo = 'Se identificaron síntomas que ameritan mayor vigilancia: ' + ', '.join(señales_alerta_amarillo) + '.'
+    elif señales['amarillo']:
+        motivo = 'Se identificaron síntomas que ameritan mayor vigilancia: ' + ', '.join(señales['amarillo']) + '.'
         recomendaciones = (
             'Se recomienda observar la evolución del niño/a de forma cercana en las próximas horas '
             'y considerar asesoría de un profesional de la salud si los síntomas persisten o empeoran.'

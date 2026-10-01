@@ -1,0 +1,18 @@
+{# Campos del niño/a, compartidos por registro y edición. Requiere `form` (NinoForm). #}
+{% from "macros/formularios.html" import campo %}
+<fieldset class="rk-fieldset">
+  <legend>Identificación</legend>
+  <div class="row">
+    {{ campo(form.nombre, 'col-sm-6 mb-3', placeholder='Ej. Sofía Valentina') }}
+    {{ campo(form.apellido, 'col-sm-6 mb-3', placeholder='Ej. Torres Gómez') }}
+    {{ campo(form.fecha_nacimiento, 'col-sm-6 mb-3', max=hoy_iso()) }}
+    {{ campo(form.sexo, 'col-sm-6 mb-3') }}
+  </div>
+</fieldset>
+<fieldset class="rk-fieldset">
+  <legend>Medidas</legend>
+  <div class="row">
+    {{ campo(form.peso_kg, 'col-sm-6 mb-3', placeholder='Ej. 11.5') }}
+    {{ campo(form.talla_cm, 'col-sm-6 mb-3', placeholder='Ej. 82') }}
+  </div>
+</fieldset>

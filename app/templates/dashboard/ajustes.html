@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block title %}Ajustes - RespiraKids{% endblock %}
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios, resumen_errores %} {% block title %}Ajustes - RespiraKids{% endblock %}
 {% block extra_css %}
 <link
   href="{{ url_for('static', filename='css/professional.css') }}"
@@ -10,9 +11,10 @@
 
   <div class="rk-panel mb-4">
     <h6 class="mb-3">Perfil profesional</h6>
-    <form method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      {{ form_perfil.csrf_token }}
       <input type="hidden" name="accion" value="actualizar_perfil" />
+      {{ nota_obligatorios() }}
 
       <div class="mb-3 text-center">
         <div class="rk-avatar-preview mx-auto mb-2">
@@ -25,9 +27,10 @@
           <span>👩‍⚕️</span>
           {% endif %}
         </div>
-        <label class="form-label small fw-bold d-block">Foto de perfil</label>
+        <label class="form-label small fw-bold d-block" for="foto">Foto de perfil <span class="rk-opcional">(opcional)</span></label>
         <input
           type="file"
+          id="foto"
           name="foto"
           accept="image/jpeg,image/png,image/webp"
           class="form-control form-control-sm"
@@ -35,45 +38,20 @@
         <div class="form-text">JPG, PNG o WEBP. Máximo 3 MB.</div>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Nombre</label>
-        <input
-          type="text"
-          name="nombre"
-          class="form-control"
-          value="{{ usuario.nombre }}"
-          required
-        />
+      {{ resumen_errores(form_perfil) }}
+      <div class="row">
+        {{ campo(form_perfil.nombre, 'col-sm-6 mb-3') }}
+        {{ campo(form_perfil.apellido, 'col-sm-6 mb-3') }}
       </div>
       <div class="mb-3">
-        <label class="form-label small fw-bold">Correo</label>
-        <input
-          type="email"
-          class="form-control"
-          value="{{ usuario.correo }}"
-          disabled
-        />
-        <div class="form-text">
-          El correo no se puede modificar por seguridad.
-        </div>
+        <label class="form-label" for="correo">Correo electrónico</label>
+        <input type="email" class="form-control" id="correo" value="{{ usuario.correo }}" disabled
+          aria-describedby="correo-ayuda" />
+        <div id="correo-ayuda" class="form-text">El correo no se puede modificar por seguridad.</div>
       </div>
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Especialidad</label>
-        <input
-          type="text"
-          name="especialidad"
-          class="form-control"
-          value="{{ usuario.especialidad or '' }}"
-        />
-      </div>
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Número de licencia</label>
-        <input
-          type="text"
-          name="numero_licencia"
-          class="form-control"
-          value="{{ usuario.numero_licencia or '' }}"
-        />
+      <div class="row">
+        {{ campo(form_perfil.especialidad, 'col-sm-6 mb-3') }}
+        {{ campo(form_perfil.numero_licencia, 'col-sm-6 mb-3') }}
       </div>
 
       <button type="submit" class="btn-rk-primary">Guardar cambios</button>
@@ -82,47 +60,7 @@
 
   <div class="rk-panel">
     <h6 class="mb-3">Cambiar contraseña</h6>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <input type="hidden" name="accion" value="cambiar_password" />
-
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Contraseña actual</label>
-        <input
-          type="password"
-          name="password_actual"
-          class="form-control"
-          required
-        />
-      </div>
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Nueva contraseña</label>
-        <input
-          type="password"
-          name="password_nueva"
-          class="form-control"
-          minlength="8"
-          required
-        />
-        <div class="form-text">Mínimo 8 caracteres.</div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label small fw-bold"
-          >Confirmar nueva contraseña</label
-        >
-        <input
-          type="password"
-          name="password_confirmar"
-          class="form-control"
-          minlength="8"
-          required
-        />
-      </div>
-
-      <button type="submit" class="btn-rk-primary">
-        Actualizar contraseña
-      </button>
-    </form>
+    {% include "dashboard/_form_password.html" %}
   </div>
 
   <a href="{{ url_for('dashboard.profesional') }}" class="btn btn-link mt-3"

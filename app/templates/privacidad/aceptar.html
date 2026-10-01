@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "macros/formularios.html" import casilla, nota_obligatorios %} {% block title %}Autorización de tratamiento de datos - RespiraKids{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h3 mb-2">Autorización de tratamiento de datos</h1>
+        <p class="text-muted">
+          Para continuar usando RespiraKids necesitamos que leas y aceptes la versión vigente de nuestra política
+          de tratamiento de datos personales.
+        </p>
+        <div class="border rounded p-3 mb-4 bg-light" style="max-height: 50vh; overflow-y: auto" tabindex="0"
+          aria-label="Texto de la política de tratamiento de datos">
+          {% include "privacidad/_contenido_politica.html" %}
+        </div>
+        <form method="POST" novalidate>
+          {{ form.csrf_token }}
+          {{ nota_obligatorios() }}
+          {% call casilla(form.acepta_politica) %}
+            He leído y acepto la política de tratamiento de datos personales y autorizo el tratamiento de mis
+            datos para las finalidades descritas.
+          {% endcall %}
+          <button type="submit" class="btn btn-primary">Aceptar y continuar</button>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-link">No acepto, cerrar sesión</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

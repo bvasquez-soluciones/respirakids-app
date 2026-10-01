@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+{% set pestanas = [
+  ('admin.inicio', 'Resumen'), ('admin.profesionales', 'Profesionales'), ('admin.cuidadores', 'Cuidadores'),
+  ('admin.solicitudes', 'Solicitudes de datos'), ('admin.auditoria', 'Auditoría'),
+  ('admin.conocimiento', 'Base de conocimiento'), ('admin.reglas', 'Reglas clínicas'), ('admin.modelo_ml', 'Modelo ML'),
+  ('admin.configuracion', 'Configuración')] %}
+<div class="rk-admin">
+  <h1 class="h4 mb-3">Administración</h1>
+  <nav aria-label="Secciones de administración" class="mb-3">
+    <ul class="nav nav-pills flex-wrap gap-1">
+      {% for endpoint, texto in pestanas %}
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if request.endpoint == endpoint or (request.endpoint or '').startswith(endpoint ~ '_') }}"
+          {% if request.endpoint == endpoint %}aria-current="page"{% endif %} href="{{ url_for(endpoint) }}">{{ texto }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% block admin %}{% endblock %}
+</div>
+{% endblock %}

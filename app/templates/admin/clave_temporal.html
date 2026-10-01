@@ -1,0 +1,17 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Contraseña temporal - Administración{% endblock %}
+{% block admin %}
+<div class="rk-panel">
+  <h2 class="h5">Contraseña temporal {{ accion }}</h2>
+  <p>Cuenta de <strong>{{ profesional.nombre_completo }}</strong> ({{ profesional.correo }}).</p>
+  <div class="alert alert-warning">
+    <p class="mb-1"><strong>Contraseña temporal:</strong> <code class="fs-5" id="clave">{{ clave }}</code></p>
+    <p class="small mb-0">
+      Se muestra <strong>una sola vez</strong>: no queda guardada en RespiraKids. Entrégala al profesional por un canal
+      seguro. Al ingresar se le pedirá cambiarla.
+      {% if profesional.estado_aprobacion != 'aprobado' %}Recuerda aprobar la cuenta tras verificar sus datos profesionales.{% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('admin.profesionales') }}" class="btn btn-primary">Volver a profesionales</a>
+</div>
+{% endblock %}

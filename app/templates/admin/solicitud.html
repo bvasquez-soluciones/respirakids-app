@@ -1,0 +1,40 @@
+{% extends "admin/_layout.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios, resumen_errores %}
+{% block title %}Solicitud de datos - Administración{% endblock %}
+{% block admin %}
+<a href="{{ url_for('admin.solicitudes') }}" class="btn btn-link ps-0">← Solicitudes</a>
+<div class="rk-ficha-grid">
+  <section class="rk-panel">
+    <h2 class="h6">{{ solicitud.tipo_texto }}</h2>
+    <dl class="rk-datos mb-2">
+      <dt>Titular</dt><dd>{{ titular.nombre_completo if titular else '—' }} ({{ solicitud.usuario_tipo }})</dd>
+      <dt>Correo</dt><dd>{{ titular.correo if titular else '—' }}</dd>
+      {% if solicitud.nino %}<dt>Se refiere a</dt><dd>{{ solicitud.nino.nombre_completo }}</dd>{% endif %}
+      <dt>Radicada</dt><dd>{{ solicitud.fecha_solicitud|fecha_hora }}</dd>
+      <dt>Vence</dt><dd>{{ limite|fecha }}
+        {% if solicitud.estado in ('pendiente', 'en_tramite') %}({{ restantes }} día(s){% if restantes < 0 %}: vencida{% endif %}){% endif %}</dd>
+      <dt>Estado</dt><dd>{{ solicitud.estado.replace('_', ' ') }}</dd>
+    </dl>
+    <p class="mb-0"><strong>Descripción del titular:</strong><br />{{ solicitud.descripcion }}</p>
+  </section>
+
+  <section class="rk-panel">
+    <h2 class="h6">Responder</h2>
+    {% if solicitud.tipo in ('supresion', 'revocatoria') %}
+    <div class="alert alert-info small">
+      Para atender una supresión o revocatoria, verifica primero si existe un deber legal de conservar los datos
+      (p. ej. información clínica). RespiraKids no borra datos automáticamente: cualquier eliminación debe hacerse de
+      forma controlada por el equipo técnico y quedar registrada.
+    </div>
+    {% endif %}
+    <form method="POST" novalidate>
+      {{ form.csrf_token }}
+      {{ nota_obligatorios() }}
+      {{ resumen_errores(form) }}
+      {{ campo(form.estado) }}
+      {{ campo(form.respuesta) }}
+      <button type="submit" class="btn btn-primary">Guardar y notificar al titular</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

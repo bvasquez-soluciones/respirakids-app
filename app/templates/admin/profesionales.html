@@ -1,0 +1,71 @@
+{% extends "admin/_layout.html" %}
+{% from "macros/paginacion.html" import paginacion %}
+{% block title %}Profesionales - Administración{% endblock %}
+{% block admin %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+  <form method="GET" class="d-flex flex-wrap gap-2 align-items-end" role="search">
+    <div>
+      <label class="form-label small mb-0" for="q">Buscar</label>
+      <input class="form-control form-control-sm" id="q" name="q" value="{{ busqueda }}" placeholder="Nombre o correo" />
+    </div>
+    <div>
+      <label class="form-label small mb-0" for="estado">Estado</label>
+      <select class="form-select form-select-sm" id="estado" name="estado">
+        <option value="">Todos</option>
+        {% for clave, texto in estados.items() %}<option value="{{ clave }}" {{ 'selected' if estado == clave }}>{{ texto }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button>
+  </form>
+  <a href="{{ url_for('admin.nuevo_profesional') }}" class="btn btn-primary btn-sm">+ Registrar profesional</a>
+</div>
+
+<div class="rk-panel">
+  {% if pagina.items %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-2">
+      <thead><tr><th>Profesional</th><th>Profesión</th><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for p in pagina.items %}
+        <tr>
+          <td><strong>{{ p.nombre_completo }}</strong><br /><span class="small text-muted">{{ p.correo }}</span>
+            {% if p.esta_bloqueado() %}<br /><span class="badge text-bg-danger">Bloqueada por intentos</span>{% endif %}</td>
+          <td class="small">{{ p.profesion or '—' }}{% if p.especialidad %}<br />{{ p.especialidad }}{% endif %}</td>
+          <td class="small">{{ p.tarjeta_profesional or p.numero_licencia or '—' }}{% if p.registro_rethus %}<br />ReTHUS {{ p.registro_rethus }}{% endif %}</td>
+          <td><span class="badge rk-estado-cuenta rk-estado-cuenta--{{ p.estado_aprobacion }}">{{ estados.get(p.estado_aprobacion, p.estado_aprobacion) }}</span>
+            {% if p.debe_cambiar_password %}<br /><span class="small text-muted">Con contraseña temporal</span>{% endif %}</td>
+          <td>
+            <div class="d-flex flex-wrap gap-1">
+              {% for nuevo, texto, clase in (('aprobado', 'Aprobar', 'success'), ('suspendido', 'Suspender', 'warning'), ('rechazado', 'Rechazar', 'danger')) if p.estado_aprobacion != nuevo and not (nuevo == 'rechazado' and p.estado_aprobacion != 'pendiente') %}
+              <form method="POST" action="{{ url_for('admin.estado_profesional', profesional_id=p.id) }}"
+                onsubmit="return confirm('¿{{ texto }} a {{ p.nombre_completo }}?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="estado" value="{{ nuevo }}" />
+                <button type="submit" class="btn btn-sm btn-outline-{{ clase }}">{{ texto }}</button>
+              </form>
+              {% endfor %}
+              <form method="POST" action="{{ url_for('admin.restablecer_profesional', profesional_id=p.id) }}"
+                onsubmit="return confirm('¿Generar una nueva contraseña temporal para {{ p.nombre_completo }}?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Nueva contraseña</button>
+              </form>
+              {% if p.esta_bloqueado() %}
+              <form method="POST" action="{{ url_for('admin.desbloquear_usuario', tipo='profesional', usuario_id=p.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Desbloquear</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(pagina, 'admin.profesionales', estado=estado, q=busqueda) }}
+  {% else %}
+  <p class="text-muted mb-0">No hay profesionales con estos filtros.</p>
+  {% endif %}
+</div>
+<p class="rk-nota-fuente">Suspender o rechazar a un profesional cierra su sesión de inmediato y le impide acceder a pacientes.</p>
+{% endblock %}

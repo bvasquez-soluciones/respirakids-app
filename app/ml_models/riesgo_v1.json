@@ -1,0 +1,115 @@
+{
+  "version": "ml-v1-sintetico",
+  "fecha_entrenamiento": "2026-10-01T20:58:32+00:00",
+  "algoritmo": "RandomForestClassifier (scikit-learn)",
+  "hiperparametros": {
+    "n_estimators": 200,
+    "max_depth": 12,
+    "class_weight": "balanced",
+    "random_state": 2026
+  },
+  "variables": [
+    "edad_meses",
+    "temperatura",
+    "frecuencia_respiratoria",
+    "spo2",
+    "altitud_msnm",
+    "dias_tos",
+    "dias_fiebre",
+    "tos",
+    "dificultad_respiratoria",
+    "respiracion_rapida",
+    "congestion_nasal",
+    "secrecion_nasal",
+    "dolor_garganta",
+    "estornudos",
+    "sibilancias",
+    "estridor",
+    "tiraje_subcostal",
+    "cianosis",
+    "incapacidad_beber_liquidos",
+    "aleteo_nasal",
+    "quejido",
+    "apnea",
+    "convulsion",
+    "alteracion_conciencia",
+    "rigidez_cuello",
+    "abombamiento_fontanela",
+    "petequias",
+    "edema_retroauricular",
+    "tos_paroxistica",
+    "vomito_tras_tos",
+    "contacto_tuberculosis",
+    "perdida_peso",
+    "disminucion_actividad",
+    "factor_riesgo_bar"
+  ],
+  "clases": [
+    "verde",
+    "amarillo",
+    "rojo"
+  ],
+  "dataset": {
+    "tipo": "SINTÉTICO",
+    "filas": 6000,
+    "entrenamiento": 4500,
+    "prueba": 1500,
+    "distribucion_clases": {
+      "verde": 2060,
+      "amarillo": 2333,
+      "rojo": 1607
+    },
+    "etiquetado_por": "reglas clínicas v1-aiepi",
+    "semilla": 2026,
+    "archivo": "ml/datos/dataset_sintetico_v1.csv",
+    "sha256": "33670364a5e508fac0b92f62aaa815ff1c30fe03e3438d2c38d5e1e9ece1748e"
+  },
+  "metricas_prueba": {
+    "exactitud": 0.8933,
+    "f1_macro": 0.8952,
+    "sensibilidad_por_clase": {
+      "verde": 0.9631,
+      "amarillo": 0.8611,
+      "rojo": 0.8507
+    },
+    "matriz_confusion": {
+      "filas_reales_columnas_predichas": [
+        "verde",
+        "amarillo",
+        "rojo"
+      ],
+      "valores": [
+        [
+          496,
+          17,
+          2
+        ],
+        [
+          75,
+          502,
+          6
+        ],
+        [
+          22,
+          38,
+          342
+        ]
+      ]
+    },
+    "rojos_predichos_como_verde": 22
+  },
+  "limitaciones": [
+    "Entrenado con datos SINTÉTICOS (generados por programa), no con casos reales.",
+    "Las etiquetas las asignan las reglas clínicas v1-aiepi: el modelo aprende a imitarlas y hereda sus limitaciones, incluida su validación clínica pendiente.",
+    "Las proporciones de cada síntoma en el dataset son supuestos del generador, no epidemiología real.",
+    "Una exactitud alta solo indica que imita bien las reglas; no indica capacidad de predecir riesgo real.",
+    "No es un dispositivo médico ni una herramienta validada: su resultado no debe usarse para decisiones clínicas.",
+    "Para un uso real debe reentrenarse con datos reales anonimizados, etiquetados por profesionales y evaluarse de forma independiente."
+  ],
+  "uso_permitido": "Apoyo complementario para profesionales y desarrollo técnico. No modifica la clasificación clínica por reglas y no se muestra a cuidadores.",
+  "entorno": {
+    "python": "3.14.4",
+    "scikit_learn": "1.9.0"
+  },
+  "sha256_modelo": "8a7ebcce4d0d1b73edc6dd5c655de30bbbe82b570ef074d420e0d1c3afa52d12"
+}

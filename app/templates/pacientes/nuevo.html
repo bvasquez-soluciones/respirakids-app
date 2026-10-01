@@ -1,45 +1,21 @@
-{% extends "base.html" %} {% block title %}Registrar Paciente - RespiraKids{%
-endblock %} {% block content %}
+{% extends "base.html" %}
+{% from "macros/formularios.html" import nota_obligatorios, resumen_errores %}
+{% block title %}Registrar niño/a - RespiraKids{% endblock %}
+{% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-6">
+  <div class="col-md-8 col-lg-7">
     <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title mb-4">Registrar Paciente</h3>
-        <div class="alert alert-warning small">
-          ⚠️ Recuerda: usa únicamente datos ficticios de prueba.
-        </div>
-        <form method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <div class="mb-3">
-            <label class="form-label">Nombre ficticio</label>
-            <input
-              type="text"
-              name="nombre_ficticio"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Fecha de nacimiento</label>
-            <input
-              type="date"
-              name="fecha_nacimiento"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Sexo</label>
-            <select name="sexo" class="form-select" required>
-              <option value="">Selecciona...</option>
-              <option value="M">Masculino</option>
-              <option value="F">Femenino</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Guardar</button>
-          <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link w-100"
-            >Cancelar</a
-          >
+      <div class="card-body p-4">
+        <h1 class="h3 card-title mb-1">Registrar niño/a</h1>
+        <p class="text-muted small">RespiraKids está dirigido a niños y niñas menores de 5 años.</p>
+        <form method="POST" novalidate>
+          {{ form.csrf_token }}
+          {{ nota_obligatorios() }}
+          {{ resumen_errores(form) }}
+          {% include "pacientes/_campos_nino.html" %}
+          {% include "pacientes/_textos_consentimiento.html" %}
+          <button type="submit" class="btn btn-primary w-100 mt-4">Guardar</button>
+          <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link w-100">Cancelar</a>
         </form>
       </div>
     </div>

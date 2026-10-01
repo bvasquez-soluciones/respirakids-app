@@ -1,6 +1,21 @@
+# Entorno y secretos
 venv/
-__pycache__/
-*.pyc
 .env
 instance/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Archivos subidos por usuarios (datos personales: nunca en git)
+app/static/uploads/
+
+# Respaldo de bytecode de la versión anterior (recuperación)
+_recuperacion_bytecode/
+
+# Editor
 .vscode/
+
+# Configuración local del asistente de desarrollo (rutas de este equipo)
+.claude/

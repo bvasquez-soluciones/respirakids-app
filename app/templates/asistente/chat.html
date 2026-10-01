@@ -9,10 +9,14 @@
   <div class="rk-chat-warning">
     <span class="icon">⚠️</span>
     <div>
-      <strong>Aviso importante:</strong> Esta IA proporciona información
-      educativa general y no sustituye el consejo, diagnóstico o tratamiento
-      médico. En caso de emergencia, contacta a los servicios de salud
-      inmediatamente.
+      <strong>Aviso importante:</strong> El asistente responde solo con la información de la
+      Herramienta Clínica de primera infancia (AIEPI) del Ministerio de Salud y Protección Social y cita
+      la fuente. No diagnostica, no recomienda medicamentos y no reemplaza a un profesional de salud.
+      En caso de emergencia, acude a un servicio de salud de inmediato.
+      <br /><span class="small">
+        🔒 Tus preguntas se procesan con un proveedor externo de IA. No escribas nombres, documentos ni
+        otros datos personales; RespiraKids retira automáticamente los que reconoce.
+      </span>
     </div>
   </div>
 
@@ -21,9 +25,14 @@
       <div class="rk-msg-row">
         <div class="rk-msg-avatar">🤖</div>
         <div class="rk-msg-bubble">
-          ¡Hola! Soy tu asistente de RespiraKids. Estoy aquí para ayudarte con
-          información general sobre cuidados respiratorios y señales de alerta.
-          ¿En qué puedo orientarte hoy?
+          {% if contexto %}
+          Hola. Puedes preguntarme sobre la evaluación de nivel <strong>{{ contexto.nivel }}</strong>
+          {% if contexto.senales %}(señales: {{ contexto.senales|join(', ') }}){% endif %}.
+          Te responderé con la información de la fuente clínica, sin cambiar esa clasificación.
+          {% else %}
+          ¡Hola! Soy el asistente de RespiraKids. Respondo con la información de la fuente clínica oficial
+          sobre infecciones respiratorias y fiebre en la primera infancia. ¿Qué quieres saber?
+          {% endif %}
         </div>
       </div>
     </div>
@@ -34,28 +43,28 @@
         <button
           type="button"
           class="rk-quick-card"
-          data-pregunta="¿Cómo puedo manejar la fiebre de mi hijo en casa?"
+          data-pregunta="¿Cuándo debo consultar por fiebre?"
         >
-          <span class="icon">🌡️</span>¿Cómo manejar la fiebre en casa?
+          <span class="icon">🌡️</span>¿Cuándo consultar por fiebre?
         </button>
         <button
           type="button"
           class="rk-quick-card"
-          data-pregunta="¿Cuáles son las señales de dificultad respiratoria en un niño?"
+          data-pregunta="¿Cuáles son los signos de alarma de la neumonía?"
         >
-          <span class="icon">😮‍💨</span>Señales de dificultad respiratoria
+          <span class="icon">😮‍💨</span>Signos de alarma respiratorios
         </button>
         <button
           type="button"
           class="rk-quick-card"
-          data-pregunta="¿Cuál es el uso correcto de un inhalador en niños?"
+          data-pregunta="¿Qué es la bronquiolitis?"
         >
-          <span class="icon">💊</span>Uso correcto del inhalador
+          <span class="icon">🫁</span>¿Qué es la bronquiolitis?
         </button>
         <button
           type="button"
           class="rk-quick-card"
-          data-pregunta="¿Qué medidas de prevención puedo tomar en casa?"
+          data-pregunta="¿Qué medidas de prevención describe la fuente?"
         >
           <span class="icon">🛡️</span>Medidas de prevención
         </button>
@@ -66,11 +75,13 @@
       <input
         type="text"
         id="input-pregunta"
-        placeholder="Escribe tu pregunta sobre cuidados..."
+        placeholder="Escribe tu pregunta..."
+        aria-label="Tu pregunta para el asistente"
         autocomplete="off"
+        maxlength="1000"
         required
       />
-      <button type="submit" class="rk-chat-send-btn" id="btn-enviar">➤</button>
+      <button type="submit" class="rk-chat-send-btn" id="btn-enviar" aria-label="Enviar pregunta">➤</button>
     </form>
   </div>
 </div>
@@ -126,7 +137,30 @@
     return texto.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   }
 
-  function agregarMensaje(texto, esUsuario) {
+  function agregarFuentes(bubble, fuentes) {
+    if (!fuentes || !fuentes.length) return;
+    const lista = document.createElement("div");
+    lista.className = "rk-msg-fuentes";
+    lista.innerHTML = "<strong>Fuentes:</strong>";
+    const ul = document.createElement("ol");
+    fuentes.forEach((f) => {
+      const li = document.createElement("li");
+      li.value = f.n;
+      if (f.url) {
+        const a = document.createElement("a");
+        a.href = f.url; a.target = "_blank"; a.rel = "noopener";
+        a.textContent = f.titulo;
+        li.appendChild(a);
+      } else {
+        li.textContent = f.titulo;
+      }
+      ul.appendChild(li);
+    });
+    lista.appendChild(ul);
+    bubble.appendChild(lista);
+  }
+
+  function agregarMensaje(texto, esUsuario, fuentes) {
     const row = document.createElement("div");
     row.className = "rk-msg-row" + (esUsuario ? " user" : "");
 
@@ -140,6 +174,7 @@
       ? escapeHtml(texto)
       : formatearRespuesta(texto);
 
+    if (!esUsuario) agregarFuentes(bubble, fuentes);
     row.appendChild(avatar);
     row.appendChild(bubble);
     chatBox.appendChild(row);
@@ -166,7 +201,7 @@
     mostrarEscribiendo();
 
     try {
-      const res = await fetch("/asistente/preguntar", {
+      const res = await fetch("{{ url_for('asistente.preguntar') }}", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,13 +209,18 @@
         },
         body: JSON.stringify({ pregunta: pregunta }),
       });
-      const data = await res.json();
       quitarEscribiendo();
+      if (res.status === 429) {
+        agregarMensaje("⚠️ Has hecho muchas preguntas seguidas. Espera un momento e inténtalo de nuevo.", false);
+        btnEnviar.disabled = false;
+        return;
+      }
+      const data = await res.json();
 
       if (data.error) {
         agregarMensaje("⚠️ " + data.error, false);
       } else {
-        agregarMensaje(data.respuesta, false);
+        agregarMensaje(data.respuesta, false, data.fuentes);
       }
     } catch (err) {
       quitarEscribiendo();

@@ -1,0 +1,48 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Base de conocimiento - Administración{% endblock %}
+{% block admin %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div class="d-flex gap-1" role="group" aria-label="Filtrar">
+    {% for valor, texto in (('activos', 'Activos'), ('inactivos', 'Inactivos'), ('todos', 'Todos')) %}
+    <a class="btn btn-sm {{ 'btn-secondary' if filtro == valor else 'btn-outline-secondary' }}"
+      href="{{ url_for('admin.conocimiento', filtro=valor) }}">{{ texto }}</a>
+    {% endfor %}
+  </div>
+  <form method="POST" action="{{ url_for('admin.reimportar_conocimiento') }}"
+    onsubmit="return confirm('¿Volver a importar el documento maestro? Se desactivará todo contenido que no provenga de él.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="btn btn-sm btn-outline-primary">Reimportar documento maestro</button>
+  </form>
+</div>
+<div class="rk-panel">
+  <p class="small text-muted">
+    El documento maestro (docs/fuentes/) es la única fuente autorizada del asistente. Desactivar una entrada no la
+    borra; el asistente simplemente deja de usarla.
+  </p>
+  {% if entradas %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0 small">
+      <thead><tr><th>Título</th><th>Fuente</th><th>Visibilidad</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        {% for e in entradas %}
+        <tr>
+          <td><strong>{{ e.titulo }}</strong><br /><span class="text-muted">{{ e.contenido|truncate(110) }}</span></td>
+          <td>{% if e.fuente and e.fuente.url %}<a href="{{ e.fuente.url }}" target="_blank" rel="noopener">{{ e.fuente.nombre|truncate(50) }}</a>{% else %}{{ e.fuente.nombre if e.fuente else '—' }}{% endif %}</td>
+          <td>{% if e.restricciones == SOLO_PROFESIONAL %}<span class="badge text-bg-warning">Solo profesionales</span>{% else %}Todos{% endif %}</td>
+          <td>{{ 'Activo' if e.activo else 'Inactivo' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.alternar_conocimiento', entrada_id=e.id, filtro=filtro) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn btn-sm btn-link p-0">{{ 'Desactivar' if e.activo else 'Activar' }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No hay entradas.</p>
+  {% endif %}
+</div>
+{% endblock %}

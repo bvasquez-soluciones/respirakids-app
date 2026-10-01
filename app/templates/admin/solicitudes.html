@@ -1,0 +1,47 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Solicitudes de datos - Administración{% endblock %}
+{% block admin %}
+{% set filtros = [('abiertas', 'Abiertas'), ('resuelta', 'Resueltas'), ('rechazada', 'Rechazadas'), ('', 'Todas')] %}
+<div class="d-flex flex-wrap gap-1 mb-3" role="group" aria-label="Filtrar por estado">
+  {% for valor, texto in filtros %}
+  <a class="btn btn-sm {{ 'btn-secondary' if estado == valor else 'btn-outline-secondary' }}"
+    href="{{ url_for('admin.solicitudes', estado=valor) }}">{{ texto }}</a>
+  {% endfor %}
+</div>
+<div class="rk-panel">
+  {% if solicitudes %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Radicada</th><th>Titular</th><th>Tipo</th><th>Estado</th><th>Plazo legal</th><th></th></tr></thead>
+      <tbody>
+        {% for s in solicitudes %}
+        {% set restantes = dias_restantes(s, hoy) %}
+        {% set persona = titular(s) %}
+        <tr>
+          <td class="small">{{ s.fecha_solicitud|fecha }}</td>
+          <td class="small">{{ persona.nombre_completo if persona else '—' }}<br /><span class="text-muted">{{ s.usuario_tipo }}</span></td>
+          <td class="small">{{ s.tipo_texto }}</td>
+          <td><span class="badge text-bg-light border">{{ s.estado.replace('_', ' ') }}</span></td>
+          <td class="small">
+            {{ fecha_limite(s)|fecha }}
+            {% if s.estado in ('pendiente', 'en_tramite') %}
+              {% if restantes < 0 %}<span class="badge text-bg-danger">Vencida hace {{ -restantes }} día(s)</span>
+              {% elif restantes <= 3 %}<span class="badge text-bg-warning">Quedan {{ restantes }} día(s)</span>
+              {% else %}<span class="text-muted">({{ restantes }} días)</span>{% endif %}
+            {% endif %}
+          </td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.solicitud', solicitud_id=s.id) }}">Atender</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No hay solicitudes con este filtro.</p>
+  {% endif %}
+</div>
+<p class="rk-nota-fuente">
+  Plazos de la Ley 1581 de 2012: consultas 10 días hábiles; reclamos (rectificación, supresión, revocatoria) 15 días
+  hábiles. El cálculo cuenta de lunes a viernes y no descuenta festivos, por lo que puede ser más corto que el legal.
+</p>
+{% endblock %}

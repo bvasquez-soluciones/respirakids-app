@@ -1,0 +1,55 @@
+{# Ficha del modelo ML complementario. Requiere: ficha (dict o None), habilitado (bool), concordancia (dict). #}
+<div class="alert alert-warning">
+  <strong>Modelo experimental entrenado con datos SINTÉTICOS.</strong> No tiene validación clínica, no modifica la
+  clasificación por reglas y no se muestra a los cuidadores.
+  Estado en este servidor: <strong>{{ 'activado' if habilitado else 'desactivado' }}</strong>.
+</div>
+{% if ficha %}
+{% set met = ficha.metricas_prueba %}
+<div class="rk-ficha-grid">
+  <section class="rk-panel">
+    <h2 class="h6">Modelo</h2>
+    <dl class="rk-datos mb-0">
+      <dt>Versión</dt><dd><code>{{ ficha.version }}</code></dd>
+      <dt>Algoritmo</dt><dd>{{ ficha.algoritmo }}</dd>
+      <dt>Entrenado</dt><dd>{{ ficha.fecha_entrenamiento }}</dd>
+      <dt>Datos</dt><dd>{{ ficha.dataset.tipo }} · {{ ficha.dataset.filas }} filas</dd>
+      <dt>Etiquetas</dt><dd>{{ ficha.dataset.etiquetado_por }}</dd>
+      <dt>Variables</dt><dd>{{ ficha.variables|length }} (las mismas del motor clínico)</dd>
+    </dl>
+  </section>
+  <section class="rk-panel">
+    <h2 class="h6">Métricas en datos sintéticos de prueba</h2>
+    <dl class="rk-datos mb-2">
+      <dt>Exactitud</dt><dd>{{ '%.1f'|format(met.exactitud * 100) }} %</dd>
+      <dt>F1 macro</dt><dd>{{ '%.3f'|format(met.f1_macro) }}</dd>
+      {% for clase, valor in met.sensibilidad_por_clase.items() %}
+      <dt>Sensibilidad {{ clase }}</dt><dd>{{ '%.1f'|format(valor * 100) }} %</dd>
+      {% endfor %}
+      <dt>Rojos predichos como verde</dt><dd><strong>{{ met.rojos_predichos_como_verde }}</strong></dd>
+    </dl>
+    <p class="rk-nota-fuente mb-0">Miden qué tan bien imita las reglas, no su capacidad de predecir riesgo real.</p>
+  </section>
+</div>
+<section class="rk-panel mt-3">
+  <h2 class="h6">Concordancia con las reglas en evaluaciones reales</h2>
+  {% if concordancia %}
+  <table class="table table-sm mb-0">
+    <thead><tr><th>Versión del modelo</th><th>Predicciones</th><th>Coinciden con las reglas</th><th>Rojo de las reglas no detectado por ML</th></tr></thead>
+    <tbody>
+      {% for version, fila in concordancia.items() %}
+      <tr><td><code>{{ version }}</code></td><td>{{ fila.total }}</td><td>{{ fila.coinciden }} ({{ fila.porcentaje }} %)</td><td>{{ fila.rojo_no_detectado }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="small text-muted mb-0">Aún no hay evaluaciones con predicción ML.</p>
+  {% endif %}
+</section>
+<section class="rk-panel mt-3">
+  <h2 class="h6">Limitaciones</h2>
+  <ul class="small mb-0">{% for l in ficha.limitaciones %}<li>{{ l }}</li>{% endfor %}</ul>
+</section>
+{% else %}
+<p class="text-muted">No hay un modelo entrenado en este servidor. Ver <code>flask ml generar-dataset</code> y <code>flask ml entrenar</code>.</p>
+{% endif %}

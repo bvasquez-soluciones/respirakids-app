@@ -1,0 +1,101 @@
+{#
+  Macros de formularios de RespiraKids.
+
+  Convenciones (aplican a TODOS los formularios):
+  - Cada campo tiene una etiqueta visible asociada (<label for>), nunca solo un placeholder.
+  - Los obligatorios se marcan con * (y "obligatorio" para lectores de pantalla); los opcionales dicen "(opcional)".
+    Se determina con field.flags.required, es decir, con la misma regla que valida el servidor.
+  - Al inicio del formulario se explica la convención: "* Campos obligatorios".
+  - Los errores se muestran junto a su campo (aria-invalid + aria-describedby) y en un resumen al inicio,
+    con enlaces a cada campo.
+  - Los textos de ayuda se asocian al campo con aria-describedby.
+#}
+
+{% macro nota_obligatorios() -%}
+<p class="rk-nota-obligatorios">Los campos marcados con <span class="rk-requerido" aria-hidden="true">*</span> son obligatorios.</p>
+{%- endmacro %}
+
+{% macro resumen_errores(form) -%}
+{% set errores = [] %}
+{% for field in form if field.errors and field.type not in ('CSRFTokenField', 'HiddenField') %}
+  {% if field.type == 'FieldList' %}
+    {# Subformularios repetidos: se indica a cuál pertenece el error (p. ej. "Medicamento 2 · Dosis"). #}
+    {% for entrada in field %}{% set numero = loop.index %}
+      {% for sub in entrada.form if sub.errors %}
+        {% set _ = errores.append((sub, field.label.text|capitalize ~ ' ' ~ numero ~ ' · ' ~ sub.label.text)) %}
+      {% endfor %}
+    {% endfor %}
+  {% else %}
+    {% set _ = errores.append((field, field.label.text)) %}
+  {% endif %}
+{% endfor %}
+{% if errores %}
+<div class="alert alert-danger rk-resumen-errores" role="alert" tabindex="-1" id="resumen-errores">
+  <p class="fw-semibold mb-1">Revisa {{ 'el siguiente campo' if errores|length == 1 else 'los siguientes campos' }}:</p>
+  <ul class="mb-0">
+    {% for field, etiqueta in errores %}
+    <li><a href="#{{ field.id }}" class="alert-link">{{ etiqueta }}</a>: {{ field.errors[0] }}</li>
+    {% endfor %}
+  </ul>
+</div>
+<script>document.getElementById('resumen-errores').focus();</script>
+{% endif %}
+{%- endmacro %}
+
+{% macro marca(field) -%}
+{% if field.flags.required %}<span class="rk-requerido" aria-hidden="true"> *</span><span class="visually-hidden"> (obligatorio)</span>{% else %} <span class="rk-opcional">(opcional)</span>{% endif %}
+{%- endmacro %}
+
+{% macro etiqueta(field, clase='form-label', marcar=True) -%}
+<label for="{{ field.id }}" class="{{ clase }}">{{ field.label.text }}{% if marcar %}{{ marca(field) }}{% endif %}</label>
+{%- endmacro %}
+
+{% macro ayuda_y_error(field) -%}
+{% if field.description %}<div id="{{ field.id }}-ayuda" class="form-text">{{ field.description }}</div>{% endif %}
+{% if field.errors %}<div id="{{ field.id }}-error" class="rk-campo-error">{{ field.errors[0] }}</div>{% endif %}
+{%- endmacro %}
+
+{#- Campo estándar (Bootstrap). Acepta atributos HTML extra como kwargs, p. ej. max='2026-01-01'. -#}
+{% macro campo(field, clase_contenedor='mb-3', marcar=True) -%}
+{%- set clase = 'form-select' if field.type == 'SelectField' else 'form-control' -%}
+<div class="{{ clase_contenedor }}">
+  {{ etiqueta(field, marcar=marcar) }}
+  {{ field(**atributos_campo(field, kwargs, clase)) }}
+  {{ ayuda_y_error(field) }}
+</div>
+{%- endmacro %}
+
+{#- Campo con el estilo de las pantallas de acceso (icono a la izquierda). -#}
+{% macro campo_auth(field, icono, mostrar_password=False) -%}
+<div class="rk-input-group">
+  {{ etiqueta(field, clase='') }}
+  <div class="rk-input-wrap{{ ' is-invalid' if field.errors }}">
+    <span class="rk-input-icon" aria-hidden="true">{{ icono }}</span>
+    {{ field(**atributos_campo(field, kwargs)) }}
+    {% if mostrar_password %}
+    <button type="button" class="rk-toggle-password" data-mostrar-password="{{ field.id }}"
+      aria-label="Mostrar u ocultar contraseña">👁️</button>
+    {% endif %}
+  </div>
+  {{ ayuda_y_error(field) }}
+</div>
+{%- endmacro %}
+
+{#- Casilla de verificación con texto largo (usar con {% call %}). -#}
+{% macro casilla(field, clase_contenedor='form-check mb-3') -%}
+<div class="{{ clase_contenedor }}">
+  {{ field(**atributos_campo(field, None, 'form-check-input')) }}
+  <label class="form-check-label" for="{{ field.id }}">{{ caller() }}{{ marca(field) }}</label>
+  {{ ayuda_y_error(field) }}
+</div>
+{%- endmacro %}
+
+
+{#- Opción de una lista de "marca lo que observes" (casilla con su texto de ayuda, sin marca de obligatoriedad). -#}
+{% macro opcion(field) -%}
+<div class="form-check rk-opcion">
+  {{ field(**atributos_campo(field, None, 'form-check-input')) }}
+  <label class="form-check-label" for="{{ field.id }}">{{ field.label.text }}</label>
+  {{ ayuda_y_error(field) }}
+</div>
+{%- endmacro %}

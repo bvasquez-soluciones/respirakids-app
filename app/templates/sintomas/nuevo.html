@@ -1,288 +1,106 @@
-{% extends "base.html" %} {% block title %}Registrar Síntomas - RespiraKids{%
-endblock %} {% block extra_css %}
-<link
-  href="{{ url_for('static', filename='css/dashboard.css') }}"
-  rel="stylesheet"
-/>
-{% endblock %} {% block content %}
-<div class="rk-dash-wrap">
-  <h4 class="mb-1">Registrar Síntomas</h4>
-  <p class="text-muted mb-4">Paciente: {{ nino.nombre_ficticio }}</p>
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo, opcion, resumen_errores %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Registrar síntomas de {{ nino.nombre }} - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-detalle">
+  <header class="rk-detalle__cabecera">
+    {{ avatar(nino, None, 56) }}
+    <div>
+      <h1 class="h4 mb-0">Registrar síntomas</h1>
+      <p class="text-muted small mb-0">{{ nino.nombre_completo }} · {{ nino.edad_texto() }}</p>
+    </div>
+  </header>
 
-  <div class="rk-wizard-progress">
-    <div class="rk-wizard-step-col">
-      <div class="rk-wizard-step-dot active" id="dot-1">1</div>
-      <div class="rk-wizard-step-label active" id="label-1">Síntomas</div>
-    </div>
-    <div class="rk-wizard-line" id="line-1"></div>
-    <div class="rk-wizard-step-col">
-      <div class="rk-wizard-step-dot" id="dot-2">2</div>
-      <div class="rk-wizard-step-label" id="label-2">Detalles</div>
-    </div>
-    <div class="rk-wizard-line" id="line-2"></div>
-    <div class="rk-wizard-step-col">
-      <div class="rk-wizard-step-dot" id="dot-3">3</div>
-      <div class="rk-wizard-step-label" id="label-3">Contexto</div>
-    </div>
+  <div class="alert alert-danger small mb-0" id="aviso-alarma" role="alert" hidden>
+    <strong>Marcaste un signo de alarma.</strong> Busca atención en un servicio de salud de inmediato;
+    no es necesario terminar este registro primero.
   </div>
 
-  <form method="POST" id="form-sintomas">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <form method="POST" novalidate class="rk-form-sintomas">
+    {{ form.csrf_token }}
+    <p class="rk-nota-obligatorios">Ningún campo es obligatorio: responde solo lo que hayas observado.</p>
+    {{ resumen_errores(form) }}
 
-    <!-- PASO 1: SÍNTOMAS -->
-    <div class="rk-wizard-panel active" id="panel-1">
-      <h5>¿Qué síntomas presenta?</h5>
-      <p class="text-muted small mb-3">
-        Selecciona todos los que apliquen para llevar un registro preciso.
-      </p>
-
-      <div class="rk-symptom-grid">
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="tos" />
-          <div class="icon">🌬️</div>
-          <div class="label">Tos seca</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="fiebre_flag" id="fiebre_flag" />
-          <div class="icon">🌡️</div>
-          <div class="label">Fiebre</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="dificultad_respiratoria" />
-          <div class="icon">😮‍💨</div>
-          <div class="label">Dificultad respiratoria</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="congestion_nasal" />
-          <div class="icon">👃</div>
-          <div class="label">Congestión</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="estornudos" />
-          <div class="icon">🤧</div>
-          <div class="label">Estornudos</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="irritabilidad" />
-          <div class="icon">😣</div>
-          <div class="label">Irritabilidad</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="respiracion_rapida" />
-          <div class="icon">💨</div>
-          <div class="label">Respiración rápida</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="secrecion_nasal" />
-          <div class="icon">💧</div>
-          <div class="label">Secreción nasal</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="dolor_garganta" />
-          <div class="icon">🗣️</div>
-          <div class="label">Dolor de garganta</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="decaimiento" />
-          <div class="icon">😴</div>
-          <div class="label">Decaimiento</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="perdida_apetito" />
-          <div class="icon">🍽️</div>
-          <div class="label">Pérdida de apetito</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="vomito" />
-          <div class="icon">🤢</div>
-          <div class="label">Vómito</div>
-        </label>
-        <label class="rk-symptom-card" data-card>
-          <input type="checkbox" name="diarrea" />
-          <div class="icon">🚽</div>
-          <div class="label">Diarrea</div>
-        </label>
+    {% for clave, titulo, ayuda, campos in form.GRUPOS %}
+    <fieldset class="rk-panel rk-grupo-sintomas{{ ' rk-grupo-sintomas--alarma' if clave == 'alarma' }}" id="grupo-{{ clave }}">
+      <legend class="h6">{{ titulo }}</legend>
+      {% if ayuda %}<p class="small text-muted">{{ ayuda }}</p>{% endif %}
+      <div class="rk-opciones">
+        {% for nombre in campos %}
+          {% set field = form[nombre] %}
+          {% if field.type == 'BooleanField' %}
+            {{ opcion(field) }}
+          {% endif %}
+        {% endfor %}
       </div>
-
-      <div class="d-flex justify-content-end">
-        <button type="button" class="btn-rk-primary" onclick="irAPaso(2)">
-          Continuar →
-        </button>
+      <div class="row mt-2">
+        {% for nombre in campos %}
+          {% set field = form[nombre] %}
+          {% if field.type != 'BooleanField' %}
+            {{ campo(field, 'col-md-6 mb-3' if field.type != 'TextAreaField' else 'col-12 mb-3', marcar=False) }}
+            {% if nombre == 'frecuencia_respiratoria' %}
+            <div class="col-md-6 mb-3 d-flex align-items-end">
+              <div>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-contador">
+                  ⏱️ Contar respiraciones durante 1 minuto
+                </button>
+                <p class="small text-muted mb-0 mt-1" id="estado-contador" aria-live="polite"></p>
+              </div>
+            </div>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
       </div>
-    </div>
+    </fieldset>
+    {% endfor %}
 
-    <!-- PASO 2: DETALLES -->
-    <div class="rk-wizard-panel" id="panel-2">
-      <h5>Detalles del malestar</h5>
-      <p class="text-muted small mb-3">Ayúdanos a entender la intensidad.</p>
-
-      <div class="rk-severity-box">
-        <label class="fw-bold small">Nivel de severidad general</label>
-        <input
-          type="range"
-          name="severidad"
-          id="severidad"
-          min="1"
-          max="10"
-          value="5"
-        />
-        <div class="rk-severity-labels">
-          <span>Leve</span><span>Moderado</span><span>Severo</span>
-        </div>
-        <span class="rk-severity-badge" id="severidad-badge"
-          >Moderado (5/10)</span
-        >
-      </div>
-
-      <div class="rk-severity-box" id="box-temperatura" style="display: none">
-        <label class="fw-bold small">Temperatura registrada (°C)</label>
-        <input
-          type="number"
-          step="0.1"
-          name="temperatura"
-          class="form-control mt-2"
-          placeholder="Ej. 38.5"
-        />
-      </div>
-
-      <div class="rk-severity-box">
-        <label class="fw-bold small mb-2 d-block"
-          >¿Desde cuándo presenta síntomas?</label
-        >
-        <div class="rk-pill-group">
-          <label class="rk-pill-option selected" data-pill>
-            <input type="radio" name="inicio_sintomas" value="hoy" checked />
-            Hoy
-          </label>
-          <label class="rk-pill-option" data-pill>
-            <input type="radio" name="inicio_sintomas" value="ayer" /> Ayer
-          </label>
-          <label class="rk-pill-option" data-pill>
-            <input type="radio" name="inicio_sintomas" value="2_3_dias" /> Hace
-            2-3 días
-          </label>
-          <label class="rk-pill-option" data-pill>
-            <input type="radio" name="inicio_sintomas" value="mas_3_dias" /> Más
-            de 3 días
-          </label>
-        </div>
-      </div>
-
-      <div class="d-flex justify-content-between">
-        <button type="button" class="btn btn-link" onclick="irAPaso(1)">
-          ← Atrás
-        </button>
-        <button type="button" class="btn-rk-primary" onclick="irAPaso(3)">
-          Continuar →
-        </button>
-      </div>
-    </div>
-
-    <!-- PASO 3: CONTEXTO -->
-    <div class="rk-wizard-panel" id="panel-3">
-      <h5>Condiciones Previas</h5>
-      <p class="text-muted small mb-3">
-        Esta información ayuda a personalizar las recomendaciones.
-      </p>
-
-      <label class="rk-condition-card" data-card>
-        <input type="checkbox" name="condicion_asma" />
-        <div>
-          <div class="title">Asma diagnosticada</div>
-          <div class="desc">El niño/a tiene un diagnóstico previo de asma.</div>
-        </div>
-      </label>
-      <label class="rk-condition-card" data-card>
-        <input type="checkbox" name="condicion_alergias" />
-        <div>
-          <div class="title">Alergias respiratorias</div>
-          <div class="desc">Sensibilidad a polvo, polen, ácaros u otros.</div>
-        </div>
-      </label>
-
-      <div class="mt-3 mb-3">
-        <label class="fw-bold small mb-2 d-block"
-          >Notas adicionales (opcional)</label
-        >
-        <textarea
-          name="observaciones"
-          class="form-control"
-          rows="3"
-          placeholder="Ej. Ha estado expuesto a humo, no ha querido comer..."
-        ></textarea>
-      </div>
-
-      <div class="d-flex justify-content-between">
-        <button type="button" class="btn btn-link" onclick="irAPaso(2)">
-          ← Atrás
-        </button>
-        <button type="submit" class="btn-rk-primary">Guardar Registro ✓</button>
-      </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="submit" class="btn btn-primary">Guardar y ver orientación</button>
+      <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link">Cancelar</a>
     </div>
   </form>
 </div>
 
 <script>
-  function irAPaso(n) {
-    document
-      .querySelectorAll(".rk-wizard-panel")
-      .forEach((p) => p.classList.remove("active"));
-    document.getElementById("panel-" + n).classList.add("active");
+  (function () {
+    // Aviso inmediato si se marca cualquier signo de alarma.
+    const aviso = document.getElementById("aviso-alarma");
+    const alarmas = document.querySelectorAll("#grupo-alarma input[type=checkbox]");
+    const revisar = () => { aviso.hidden = ![...alarmas].some((c) => c.checked); };
+    alarmas.forEach((c) => c.addEventListener("change", revisar));
+    revisar();
 
-    for (let i = 1; i <= 3; i++) {
-      const dot = document.getElementById("dot-" + i);
-      const label = document.getElementById("label-" + i);
-      dot.classList.remove("active", "done");
-      label.classList.remove("active");
-      if (i < n) dot.classList.add("done");
-      if (i === n) {
-        dot.classList.add("active");
-        label.classList.add("active");
+    // Contador de 60 segundos: la fuente indica medir la frecuencia respiratoria durante 1 minuto.
+    const boton = document.getElementById("btn-contador");
+    const estado = document.getElementById("estado-contador");
+    const campo = document.getElementById("frecuencia_respiratoria");
+    let intervalo = null;
+    boton.addEventListener("click", () => {
+      if (intervalo) {
+        clearInterval(intervalo); intervalo = null;
+        boton.textContent = "⏱️ Contar respiraciones durante 1 minuto";
+        estado.textContent = "Conteo cancelado.";
+        return;
       }
-    }
-    for (let i = 1; i <= 2; i++) {
-      document.getElementById("line-" + i).classList.toggle("done", i < n);
-    }
-  }
-
-  // Tarjetas seleccionables (síntomas y condiciones)
-  document.querySelectorAll("[data-card]").forEach((card) => {
-    card.addEventListener("click", () => {
-      const input = card.querySelector("input");
-      setTimeout(() => card.classList.toggle("selected", input.checked), 0);
+      let restantes = 60;
+      boton.textContent = "Cancelar conteo";
+      estado.textContent = "Cuenta cada vez que el pecho sube. Quedan 60 s.";
+      intervalo = setInterval(() => {
+        restantes -= 1;
+        if (restantes > 0) {
+          estado.textContent = "Cuenta cada vez que el pecho sube. Quedan " + restantes + " s.";
+          return;
+        }
+        clearInterval(intervalo); intervalo = null;
+        boton.textContent = "⏱️ Contar de nuevo";
+        estado.textContent = "¡Tiempo! Escribe cuántas respiraciones contaste.";
+        campo.focus();
+      }, 1000);
     });
-  });
-
-  // Pills de "desde cuándo"
-  document.querySelectorAll("[data-pill]").forEach((pill) => {
-    pill.addEventListener("click", () => {
-      document
-        .querySelectorAll("[data-pill]")
-        .forEach((p) => p.classList.remove("selected"));
-      pill.classList.add("selected");
-    });
-  });
-
-  // Slider de severidad
-  const severidadInput = document.getElementById("severidad");
-  const badge = document.getElementById("severidad-badge");
-  function actualizarSeveridad() {
-    const v = parseInt(severidadInput.value);
-    let texto = "Leve";
-    if (v >= 4 && v <= 7) texto = "Moderado";
-    if (v >= 8) texto = "Severo";
-    badge.textContent = `${texto} (${v}/10)`;
-  }
-  severidadInput.addEventListener("input", actualizarSeveridad);
-  actualizarSeveridad();
-
-  // Mostrar campo de temperatura si se marcó "Fiebre" en el paso 1
-  document
-    .getElementById("fiebre_flag")
-    .addEventListener("change", function () {
-      document.getElementById("box-temperatura").style.display = this.checked
-        ? "block"
-        : "none";
-    });
+  })();
 </script>
 {% endblock %}

@@ -183,3 +183,18 @@
 .rk-auth-links a:hover {
   color: var(--rk-deep);
 }
+
+/* Campos en dos columnas (p. ej. Nombres y Apellidos); en móvil pasan a una columna. */
+.rk-auth-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+@media (max-width: 480px) {
+  .rk-auth-fila {
+    grid-template-columns: 1fr;
+  }
+}
+.rk-input-wrap.is-invalid input {
+  border-color: #c0392b;
+}

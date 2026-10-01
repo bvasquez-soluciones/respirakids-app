@@ -1,88 +1,54 @@
-{% extends "base.html" %} {% block title %}Panel Cuidador - RespiraKids{%
-endblock %} {% block extra_css %}
-<link
-  href="{{ url_for('static', filename='css/dashboard.css') }}"
-  rel="stylesheet"
-/>
-{% endblock %} {% block content %} {% set mapa_emoji = {'verde': '🙂',
-'amarillo': '😐', 'rojo': '😟'} %} {% set mapa_texto = {'verde': 'Todo bajo
-control', 'amarillo': 'Requiere vigilancia', 'rojo': 'Posible señal de alarma'}
-%}
-
-<div class="rk-dash-wrap">
-  <div
-    class="rk-status-card rk-status-card--{{ ultima_evaluacion.nivel_riesgo if ultima_evaluacion else 'neutral' }}"
-  >
+{% extends "base.html" %}
+{% block title %}Inicio - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-inicio">
+  <header class="rk-inicio__saludo">
     <div>
-      <div class="text-muted small">Estado Actual</div>
-      {% if ultima_evaluacion %}
-      <div class="fw-bold">
-        {{ mapa_texto[ultima_evaluacion.nivel_riesgo] }}
-      </div>
-      <div class="small text-muted">
-        {{ ultima_evaluacion.nino.nombre_ficticio }} · {{
-        ultima_evaluacion.fecha.strftime('%d/%m %H:%M') }}
-      </div>
-      {% else %}
-      <div class="fw-bold">Sin registros aún</div>
-      <div class="small text-muted">
-        Registra el primer síntoma para ver el estado
-      </div>
-      {% endif %}
+      <h1 class="h3 mb-0">Hola, {{ usuario.nombre.split()[0] }}</h1>
+      <p class="text-muted mb-0">
+        {% if resumenes %}Este es el estado de {{ 'tu niño/a' if resumenes|length == 1 else 'tus niños' }}.
+        {% else %}Bienvenido/a a RespiraKids.{% endif %}
+      </p>
     </div>
-    <div class="rk-status-emoji">
-      {{ mapa_emoji[ultima_evaluacion.nivel_riesgo] if ultima_evaluacion else
-      '🫁' }}
-    </div>
-  </div>
+    <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-outline-primary btn-sm">+ Registrar niño/a</a>
+  </header>
 
-  {% if ninos %} {% if ninos|length == 1 %}
-  <a
-    href="{{ url_for('sintomas.nuevo', nino_id=ninos[0].id) }}"
-    class="rk-cta-pill"
-    >+ Registrar Nuevos Síntomas</a
-  >
+  {% if resumenes %}
+  <div class="rk-ninos-grid">
+    {% for r in resumenes %}{% include "dashboard/_tarjeta_nino.html" %}{% endfor %}
+  </div>
   {% else %}
-  <a href="{{ url_for('pacientes.listar') }}" class="rk-cta-pill"
-    >+ Registrar Nuevos Síntomas</a
-  >
-  {% endif %} {% else %}
-  <a href="{{ url_for('pacientes.nuevo') }}" class="rk-cta-pill"
-    >+ Registrar tu primer paciente</a
-  >
+  <section class="rk-vacio">
+    <p class="h5">Aún no has registrado ningún niño o niña</p>
+    <p class="text-muted">Regístralo para llevar su historial de síntomas y recibir orientación según su estado.</p>
+    <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary">Registrar niño/a</a>
+  </section>
   {% endif %}
 
-  <div class="rk-dash-grid">
-    <div class="rk-panel">
-      <h6>🕐 Últimos Síntomas</h6>
-      {% if ultimos_sintomas %} {% for r in ultimos_sintomas %}
-      <div class="rk-sintoma-item">
-        <div class="nino-name">{{ r.nino.nombre_ficticio }}</div>
-        <div class="fecha">{{ r.fecha.strftime('%d/%m %H:%M') }}</div>
-        {% if r.evaluacion %} {% set b = {'verde': 'success', 'amarillo':
-        'warning', 'rojo': 'danger'} %}
-        <span class="badge bg-{{ b[r.evaluacion.nivel_riesgo] }} mt-1"
-          >{{ r.evaluacion.nivel_riesgo|capitalize }}</span
-        >
-        {% endif %}
-      </div>
-      {% endfor %} {% else %}
-      <p class="text-muted small mb-0">Aún no hay síntomas registrados.</p>
-      {% endif %}
-    </div>
-
-    <div class="rk-panel">
-      <h6>🤖 Asistente IA</h6>
+  <div class="rk-inicio__secundario">
+    <section class="rk-panel">
+      <h2 class="h6">🤖 Asistente IA</h2>
       <p class="text-muted small">
-        Resuelve dudas sobre prevención y cuidados generales, sin reemplazar a
-        un profesional de salud.
+        Resuelve dudas generales sobre prevención y cuidados. No diagnostica ni reemplaza a un profesional de salud.
       </p>
-      <a
-        href="{{ url_for('asistente.chat') }}"
-        class="btn btn-outline-primary btn-sm w-100"
-        >Hablar con el asistente</a
-      >
-    </div>
+      <a href="{{ url_for('asistente.chat') }}" class="btn btn-outline-primary btn-sm">Hablar con el asistente</a>
+    </section>
+    <section class="rk-panel">
+      <h2 class="h6">🚨 Ante signos de alarma</h2>
+      <p class="small mb-2">
+        Si notas hundimiento de las costillas al respirar (tiraje), coloración azulada (cianosis), que no puede
+        beber líquidos, quejido al respirar, convulsiones o alteración de la conciencia,
+        <strong>busca atención en un servicio de salud de inmediato</strong>, sin esperar a registrar los síntomas.
+      </p>
+      <p class="rk-nota-fuente mb-0">
+        Fuente: Ministerio de Salud y Protección Social,
+        <a href="https://herramientaclinicaprimerainfancia.minsalud.gov.co/modulo-6/neumonia/" target="_blank" rel="noopener">Herramienta Clínica Primera Infancia, Módulo 6</a>
+        y <a href="https://herramientaclinicaprimerainfancia.minsalud.gov.co/modulo-5/enfermedad-febril/" target="_blank" rel="noopener">Módulo 5</a>.
+      </p>
+    </section>
   </div>
 </div>
 {% endblock %}

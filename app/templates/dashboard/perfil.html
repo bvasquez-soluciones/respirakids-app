@@ -1,18 +1,42 @@
-{% extends "base.html" %} {% block title %}Mi Perfil - RespiraKids{% endblock %}
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios, resumen_errores %}
+{% block title %}Mi perfil - RespiraKids{% endblock %}
 {% block extra_css %}
-<link
-  href="{{ url_for('static', filename='css/dashboard.css') }}"
-  rel="stylesheet"
-/>
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
 {% endblock %} {% block content %}
 <div class="rk-dash-wrap">
-  <div class="rk-panel mb-3">
-    <h6>👤 Mi Perfil</h6>
-    <p class="mb-1"><strong>Nombre:</strong> {{ usuario.nombre }}</p>
-    <p class="mb-1"><strong>Correo:</strong> {{ usuario.correo }}</p>
-    <p class="mb-1"><strong>Teléfono:</strong> {{ usuario.telefono or '—' }}</p>
-    <p class="mb-0"><strong>Rol:</strong> {{ usuario.rol|capitalize }}</p>
-  </div>
+  <section class="rk-panel mb-3" aria-labelledby="titulo-datos">
+    <h1 class="h6" id="titulo-datos">👤 Mis datos</h1>
+    <form method="POST" novalidate>
+      {{ form_perfil.csrf_token }}
+      <input type="hidden" name="accion" value="actualizar_perfil" />
+      {{ nota_obligatorios() }}
+      {{ resumen_errores(form_perfil) }}
+      <div class="row">
+        {{ campo(form_perfil.nombre, 'col-sm-6 mb-3') }}
+        {{ campo(form_perfil.apellido, 'col-sm-6 mb-3') }}
+        {{ campo(form_perfil.telefono, 'col-sm-6 mb-3') }}
+        <div class="col-sm-6 mb-3">
+          <label class="form-label" for="correo">Correo electrónico</label>
+          <input class="form-control" id="correo" value="{{ usuario.correo }}" disabled aria-describedby="correo-ayuda" />
+          <div id="correo-ayuda" class="form-text">Por seguridad el correo no se puede cambiar.</div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Guardar cambios</button>
+    </form>
+  </section>
+
+  <section class="rk-panel mb-3" aria-labelledby="titulo-password">
+    <h2 class="h6" id="titulo-password">🔒 Cambiar contraseña</h2>
+    {% include "dashboard/_form_password.html" %}
+  </section>
+
+  <section class="rk-panel mb-3" aria-labelledby="titulo-privacidad">
+    <h2 class="h6" id="titulo-privacidad">🛡️ Privacidad</h2>
+    <p class="small text-muted mb-2">Descarga tus datos, gestiona autorizaciones y radica solicitudes.</p>
+    <a href="{{ url_for('privacidad.mis_datos') }}" class="btn btn-outline-secondary btn-sm">Mis datos y privacidad</a>
+  </section>
+
   <a href="{{ url_for('auth.logout') }}" class="rk-cta-pill">Cerrar sesión</a>
 </div>
 {% endblock %}

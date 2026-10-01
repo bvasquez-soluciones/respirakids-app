@@ -1,91 +1,98 @@
-from flask import render_template, redirect, url_for, flash, request, abort
-from flask_login import login_required, current_user
-from app.sintomas import sintomas_bp
-from app.decorators import rol_requerido
-from app.models import Nino, RegistroSintomas, Evaluacion
-from app.semaforo import clasificar_riesgo
-from app.ml_model import predecir_riesgo_ml
+from flask import abort, flash, redirect, render_template, request, url_for
+from flask_login import login_required
+
 from app import db
+from app.decorators import rol_requerido
+from app.forms import SintomasForm
+from app.ml.prediccion import predecir
+from app.models import Evaluacion, RegistroSintomas
+from app.clinica.motor import evaluar
+from app.presentacion import datos_complementarios, hallazgos_registrados
+from app.services.acceso import nino_del_cuidador
+from app.services.auditoria import registrar_actividad
+from app.services.resumen_nino import avisos_de_evaluacion, datos_evolucion, senales_de_evaluacion
+from app.sintomas import sintomas_bp
 
-
-def verificar_acceso_nino(nino):
-    """Verifica que el niño pertenezca al cuidador actual."""
-    if nino.cuidador_id != current_user.id:
-        abort(403)
+ROLES_CUIDADOR = ('cuidador', 'admin')
 
 
 @sintomas_bp.route('/nino/<int:nino_id>')
 @login_required
-@rol_requerido('cuidador', 'admin')
+@rol_requerido(*ROLES_CUIDADOR)
 def listar(nino_id):
-    nino = Nino.query.get_or_404(nino_id)
-    verificar_acceso_nino(nino)
-
-    registros = RegistroSintomas.query.filter_by(nino_id=nino.id).order_by(RegistroSintomas.fecha.desc()).all()
-    return render_template('sintomas/listar.html', nino=nino, registros=registros)
+    nino = nino_del_cuidador(nino_id)
+    registros = (
+        RegistroSintomas.query.filter_by(nino_id=nino.id)
+        .order_by(RegistroSintomas.fecha.desc(), RegistroSintomas.id.desc())
+        .all()
+    )
+    registrar_actividad('consultar_historial', 'nino', nino.id)
+    return render_template('sintomas/listar.html', nino=nino, registros=registros,
+                           evolucion=datos_evolucion(registros))
 
 
 @sintomas_bp.route('/nino/<int:nino_id>/nuevo', methods=['GET', 'POST'])
 @login_required
-@rol_requerido('cuidador', 'admin')
+@rol_requerido(*ROLES_CUIDADOR)
 def nuevo(nino_id):
-    nino = Nino.query.get_or_404(nino_id)
-    verificar_acceso_nino(nino)
+    nino = nino_del_cuidador(nino_id, solo_activos=True)
+    if not nino.consentimiento_otorgado:
+        flash('Antes de registrar síntomas debes autorizar el tratamiento de los datos de salud de '
+              f'{nino.nombre}.', 'warning')
+        return redirect(url_for('pacientes.consentimiento', nino_id=nino.id))
+    form = SintomasForm()
 
     if request.method == 'POST':
-        registro = RegistroSintomas(
-            nino_id=nino.id,
-            temperatura=request.form.get('temperatura') or None,
-            tos='tos' in request.form,
-            dificultad_respiratoria='dificultad_respiratoria' in request.form,
-            respiracion_rapida='respiracion_rapida' in request.form,
-            congestion_nasal='congestion_nasal' in request.form,
-            secrecion_nasal='secrecion_nasal' in request.form,
-            dolor_garganta='dolor_garganta' in request.form,
-            decaimiento='decaimiento' in request.form,
-            perdida_apetito='perdida_apetito' in request.form,
-            vomito='vomito' in request.form,
-            diarrea='diarrea' in request.form,
-            estornudos='estornudos' in request.form,
-            irritabilidad='irritabilidad' in request.form,
-            severidad=request.form.get('severidad') or None,
-            inicio_sintomas=request.form.get('inicio_sintomas') or None,
-            condicion_asma='condicion_asma' in request.form,
-            condicion_alergias='condicion_alergias' in request.form,
-            otros_sintomas=request.form.get('otros_sintomas'),
-            observaciones=request.form.get('observaciones'),
-        )
+        if not form.validate_on_submit():
+            return render_template('sintomas/nuevo.html', nino=nino, form=form), 400
 
+        registro = RegistroSintomas(nino_id=nino.id, **form.datos_registro())
         db.session.add(registro)
-        db.session.commit()
+        db.session.flush()  # asigna id y fecha sin cerrar la transacción
 
-        # Clasificación por reglas de semáforo y predicción por ML
-        nivel, motivo, recomendaciones = clasificar_riesgo(registro)
-        ml_nivel, ml_confianza = predecir_riesgo_ml(registro, nino)
+        # Clasificación clínica por reglas (determinante) y predicción ML (complementaria).
+        resultado = evaluar(registro, nino)
+        prediccion = predecir(registro, nino)
 
         evaluacion = Evaluacion(
             nino_id=nino.id,
             registro_sintomas_id=registro.id,
-            nivel_riesgo=nivel,
-            motivo=motivo,
-            recomendaciones=recomendaciones,
-            ml_nivel_riesgo=ml_nivel,
-            ml_confianza=ml_confianza
+            nivel_riesgo=resultado.nivel,
+            motivo=resultado.motivo,
+            recomendaciones=resultado.recomendaciones,
+            version_reglas=resultado.version,
+            senales_json=resultado.detalle_json(),
+            ml_nivel_riesgo=prediccion.nivel if prediccion else None,
+            ml_confianza=prediccion.confianza if prediccion else None,
+            ml_version=prediccion.version if prediccion else None,
         )
         db.session.add(evaluacion)
-        db.session.commit()
+        db.session.commit()  # registro y evaluación se guardan juntos o no se guarda nada
+        registrar_actividad('crear_evaluacion', 'nino', nino.id, detalles={
+            'registro_id': registro.id, 'evaluacion_id': evaluacion.id,
+            'nivel': resultado.nivel, 'version_reglas': resultado.version,
+            'reglas': [s['regla_id'] for s in resultado.senales],
+        })
 
         flash('Síntomas registrados correctamente.', 'success')
         return redirect(url_for('sintomas.resultado', evaluacion_id=evaluacion.id))
 
-    return render_template('sintomas/nuevo.html', nino=nino)
+    return render_template('sintomas/nuevo.html', nino=nino, form=form)
 
 
 @sintomas_bp.route('/resultado/<int:evaluacion_id>')
 @login_required
-@rol_requerido('cuidador', 'admin')
+@rol_requerido(*ROLES_CUIDADOR)
 def resultado(evaluacion_id):
-    evaluacion = Evaluacion.query.get_or_404(evaluacion_id)
-    verificar_acceso_nino(evaluacion.nino)
-
-    return render_template('sintomas/resultado.html', evaluacion=evaluacion)
+    evaluacion = db.session.get(Evaluacion, evaluacion_id)
+    if evaluacion is None:
+        abort(404)
+    nino_del_cuidador(evaluacion.nino_id)
+    registrar_actividad('consultar_evaluacion', 'evaluacion', evaluacion.id)
+    registro = evaluacion.registro_sintomas
+    return render_template(
+        'sintomas/resultado.html', evaluacion=evaluacion, registro=registro,
+        senales=senales_de_evaluacion(evaluacion), avisos=avisos_de_evaluacion(evaluacion),
+        hallazgos=hallazgos_registrados(registro),
+        complementarios=datos_complementarios(registro),
+    )
