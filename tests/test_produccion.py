@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from config import ProductionConfig
+from config import ProductionConfig, TestingConfig
 from tests.conftest import crear_cuidador, login
 
 ENTORNO_VALIDO = {
@@ -79,6 +79,11 @@ def test_archivos_de_despliegue_existen_con_finales_de_linea_lf():
 def test_produccion_redirige_http_a_https(monkeypatch):
     for clave, valor in ENTORNO_VALIDO.items():
         monkeypatch.setenv(clave, valor)
+    # La configuración lee el entorno al importarse: se aplican la clave válida y la base de pruebas
+    # (nunca la real ni la del .env).
+    monkeypatch.setattr(ProductionConfig, 'SECRET_KEY', ENTORNO_VALIDO['SECRET_KEY'])
+    monkeypatch.setattr(ProductionConfig, 'SQLALCHEMY_DATABASE_URI', TestingConfig.SQLALCHEMY_DATABASE_URI)
+    monkeypatch.setattr(ProductionConfig, 'SQLALCHEMY_ENGINE_OPTIONS', TestingConfig.SQLALCHEMY_ENGINE_OPTIONS)
     from app import create_app
     cliente = create_app('production').test_client()
     respuesta = cliente.get('/auth/login', base_url='http://respirakids.test')
