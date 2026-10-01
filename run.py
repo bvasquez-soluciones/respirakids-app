@@ -1,8 +1,7 @@
-import os
+"""Servidor de desarrollo. En producción se usa wsgi.py con Gunicorn."""
 from app import create_app
 
 app = create_app()
 
 if __name__ == '__main__':
-    modo_debug = os.environ.get('FLASK_ENV') == 'development'
-    app.run(debug=modo_debug)
+    app.run(debug=app.config.get('DEBUG', False))

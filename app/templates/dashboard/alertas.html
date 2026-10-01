@@ -11,14 +11,14 @@
   <div class="rk-patient-list">
     {% for nino, eval in pacientes_rojo %}
     <a
-      href="{{ url_for('dashboard.ver_paciente', nino_id=nino.id) }}"
+      href="{{ url_for('dashboard.profesional', paciente=nino.id) }}"
       class="rk-patient-card riesgo-rojo"
     >
       <div class="rk-patient-top">
         <div class="d-flex align-items-center gap-2">
           <div class="rk-patient-avatar">🧒</div>
           <div>
-            <div class="name">{{ nino.nombre_ficticio }}</div>
+            <div class="name">{{ nino.nombre_completo }}</div>
             <div class="meta">{{ eval.motivo }}</div>
           </div>
         </div>

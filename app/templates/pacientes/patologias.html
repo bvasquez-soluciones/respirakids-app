@@ -1,40 +1,21 @@
-{% extends "base.html" %} {% block title %}Condiciones de base - RespiraKids{%
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios, resumen_errores %} {% block title %}Condiciones de base - RespiraKids{%
 endblock %} {% block content %}
 <h2>Condiciones o patologías de base</h2>
-<p class="text-muted">Paciente: {{ nino.nombre_ficticio }}</p>
+<p class="text-muted">Paciente: {{ nino.nombre_completo }}</p>
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">
     <h5 class="card-title">Registrar nueva condición</h5>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <div class="row g-2">
-        <div class="col-md-4">
-          <input
-            type="text"
-            name="nombre"
-            class="form-control"
-            placeholder="Ej. Asma, Rinitis alérgica..."
-            required
-          />
-        </div>
-        <div class="col-md-3">
-          <input
-            type="date"
-            name="fecha_diagnostico"
-            class="form-control"
-            placeholder="Fecha de diagnóstico (opcional)"
-          />
-        </div>
-        <div class="col-md-3">
-          <input
-            type="text"
-            name="descripcion"
-            class="form-control"
-            placeholder="Notas (opcional)"
-          />
-        </div>
-        <div class="col-md-2">
+    <form method="POST" novalidate>
+      {{ form.csrf_token }}
+      {{ nota_obligatorios() }}
+      {{ resumen_errores(form) }}
+      <div class="row align-items-end">
+        {{ campo(form.nombre, 'col-md-4 mb-3') }}
+        {{ campo(form.fecha_diagnostico, 'col-md-3 mb-3', max=hoy_iso()) }}
+        {{ campo(form.descripcion, 'col-md-3 mb-3') }}
+        <div class="col-md-2 mb-3">
           <button type="submit" class="btn btn-primary w-100">Agregar</button>
         </div>
       </div>
@@ -59,7 +40,7 @@ endblock %} {% block content %}
       <tr>
         <td>{{ p.nombre }}</td>
         <td>
-          {{ p.fecha_diagnostico.strftime('%d/%m/%Y') if p.fecha_diagnostico
+          {{ p.fecha_diagnostico|fecha if p.fecha_diagnostico
           else '—' }}
         </td>
         <td>{{ p.descripcion or '—' }}</td>

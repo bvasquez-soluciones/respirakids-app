@@ -3,7 +3,13 @@ Script de siembra de datos ficticios para RespiraKids.
 Ejecutar UNA sola vez con: python seed_data.py
 """
 
+import os
+import sys
 from datetime import date, datetime, timedelta
+
+if os.environ.get('RESPIRAKIDS_ENV') == 'production':
+    sys.exit('seed_data.py crea datos de prueba y no puede ejecutarse en producción.')
+
 from app import create_app, db
 from app.models import Cuidador, Profesional, Nino, RegistroSintomas, Evaluacion, PatologiaBase, Autorizacion
 from app.semaforo import clasificar_riesgo
@@ -62,7 +68,7 @@ with app.app_context():
     ]
     ninos = []
     for nombre, fnac, sexo, idx_cuidador in ninos_data:
-        n = Nino(nombre_ficticio=nombre, fecha_nacimiento=fnac, sexo=sexo, cuidador_id=cuidadores[idx_cuidador].id, estado='activo')
+        n = Nino(nombre=nombre, fecha_nacimiento=fnac, sexo=sexo, cuidador_id=cuidadores[idx_cuidador].id, estado='activo')
         db.session.add(n)
         ninos.append(n)
     db.session.commit()

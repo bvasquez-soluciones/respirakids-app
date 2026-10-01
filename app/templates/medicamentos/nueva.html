@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios, resumen_errores %}
+{% block title %}Nueva indicación - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-detalle">
+  <a href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}" class="btn btn-link ps-0">← Medicamentos de {{ nino.nombre }}</a>
+  <h1 class="h4 mb-0">Nueva indicación de medicamentos</h1>
+  <p class="text-muted small mb-0">Paciente: {{ nino.nombre_completo }} · {{ nino.edad_texto() }}
+    {% if nino.peso_kg %} · {{ '%.1f'|format(nino.peso_kg) }} kg{% endif %}</p>
+
+  <form method="POST" novalidate class="d-flex flex-column gap-3">
+    {{ form.csrf_token }}
+    {{ nota_obligatorios() }}
+    {{ resumen_errores(form) }}
+
+    <fieldset class="rk-panel">
+      <legend class="h6">Indicación</legend>
+      <div class="row">
+        {{ campo(form.motivo, 'col-md-7 mb-3', placeholder='Ej. Control posterior a consulta') }}
+        {{ campo(form.fecha_inicio, 'col-md-5 mb-3') }}
+        {{ campo(form.indicaciones_generales, 'col-12 mb-0') }}
+      </div>
+    </fieldset>
+
+    <div id="lista-medicamentos" class="d-flex flex-column gap-3">
+      {% for entrada in form.medicamentos %}
+      <fieldset class="rk-panel rk-medicamento">
+        <legend class="h6">Medicamento <span class="rk-medicamento__numero">{{ loop.index }}</span></legend>
+        <div class="row">
+          {{ campo(entrada.form.nombre, 'col-md-6 mb-3') }}
+          {{ campo(entrada.form.dosis, 'col-md-6 mb-3') }}
+          {{ campo(entrada.form.frecuencia_horas, 'col-md-6 mb-3') }}
+          {{ campo(entrada.form.duracion_dias, 'col-md-6 mb-3') }}
+          {{ campo(entrada.form.instrucciones, 'col-12 mb-2') }}
+        </div>
+        <button type="button" class="btn btn-sm btn-link text-danger p-0 rk-quitar-medicamento">Quitar este medicamento</button>
+      </fieldset>
+      {% endfor %}
+    </div>
+    <div>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="agregar-medicamento">+ Agregar otro medicamento</button>
+    </div>
+
+    <p class="rk-nota-fuente mb-0">
+      Al guardar, el cuidador recibe una notificación y, si indicas la duración, verá los recordatorios de cada toma
+      en su hora local. Quedará registro de quién y cuándo registró la indicación.
+    </p>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Registrar indicación</button>
+      <a href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}" class="btn btn-link">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    const MAXIMO = 5;
+    const lista = document.getElementById("lista-medicamentos");
+    const agregar = document.getElementById("agregar-medicamento");
+
+    function renumerar() {
+      const bloques = lista.querySelectorAll(".rk-medicamento");
+      bloques.forEach((bloque, i) => {
+        bloque.querySelector(".rk-medicamento__numero").textContent = i + 1;
+        bloque.querySelectorAll("[id], [name], [for], [aria-describedby]").forEach((el) => {
+          ["id", "name", "for", "aria-describedby"].forEach((atr) => {
+            const valor = el.getAttribute(atr);
+            if (valor) el.setAttribute(atr, valor.replace(/medicamentos-\d+-/g, "medicamentos-" + i + "-"));
+          });
+        });
+        bloque.querySelector(".rk-quitar-medicamento").hidden = bloques.length === 1;
+      });
+      agregar.hidden = bloques.length >= MAXIMO;
+    }
+
+    agregar.addEventListener("click", () => {
+      const copia = lista.querySelector(".rk-medicamento:last-child").cloneNode(true);
+      copia.querySelectorAll("input, textarea").forEach((el) => { el.value = ""; el.removeAttribute("aria-invalid"); el.classList.remove("is-invalid"); });
+      copia.querySelectorAll(".rk-campo-error").forEach((el) => el.remove());
+      lista.appendChild(copia);
+      renumerar();
+      copia.querySelector("input").focus();
+    });
+
+    lista.addEventListener("click", (evento) => {
+      if (!evento.target.classList.contains("rk-quitar-medicamento")) return;
+      evento.target.closest(".rk-medicamento").remove();
+      renumerar();
+    });
+
+    renumerar();
+  })();
+</script>
+{% endblock %}

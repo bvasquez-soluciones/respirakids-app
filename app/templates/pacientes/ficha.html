@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Ficha de {{ nino.nombre }} - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+{% set info = resumen.info_nivel %}
+<div class="rk-detalle">
+  <a href="{{ url_for('dashboard.cuidador') }}" class="btn btn-link ps-0">← Inicio</a>
+
+  <header class="rk-detalle__cabecera">
+    {{ avatar(nino, resumen.nivel, 88) }}
+    <div class="flex-grow-1">
+      <h1 class="h4 mb-0">{{ nino.nombre_completo }}</h1>
+      <p class="text-muted mb-0">{{ nino.edad_texto() }} · {{ 'Niña' if nino.sexo == 'F' else 'Niño' }}
+        {% if not nino.activo %} · <span class="badge bg-secondary">Inactivo</span>{% endif %}</p>
+    </div>
+    <a href="{{ url_for('pacientes.editar', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Editar datos</a>
+  </header>
+
+  <section class="rk-estado rk-estado--{{ resumen.nivel }}" role="status">
+    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+    <div>
+      <p class="rk-estado__titulo"><span class="visually-hidden">Estado actual: </span>{{ info.titulo }}</p>
+      <p class="rk-estado__detalle">
+        {% if resumen.ultima_evaluacion %}
+          Última evaluación: {{ resumen.ultima_evaluacion.fecha|fecha_hora }} ·
+          <a href="{{ url_for('sintomas.resultado', evaluacion_id=resumen.ultima_evaluacion.id) }}">ver detalle</a>
+        {% else %}{{ info.resumen }}{% endif %}
+      </p>
+    </div>
+  </section>
+
+  <div class="rk-ficha-grid">
+    <section class="rk-panel">
+      <h2 class="h6">Identificación</h2>
+      <dl class="rk-datos mb-0">
+        <dt>Fecha de nacimiento</dt><dd>{{ nino.fecha_nacimiento|fecha }}</dd>
+        <dt>Edad</dt><dd>{{ nino.edad_texto() }}</dd>
+        <dt>Sexo</dt><dd>{{ 'Femenino' if nino.sexo == 'F' else 'Masculino' }}</dd>
+        <dt>Peso</dt><dd>{{ '%.1f kg'|format(nino.peso_kg) if nino.peso_kg else 'No registrado' }}</dd>
+        <dt>Talla</dt><dd>{{ '%.1f cm'|format(nino.talla_cm) if nino.talla_cm else 'No registrada' }}</dd>
+        <dt>Cuidador</dt><dd>{{ nino.cuidador.nombre_completo }}</dd>
+        <dt>Registrado en RespiraKids</dt><dd>{{ nino.fecha_registro|fecha if nino.fecha_registro else '—' }}</dd>
+      </dl>
+    </section>
+
+    <section class="rk-panel">
+      <h2 class="h6">Antecedentes y condiciones de base</h2>
+      {% if patologias %}
+      <ul class="rk-lista-senales mb-2">
+        {% for p in patologias %}
+        <li>{{ p.nombre }}{% if p.fecha_diagnostico %} <span class="text-muted small">(desde {{ p.fecha_diagnostico|mes_anio }})</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="small text-muted mb-2">No hay condiciones registradas.</p>
+      {% endif %}
+      <a href="{{ url_for('pacientes.patologias', nino_id=nino.id) }}" class="small">Gestionar condiciones de base</a>
+    </section>
+
+    <section class="rk-panel">
+      <h2 class="h6">Medicamentos indicados</h2>
+      {% if resumen.medicamentos_activos %}
+      <ul class="rk-lista-medicamentos">
+        {% for m in resumen.medicamentos_activos %}
+        <li>
+          <strong>{{ m.nombre }}</strong> · {{ m.dosis }} cada {{ m.frecuencia_horas }} h
+          {% if m.duracion_dias %}durante {{ m.duracion_dias }} días{% endif %}
+          {% if m.instrucciones %}<br /><span class="small text-muted">{{ m.instrucciones }}</span>{% endif %}
+          <br /><span class="small text-muted">Indicado por {{ m.receta.profesional.nombre_completo }}
+            el {{ m.receta.fecha|fecha }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="rk-nota-fuente">Indicaciones registradas por un profesional de salud. RespiraKids no recomienda medicamentos.</p>
+      <a class="small" href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}">Ver tomas, recordatorios e historial</a>
+      {% else %}
+      <p class="small text-muted mb-1">No hay medicamentos activos indicados por un profesional.</p>
+      <a class="small" href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}">Ver historial de indicaciones</a>
+      {% endif %}
+    </section>
+
+    <section class="rk-panel">
+      <h2 class="h6">Profesionales con acceso</h2>
+      {% if autorizaciones %}
+      <ul class="rk-lista-senales mb-2">
+        {% for a in autorizaciones %}<li>{{ a.profesional.nombre_completo }}{% if a.profesional.especialidad %} · {{ a.profesional.especialidad }}{% endif %}</li>{% endfor %}
+      </ul>
+      {% else %}
+      <p class="small text-muted mb-2">Ningún profesional tiene acceso.</p>
+      {% endif %}
+      <a href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}" class="small">Gestionar accesos</a> ·
+      <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="small">Autorizaciones de datos</a>
+      {% if not nino.consentimiento_otorgado %}
+      <div class="alert alert-warning small mt-2 mb-0">Falta autorizar el tratamiento de datos de salud.</div>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="rk-panel">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <h2 class="h6 mb-0">Últimas evaluaciones</h2>
+      <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="small">Ver historial completo ({{ resumen.total_registros }})</a>
+    </div>
+    {% if evaluaciones %}
+    <ul class="list-unstyled mb-0">
+      {% for e in evaluaciones %}
+      {% set i = nivel_info(e.nivel_riesgo) %}
+      <li class="py-1 border-bottom">
+        <span aria-hidden="true">{{ i.icono }}</span> <strong>{{ i.nombre }}</strong> · {{ e.fecha|fecha_hora }} ·
+        <a href="{{ url_for('sintomas.resultado', evaluacion_id=e.id) }}" class="small">detalle</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="small text-muted mb-0">Aún no hay evaluaciones.</p>
+    {% endif %}
+  </section>
+
+  <div class="d-flex flex-wrap gap-2">
+    {% if nino.activo and nino.consentimiento_otorgado %}
+    <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary">+ Registrar síntomas</a>
+    {% endif %}
+    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary">Mensajes</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Configuración - Administración{% endblock %}
+{% block admin %}
+<div class="rk-panel">
+  <p class="small text-muted">
+    La configuración se define con variables de entorno en el servidor (ver <code>.env.example</code>); esta página
+    solo la muestra. Las claves y contraseñas nunca se muestran.
+  </p>
+  <table class="table table-sm align-middle mb-0">
+    <tbody>
+      {% for concepto, valor, correcto in estado %}
+      <tr>
+        <th scope="row" class="fw-normal">{{ concepto }}</th>
+        <td><code>{{ valor }}</code></td>
+        <td>
+          {% if correcto is sameas true %}<span class="badge text-bg-success">Correcto</span>
+          {% elif correcto is sameas false %}<span class="badge text-bg-warning">Requiere atención</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

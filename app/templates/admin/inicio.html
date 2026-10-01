@@ -1,0 +1,39 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Administración - RespiraKids{% endblock %}
+{% block admin %}
+{% set p = datos.profesionales %}
+<div class="rk-admin-kpis">
+  <a class="rk-kpi" href="{{ url_for('admin.cuidadores') }}"><span class="rk-kpi__valor">{{ datos.cuidadores }}</span><span>Cuidadores</span></a>
+  <a class="rk-kpi" href="{{ url_for('admin.profesionales', estado='aprobado') }}"><span class="rk-kpi__valor">{{ p.get('aprobado', 0) }}</span><span>Profesionales aprobados</span></a>
+  <a class="rk-kpi {{ 'rk-kpi--atencion' if p.get('pendiente') }}" href="{{ url_for('admin.profesionales', estado='pendiente') }}"><span class="rk-kpi__valor">{{ p.get('pendiente', 0) }}</span><span>Profesionales pendientes</span></a>
+  <div class="rk-kpi"><span class="rk-kpi__valor">{{ datos.ninos_activos }}</span><span>Niños/as activos</span></div>
+  <a class="rk-kpi {{ 'rk-kpi--atencion' if datos.solicitudes_pendientes }}" href="{{ url_for('admin.solicitudes') }}"><span class="rk-kpi__valor">{{ datos.solicitudes_pendientes }}</span><span>Solicitudes de datos abiertas</span></a>
+  <div class="rk-kpi {{ 'rk-kpi--atencion' if datos.cuentas_bloqueadas }}"><span class="rk-kpi__valor">{{ datos.cuentas_bloqueadas }}</span><span>Cuentas bloqueadas</span></div>
+  <a class="rk-kpi" href="{{ url_for('admin.auditoria', evento='acceso_denegado') }}"><span class="rk-kpi__valor">{{ datos.accesos_denegados_7_dias }}</span><span>Accesos denegados (7 días)</span></a>
+  <a class="rk-kpi" href="{{ url_for('admin.conocimiento') }}"><span class="rk-kpi__valor">{{ datos.conocimiento_activo }}</span><span>Fragmentos de conocimiento activos</span></a>
+</div>
+
+<div class="rk-ficha-grid mt-3">
+  <section class="rk-panel">
+    <h2 class="h6">Evaluaciones de los últimos 30 días</h2>
+    {% set e = datos.evaluaciones_30_dias %}
+    <ul class="list-unstyled mb-2">
+      {% for nivel in ('rojo', 'amarillo', 'verde') %}
+      <li><span aria-hidden="true">{{ nivel_info(nivel).icono }}</span> {{ nivel_info(nivel).nombre }}: <strong>{{ e.get(nivel, 0) }}</strong></li>
+      {% endfor %}
+    </ul>
+    <p class="rk-nota-fuente mb-0">Cifras agregadas. El administrador no accede a la información clínica de cada niño/a.</p>
+  </section>
+  <section class="rk-panel">
+    <h2 class="h6">Pendientes de cumplimiento</h2>
+    <ul class="small mb-0">
+      <li>Reglas clínicas en uso: <code>{{ version_reglas }}</code> —
+        <a href="{{ url_for('admin.reglas') }}">ver estado de validación</a></li>
+      {% if datos.ninos_sin_consentimiento %}
+      <li>{{ datos.ninos_sin_consentimiento }} niño/a(s) activo(s) sin autorización de tratamiento de datos registrada.</li>
+      {% endif %}
+      <li><a href="{{ url_for('admin.configuracion') }}">Revisar la configuración del sistema</a></li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

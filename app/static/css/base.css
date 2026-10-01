@@ -335,3 +335,41 @@ h5,
   object-fit: cover;
   border: 1.5px solid rgba(255, 255, 255, 0.5);
 }
+
+/* ---------------------------------------------------------------- Formularios
+   Convención: * = obligatorio, "(opcional)" = opcional, error junto al campo. */
+.rk-requerido {
+  color: #c0392b;
+  font-weight: 700;
+}
+.rk-opcional {
+  color: #6c757d;
+  font-weight: 400;
+  font-size: 0.85em;
+}
+.rk-nota-obligatorios {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+.rk-campo-error {
+  color: #c0392b;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+.rk-resumen-errores:focus {
+  outline: 3px solid rgba(192, 57, 43, 0.35);
+}
+.rk-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.5rem;
+}
+.rk-fieldset legend {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}

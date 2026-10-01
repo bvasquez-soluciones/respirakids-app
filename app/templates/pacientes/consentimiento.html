@@ -1,0 +1,32 @@
+{% extends "base.html" %} {% block title %}Autorizaciones de datos - RespiraKids{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-1">Autorizaciones sobre los datos de {{ nino.nombre_completo }}</h1>
+        {% if nino.consentimiento_otorgado %}
+        <p class="text-muted small">
+          Autorización de tratamiento otorgada el {{ nino.consentimiento_fecha|fecha }}.
+          Si la retiras, los profesionales perderán el acceso y no se podrán registrar nuevos síntomas. La información
+          ya registrada se conserva; para pedir que se elimine, radica una solicitud en
+          <a href="{{ url_for('privacidad.mis_datos') }}">Mis datos</a>.
+        </p>
+        {% else %}
+        <div class="alert alert-warning small">
+          Todavía no hay una autorización registrada para tratar los datos de salud de {{ nino.nombre }}.
+          Sin ella no es posible registrar síntomas ni compartir información con profesionales.
+        </div>
+        {% endif %}
+
+        <form method="POST">
+          {{ form.csrf_token }}
+          {% include "pacientes/_textos_consentimiento.html" %}
+          <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+          <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link mt-3">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

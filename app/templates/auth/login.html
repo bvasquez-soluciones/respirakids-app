@@ -1,60 +1,27 @@
-{% extends "base.html" %} {% block title %}Iniciar sesión - RespiraKids{%
-endblock %} {% block extra_css %}
-<link
-  href="{{ url_for('static', filename='css/auth.css') }}"
-  rel="stylesheet"
-/>
-{% endblock %} {% block content %}
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo_auth, nota_obligatorios %}
+{% block title %}Iniciar sesión - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
 <div class="rk-auth-page">
   <div class="rk-auth-card">
     <div class="rk-auth-blob a"></div>
     <div class="rk-auth-blob b"></div>
 
     <div class="rk-auth-header">
-      <div class="rk-auth-logo">🫁</div>
-      <h1>Iniciar Sesión</h1>
+      <div class="rk-auth-logo" aria-hidden="true">🫁</div>
+      <h1>Iniciar sesión</h1>
       <p>Bienvenido de nuevo a RespiraKids</p>
     </div>
 
-    <form method="POST" class="rk-auth-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-      <div class="rk-input-group">
-        <label for="correo">Correo Electrónico</label>
-        <div class="rk-input-wrap">
-          <span class="rk-input-icon">✉️</span>
-          <input
-            type="email"
-            name="correo"
-            id="correo"
-            placeholder="ejemplo@correo.com"
-            required
-          />
-        </div>
-      </div>
-
-      <div class="rk-input-group">
-        <label for="password">Contraseña</label>
-        <div class="rk-input-wrap">
-          <span class="rk-input-icon">🔒</span>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            placeholder="••••••••"
-            required
-          />
-          <button
-            type="button"
-            class="rk-toggle-password"
-            onclick="togglePassword()"
-          >
-            👁️
-          </button>
-        </div>
-      </div>
-
-      <button type="submit" class="rk-auth-submit">→ Iniciar Sesión</button>
+    <form method="POST" class="rk-auth-form" novalidate>
+      {{ form.csrf_token }}
+      {{ nota_obligatorios() }}
+      {{ campo_auth(form.correo, '✉️') }}
+      {{ campo_auth(form.password, '🔒', mostrar_password=True, placeholder='••••••••') }}
+      <button type="submit" class="rk-auth-submit">→ Iniciar sesión</button>
     </form>
 
     <div class="rk-auth-footer">
@@ -64,13 +31,6 @@ endblock %} {% block extra_css %}
 </div>
 
 <div class="rk-auth-links">
-  <a href="#">Privacidad</a> • <a href="#">Soporte</a>
+  <a href="{{ url_for('privacidad.politica') }}">Privacidad</a>
 </div>
-
-<script>
-  function togglePassword() {
-    const input = document.getElementById("password");
-    input.type = input.type === "password" ? "text" : "password";
-  }
-</script>
 {% endblock %}

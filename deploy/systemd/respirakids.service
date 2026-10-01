@@ -1,0 +1,34 @@
+# Servicio systemd de RespiraKids. Instalar en /etc/systemd/system/respirakids.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now respirakids
+[Unit]
+Description=RespiraKids (Gunicorn)
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service redis-server.service
+
+[Service]
+Type=notify
+User=respirakids
+Group=respirakids
+WorkingDirectory=/srv/respirakids
+# Variables de entorno (SECRET_KEY, DATABASE_URL, ...). Archivo con permisos 600, propiedad de respirakids.
+EnvironmentFile=/etc/respirakids/respirakids.env
+Environment=RESPIRAKIDS_ENV=production
+ExecStart=/srv/respirakids/venv/bin/gunicorn wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=35
+
+# Endurecimiento: el proceso solo puede escribir en las carpetas que necesita.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/respirakids/app/static/uploads
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

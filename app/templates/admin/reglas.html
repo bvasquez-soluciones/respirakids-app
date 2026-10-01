@@ -1,0 +1,41 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Reglas clínicas - Administración{% endblock %}
+{% block admin %}
+<div class="alert {{ 'alert-success' if validadas else 'alert-warning' }}">
+  {% if validadas %}
+  La versión <code>{{ version }}</code> está marcada como validada por un profesional de salud.
+  {% else %}
+  <strong>Las reglas <code>{{ version }}</code> están pendientes de validación clínica.</strong>
+  La aplicación no arrancará en producción hasta que un profesional de salud firme el documento
+  <code>docs/REGLAS_CLINICAS_v1.md</code> y se configure <code>REGLAS_CLINICAS_VALIDADAS={{ version }}</code>.
+  {% endif %}
+  Versión en uso para nuevas evaluaciones: <code>{{ version_vigente }}</code>.
+</div>
+
+<div class="rk-panel mb-3">
+  <h2 class="h6">Reglas ({{ reglas|length }})</h2>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0 small">
+      <thead><tr><th>Regla</th><th>Nivel</th><th>Señal</th><th>Origen</th><th>Puntos a validar</th></tr></thead>
+      <tbody>
+        {% for r in reglas %}
+        <tr>
+          <td><code>{{ r.id }}</code></td>
+          <td><span aria-hidden="true">{{ nivel_info(r.nivel).icono }}</span> {{ nivel_info(r.nivel).nombre }}</td>
+          <td>{{ r.senal }}</td>
+          <td>{{ 'Salvaguarda (no proviene de la fuente)' if r.origen == 'salvaguarda' else 'Fuente clínica' }}</td>
+          <td>{{ r.validacion|length }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="rk-panel">
+  <h2 class="h6">Criterios de la fuente no implementados ({{ no_implementables|length }})</h2>
+  <ul class="small mb-0">
+    {% for criterio, motivo in no_implementables %}<li><strong>{{ criterio }}</strong>: {{ motivo }}</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

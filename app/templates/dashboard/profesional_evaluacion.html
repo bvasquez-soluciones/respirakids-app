@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Evaluación de {{ nino.nombre }} - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+{% set info = nivel_info(evaluacion.nivel_riesgo) %}
+<div class="rk-detalle">
+  <a href="{{ url_for('dashboard.profesional', paciente=nino.id) }}" class="btn btn-link ps-0">← {{ nino.nombre_completo }}</a>
+
+  <header class="rk-detalle__cabecera">
+    {{ avatar(nino, evaluacion.nivel_riesgo, 56) }}
+    <div>
+      <h1 class="h4 mb-0">Detalle clínico de la evaluación</h1>
+      <p class="text-muted small mb-0">{{ nino.nombre_completo }} · {{ nino.edad_texto() }} ·
+        {{ evaluacion.fecha|fecha_hora }} · Reglas <code>{{ evaluacion.version_reglas_efectiva }}</code></p>
+    </div>
+  </header>
+
+  <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }}" role="status">
+    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+    <div>
+      <p class="rk-estado__titulo">Clasificación {{ info.nombre }}: {{ info.titulo }}</p>
+      <p class="rk-estado__detalle">
+        {% if evaluacion.version_reglas_efectiva == 'v1-aiepi' %}
+        Criterios de la Herramienta Clínica (AIEPI). La conversión a colores está pendiente de validación clínica.
+        {% else %}
+        Reglas provisionales v0 (anteriores a AIEPI), pendientes de validación clínica.
+        {% endif %}
+      </p>
+    </div>
+  </section>
+
+  <section class="rk-panel">
+    <h2 class="h6">Reglas aplicadas</h2>
+    {% if senales %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Regla</th><th>Nivel</th><th>Señal</th><th>Criterio de la fuente</th></tr></thead>
+        <tbody>
+          {% for s in senales %}
+          {% set regla = reglas.get(s.regla_id) if s.regla_id else None %}
+          <tr>
+            <td><code>{{ s.regla_id or 'v0' }}</code></td>
+            <td><span aria-hidden="true">{{ nivel_info(s.nivel).icono }}</span> {{ nivel_info(s.nivel).nombre }}</td>
+            <td>{{ s.texto }}{% if s.origen == 'salvaguarda' %} <span class="badge text-bg-light border">Salvaguarda</span>{% endif %}</td>
+            <td class="small">
+              {% if regla %}{{ regla.criterio }}{% endif %}
+              {% if s.fuente and s.fuente.url %}<br /><a href="{{ s.fuente.url }}" target="_blank" rel="noopener">{{ s.fuente.nombre }}</a>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="small text-muted mb-0">No se cumplió ningún criterio.</p>
+    {% endif %}
+    {% for a in avisos %}<p class="small text-muted mt-2 mb-0">ℹ️ {{ a }}</p>{% endfor %}
+  </section>
+
+  <section class="rk-panel">
+    <h2 class="h6">Datos registrados por el cuidador</h2>
+    {% if hallazgos %}
+    <ul class="rk-lista-senales mb-2">{% for h in hallazgos %}<li>{{ h }}</li>{% endfor %}</ul>
+    {% else %}
+    <p class="small text-muted mb-2">No marcó síntomas.</p>
+    {% endif %}
+    {% if complementarios %}
+    <dl class="rk-datos mb-0">{% for e, v in complementarios %}<dt>{{ e }}</dt><dd>{{ v }}</dd>{% endfor %}</dl>
+    {% endif %}
+    {% if registro.observaciones %}<p class="small mt-2 mb-0"><strong>Notas:</strong> {{ registro.observaciones }}</p>{% endif %}
+  </section>
+
+  <section class="rk-panel">
+    <h2 class="h6">Orientación mostrada al cuidador</h2>
+    <p class="small mb-0">{{ evaluacion.recomendaciones }}</p>
+  </section>
+
+  {% if evaluacion.ml_nivel %}
+  <section class="rk-panel rk-panel--complementario">
+    <h2 class="h6">Predicción complementaria de ML (experimental)</h2>
+    <p class="small mb-1">
+      Nivel sugerido por el modelo: <strong>{{ nivel_info(evaluacion.ml_nivel).nombre }}</strong>
+      {% if evaluacion.ml_confianza is not none %}(probabilidad {{ evaluacion.ml_confianza }} %){% endif %}
+      · Modelo <code>{{ evaluacion.ml_version or 'anterior (sin versión registrada)' }}</code>
+    </p>
+    {% if evaluacion.discrepancia_ml %}
+    <p class="small mb-1"><span class="badge text-bg-warning">No coincide con las reglas</span>
+      La clasificación válida es la de las reglas ({{ nivel_info(evaluacion.nivel_riesgo).nombre }}).</p>
+    {% endif %}
+    <p class="rk-nota-fuente mb-0">
+      Modelo entrenado con datos sintéticos, sin validación clínica. No modifica la clasificación por reglas y no se
+      muestra al cuidador. <a href="{{ url_for('dashboard.modelo_ml') }}">Ver ficha del modelo</a>.
+    </p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Notificaciones - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-detalle">
+  <h1 class="h4 mb-0">Notificaciones</h1>
+  {% if notificaciones %}
+  <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+    {% for n in notificaciones %}
+    {% set url = enlace(n) %}
+    <li class="rk-panel {{ 'rk-notificacion--nueva' if not n.leida }}">
+      <div class="d-flex justify-content-between flex-wrap gap-2">
+        <strong>{% if not n.leida %}<span class="badge text-bg-primary me-1">Nueva</span>{% endif %}{{ n.titulo }}</strong>
+        <span class="small text-muted">{{ n.fecha_creacion|fecha_hora }}</span>
+      </div>
+      <p class="small mb-1">{{ n.contenido }}</p>
+      {% if url %}<a href="{{ url }}" class="small">Ver</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="rk-vacio"><p class="mb-0">No tienes notificaciones.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Medicamentos de {{ nino.nombre }} - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-detalle">
+  {% if es_profesional %}
+  <a href="{{ url_for('dashboard.profesional', paciente=nino.id) }}" class="btn btn-link ps-0">← Volver al paciente</a>
+  {% else %}
+  <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link ps-0">← Ficha de {{ nino.nombre }}</a>
+  {% endif %}
+
+  <header class="rk-detalle__cabecera">
+    {{ avatar(nino, None, 56) }}
+    <div class="flex-grow-1">
+      <h1 class="h4 mb-0">Medicamentos de {{ nino.nombre_completo }}</h1>
+      <p class="text-muted small mb-0">{{ nino.edad_texto() }}</p>
+    </div>
+    {% if es_profesional %}
+    <a href="{{ url_for('medicamentos.nueva', nino_id=nino.id) }}" class="btn btn-primary btn-sm">+ Nueva indicación</a>
+    {% endif %}
+  </header>
+
+  <p class="rk-nota-fuente mb-0">
+    RespiraKids no recomienda medicamentos ni dosis. Aquí solo aparecen las indicaciones registradas por profesionales
+    de salud autorizados. Ante cualquier duda sobre un medicamento, consulta al profesional que lo indicó.
+  </p>
+
+  <section class="rk-panel" aria-labelledby="titulo-tomas">
+    <h2 class="h6" id="titulo-tomas">Tomas de las últimas y próximas 24 horas</h2>
+    {% if tomas %}
+    <ul class="list-unstyled mb-0">
+      {% for t in tomas %}
+      {% set vencida = t.hora_programada <= ahora_utc() %}
+      <li class="rk-toma {{ 'rk-toma--vencida' if vencida }}">
+        <div>
+          <strong>{{ t.hora_programada|fecha_hora_corta }}</strong> ·
+          {{ t.medicamento.nombre }} — {{ t.medicamento.dosis }}
+          {% if vencida %}<span class="badge text-bg-warning ms-1">Pendiente</span>{% endif %}
+        </div>
+        {% if not es_profesional %}
+        <form method="POST" action="{{ url_for('medicamentos.marcar', toma_id=t.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="administrada" value="1" />
+          <button type="submit" class="btn btn-sm btn-outline-success">Marcar como administrada</button>
+        </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="small text-muted mb-0">No hay tomas pendientes en este periodo.</p>
+    {% endif %}
+  </section>
+
+  {% for receta in recetas %}
+  <section class="rk-panel {{ '' if receta.activa else 'rk-panel--inactiva' }}">
+    <div class="d-flex justify-content-between flex-wrap gap-2">
+      <div>
+        <h2 class="h6 mb-0">{{ receta.motivo or 'Indicación de medicamentos' }}</h2>
+        <p class="small text-muted mb-1">
+          Indicado por {{ receta.profesional.nombre_completo }}{% if receta.profesional.especialidad %}
+          ({{ receta.profesional.especialidad }}){% endif %} el {{ receta.fecha|fecha_hora }}
+        </p>
+      </div>
+      <div>
+        {% if receta.activa %}<span class="badge text-bg-success">Activa</span>
+        {% else %}<span class="badge text-bg-secondary">Suspendida</span>{% endif %}
+      </div>
+    </div>
+    {% if receta.indicaciones_generales %}<p class="small">{{ receta.indicaciones_generales }}</p>{% endif %}
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-2">
+        <thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Cumplimiento</th></tr></thead>
+        <tbody>
+          {% for m in receta.medicamentos %}
+          {% set c = cumplimiento(m) %}
+          <tr>
+            <td><strong>{{ m.nombre }}</strong>{% if m.instrucciones %}<br /><span class="small text-muted">{{ m.instrucciones }}</span>{% endif %}</td>
+            <td>{{ m.dosis }}</td>
+            <td>Cada {{ m.frecuencia_horas }} h</td>
+            <td>{{ (m.duracion_dias ~ ' días') if m.duracion_dias else 'No indicada' }}<br />
+              <span class="small text-muted">Desde {{ m.fecha_inicio|fecha_hora_corta }}</span></td>
+            <td>{% if c %}{{ c.administradas }} de {{ c.vencidas }} ({{ c.porcentaje }} %){% else %}<span class="text-muted">—</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% set administradas = receta.medicamentos|map(attribute='tomas')|sum(start=[])|selectattr('administrada')|sort(attribute='hora_administrada', reverse=true)|list %}
+    {% if administradas %}
+    <details class="small">
+      <summary>Tomas registradas ({{ administradas|length }})</summary>
+      <ul class="list-unstyled mt-2 mb-0">
+        {% for t in administradas[:20] %}
+        <li class="rk-toma">
+          <span>{{ t.medicamento.nombre }} · programada {{ t.hora_programada|fecha_hora_corta }} ·
+            administrada {{ t.hora_administrada|fecha_hora_corta }}{% if t.administrado_por %} por {{ t.administrado_por.nombre }}{% endif %}</span>
+          {% if not es_profesional and receta.activa %}
+          <form method="POST" action="{{ url_for('medicamentos.marcar', toma_id=t.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="administrada" value="0" />
+            <button type="submit" class="btn btn-sm btn-link p-0">Quitar marca</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    {% if es_profesional and receta.activa and receta.profesional_id == current_user.id %}
+    <form method="POST" action="{{ url_for('medicamentos.suspender', receta_id=receta.id) }}" class="mt-2"
+      onsubmit="return confirm('¿Suspender esta indicación? Se notificará al cuidador.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn-sm btn-outline-danger">Suspender indicación</button>
+    </form>
+    {% endif %}
+  </section>
+  {% else %}
+  <section class="rk-vacio">
+    <p class="mb-0">No hay indicaciones de medicamentos registradas por profesionales.</p>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

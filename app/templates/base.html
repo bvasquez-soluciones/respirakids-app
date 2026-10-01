@@ -63,11 +63,16 @@
           <a
             href="{{ url_for('dashboard.alertas') }}"
             class="rk-bell-btn"
-            title="Alertas"
+            title="Pacientes en rojo"
+            aria-label="Pacientes con alerta roja{{ ': ' ~ alertas_count if alertas_count }}"
           >
             🔔 {% if alertas_count and alertas_count > 0 %}
             <span class="rk-bell-badge">{{ alertas_count }}</span>
             {% endif %}
+          </a>
+          <a href="{{ url_for('dashboard.notificaciones') }}" class="rk-bell-btn" title="Notificaciones"
+            aria-label="Notificaciones{{ ': ' ~ notificaciones_count ~ ' sin leer' if notificaciones_count }}">
+            ✉️ {% if notificaciones_count %}<span class="rk-bell-badge">{{ notificaciones_count }}</span>{% endif %}
           </a>
           {% if current_user.foto %}
           <img
@@ -88,6 +93,10 @@
           <span class="text-white me-2 d-none d-md-inline"
             >Hola, {{ current_user.nombre }}</span
           >
+          <a href="{{ url_for('dashboard.notificaciones') }}" class="rk-bell-btn" title="Notificaciones"
+            aria-label="Notificaciones{{ ': ' ~ notificaciones_count ~ ' sin leer' if notificaciones_count }}">
+            🔔 {% if notificaciones_count %}<span class="rk-bell-badge">{{ notificaciones_count }}</span>{% endif %}
+          </a>
           <div class="dropdown">
             <button
               class="rk-hamburger-btn"
@@ -110,7 +119,7 @@
                 <a
                   class="dropdown-item"
                   href="{{ url_for('pacientes.listar') }}"
-                  >📋 Síntomas</a
+                  >👶 Mis niños</a
                 >
               </li>
               <li>
@@ -125,6 +134,9 @@
                   >👤 Perfil</a
                 >
               </li>
+              {% if current_user.rol == 'admin' %}
+              <li><a class="dropdown-item" href="{{ url_for('admin.inicio') }}">⚙️ Administración</a></li>
+              {% endif %}
               <li><hr class="dropdown-divider" /></li>
               <li>
                 <a class="dropdown-item" href="{{ url_for('auth.logout') }}"
@@ -168,6 +180,15 @@
       {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
     </div>
 
+    <footer class="rk-footer container small text-muted text-center py-4 mt-4">
+      <p class="mb-1">
+        RespiraKids no constituye un diagnóstico médico y no reemplaza la valoración de un profesional de salud.
+        Ante signos de alarma, consulta de inmediato a un servicio de salud.
+      </p>
+      <a href="{{ url_for('privacidad.politica') }}">Política de tratamiento de datos</a>
+      {% if current_user.is_authenticated %} · <a href="{{ url_for('privacidad.mis_datos') }}">Mis datos</a>{% endif %}
+    </footer>
+
     {% if current_user.is_authenticated and current_user.rol in ('cuidador',
     'admin') %}
     <nav class="rk-bottom-nav">
@@ -181,7 +202,7 @@
         href="{{ url_for('pacientes.listar') }}"
         class="rk-nav-item {{ 'active' if request.endpoint and (request.endpoint.startswith('pacientes.') or request.endpoint.startswith('sintomas.')) }}"
       >
-        <span class="rk-nav-icon">📋</span> Síntomas
+        <span class="rk-nav-icon" aria-hidden="true">👶</span> Mis niños
       </a>
       <a
         href="{{ url_for('asistente.chat') }}"
@@ -214,6 +235,14 @@
           { threshold: 0.15 },
         );
         reveals.forEach((el) => observer.observe(el));
+
+        // Botones "mostrar contraseña" de cualquier formulario.
+        document.querySelectorAll("[data-mostrar-password]").forEach((boton) => {
+          boton.addEventListener("click", () => {
+            const input = document.getElementById(boton.dataset.mostrarPassword);
+            input.type = input.type === "password" ? "text" : "password";
+          });
+        });
       });
     </script>
   </body>

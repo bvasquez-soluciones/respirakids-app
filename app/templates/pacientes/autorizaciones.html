@@ -1,24 +1,23 @@
-{% extends "base.html" %} {% block title %}Autorizaciones - RespiraKids{%
+{% extends "base.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios %} {% block title %}Autorizaciones - RespiraKids{%
 endblock %} {% block content %}
 <h2>Autorizaciones de acceso</h2>
-<p class="text-muted">Paciente: {{ nino.nombre_ficticio }}</p>
+<p class="text-muted">Paciente: {{ nino.nombre_completo }}</p>
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">
     <h5 class="card-title">Autorizar a un profesional</h5>
-    <form method="POST" class="row g-2">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <div class="col-md-8">
-        <input
-          type="email"
-          name="correo_profesional"
-          class="form-control"
-          placeholder="Correo del profesional"
-          required
-        />
-      </div>
-      <div class="col-md-4">
-        <button type="submit" class="btn btn-primary w-100">Autorizar</button>
+    <p class="small text-muted">
+      El profesional podrá ver el historial y las evaluaciones de {{ nino.nombre }} hasta que revoques el acceso.
+    </p>
+    <form method="POST" novalidate>
+      {{ form.csrf_token }}
+      {{ nota_obligatorios() }}
+      <div class="row align-items-end">
+        {{ campo(form.correo_profesional, 'col-md-8 mb-3', placeholder='correo@profesional.com') }}
+        <div class="col-md-4 mb-3">
+          <button type="submit" class="btn btn-primary w-100">Autorizar</button>
+        </div>
       </div>
     </form>
   </div>

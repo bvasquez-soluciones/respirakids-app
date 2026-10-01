@@ -1,0 +1,44 @@
+{% extends "admin/_layout.html" %}
+{% from "macros/paginacion.html" import paginacion %}
+{% block title %}Cuidadores - Administración{% endblock %}
+{% block admin %}
+<form method="GET" class="d-flex flex-wrap gap-2 align-items-end mb-3" role="search">
+  <div>
+    <label class="form-label small mb-0" for="q">Buscar</label>
+    <input class="form-control form-control-sm" id="q" name="q" value="{{ busqueda }}" placeholder="Nombre o correo" />
+  </div>
+  <button class="btn btn-sm btn-outline-secondary" type="submit">Buscar</button>
+</form>
+<div class="rk-panel">
+  {% if pagina.items %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-2">
+      <thead><tr><th>Cuidador</th><th>Rol</th><th>Niños/as</th><th>Registro</th><th>Cuenta</th></tr></thead>
+      <tbody>
+        {% for c in pagina.items %}
+        <tr>
+          <td><strong>{{ c.nombre_completo }}</strong><br /><span class="small text-muted">{{ c.correo }}</span></td>
+          <td class="small">{{ 'Administrador' if c.rol == 'admin' else 'Cuidador' }}</td>
+          <td>{{ c.ninos|selectattr('activo')|list|length }}</td>
+          <td class="small">{{ c.fecha_registro|fecha }}</td>
+          <td>
+            {% if c.esta_bloqueado() %}
+            <span class="badge text-bg-danger">Bloqueada</span>
+            <form method="POST" action="{{ url_for('admin.desbloquear_usuario', tipo='cuidador', usuario_id=c.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn btn-sm btn-link">Desbloquear</button>
+            </form>
+            {% else %}<span class="badge text-bg-light border">Activa</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(pagina, 'admin.cuidadores', q=busqueda) }}
+  {% else %}
+  <p class="text-muted mb-0">No hay cuidadores con esta búsqueda.</p>
+  {% endif %}
+</div>
+<p class="rk-nota-fuente">Por privacidad, aquí solo se muestran datos de la cuenta; la información de salud de los niños no es visible para el administrador.</p>
+{% endblock %}

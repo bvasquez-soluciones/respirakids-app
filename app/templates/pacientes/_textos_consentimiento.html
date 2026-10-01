@@ -1,0 +1,19 @@
+{# Casillas de autorización sobre los datos de un niño/a. Requiere `form` con
+   consentimiento_tratamiento y consentimiento_investigacion. #}
+{% from "macros/formularios.html" import casilla %}
+<fieldset class="rk-fieldset border rounded p-3 bg-light">
+  <legend class="float-none w-auto px-1">Autorizaciones de datos</legend>
+  {% call casilla(form.consentimiento_tratamiento, 'form-check mb-3 small') %}
+    <strong>Autorización de tratamiento de datos de salud.</strong>
+    Declaro que soy el representante legal o cuidador autorizado de este niño/a, y autorizo el tratamiento de
+    sus datos personales y de salud para registrar síntomas, obtener la clasificación orientativa de riesgo,
+    llevar su historial y compartirlo con los profesionales que yo autorice, según la
+    <a href="{{ url_for('privacidad.politica') }}" target="_blank" rel="noopener">política de tratamiento de datos</a>.
+    Sé que los datos de salud son sensibles y que entregarlos es facultativo.
+  {% endcall %}
+  {% call casilla(form.consentimiento_investigacion, 'form-check mb-0 small') %}
+    <strong>Uso para investigación.</strong>
+    Autorizo que los datos de este niño/a se usen de forma <strong>anonimizada</strong> (sin nombre ni datos que
+    lo identifiquen) para investigación y mejora de RespiraKids. Puedo retirar esta autorización cuando quiera.
+  {% endcall %}
+</fieldset>

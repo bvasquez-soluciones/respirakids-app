@@ -1,9 +1,9 @@
-{% extends "base.html" %} {% block title %}Mis Pacientes - RespiraKids{%
+{% extends "base.html" %} {% block title %}Mis niños - RespiraKids{%
 endblock %} {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2>Mis Pacientes</h2>
+  <h1 class="h2">Mis niños</h1>
   <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary"
-    >+ Registrar Paciente</a
+    >+ Registrar niño/a</a
   >
 </div>
 
@@ -13,7 +13,7 @@ endblock %} {% block content %}
     <thead>
       <tr>
         <th>Nombre</th>
-        <th>Fecha de nacimiento</th>
+        <th>Edad</th>
         <th>Sexo</th>
         <th>Estado</th>
         <th>Acciones</th>
@@ -22,8 +22,8 @@ endblock %} {% block content %}
     <tbody>
       {% for nino in ninos %}
       <tr>
-        <td>{{ nino.nombre_ficticio }}</td>
-        <td>{{ nino.fecha_nacimiento.strftime('%d/%m/%Y') }}</td>
+        <td><a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}">{{ nino.nombre_completo }}</a></td>
+        <td>{{ nino.edad_texto() }}</td>
         <td>{{ 'Masculino' if nino.sexo == 'M' else 'Femenino' }}</td>
         <td>
           <span
@@ -33,44 +33,30 @@ endblock %} {% block content %}
           </span>
         </td>
         <td>
-          <a
-            href="{{ url_for('sintomas.listar', nino_id=nino.id) }}"
-            class="btn btn-sm btn-outline-info"
-            >Ver síntomas</a
-          >
-          <a
-            href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}"
-            class="btn btn-sm btn-outline-success"
-            >Mensajes</a
-          >
-          <a
-            href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}"
-            class="btn btn-sm btn-outline-secondary"
-            >Autorizaciones</a
-          >
-          <a
-            href="{{ url_for('pacientes.patologias', nino_id=nino.id) }}"
-            class="btn btn-sm btn-outline-dark"
-            >Condiciones de base</a
-          >
-          <a
-            href="{{ url_for('pacientes.editar', nino_id=nino.id) }}"
-            class="btn btn-sm btn-outline-primary"
-            >Editar</a
-          >
-          <form
-            method="POST"
-            action="{{ url_for('pacientes.eliminar', nino_id=nino.id) }}"
-            class="d-inline"
-            onsubmit="
-              return confirm('¿Seguro que deseas desactivar este paciente?');
-            "
-          >
+          {% if nino.activo and not nino.consentimiento_otorgado %}
+          <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="btn btn-sm btn-warning">Autorizar tratamiento de datos</a>
+          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-info">Historial</a>
+          <a href="{{ url_for('pacientes.editar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+          {% elif nino.activo %}
+          <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-sm btn-primary">Registrar síntomas</a>
+          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-info">Historial</a>
+          <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-success">Mensajes</a>
+          <a href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Profesionales autorizados</a>
+          <a href="{{ url_for('pacientes.patologias', nino_id=nino.id) }}" class="btn btn-sm btn-outline-dark">Condiciones de base</a>
+          <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Autorizaciones de datos</a>
+          <a href="{{ url_for('pacientes.editar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+          <form method="POST" action="{{ url_for('pacientes.eliminar', nino_id=nino.id) }}" class="d-inline"
+            onsubmit="return confirm('¿Desactivar este registro? La información se conserva.');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn btn-sm btn-outline-danger">
-              Eliminar
-            </button>
+            <button type="submit" class="btn btn-sm btn-outline-danger">Desactivar</button>
           </form>
+          {% else %}
+          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-info">Historial</a>
+          <form method="POST" action="{{ url_for('pacientes.reactivar', nino_id=nino.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
+          </form>
+          {% endif %}
         </td>
       </tr>
       {% endfor %}
@@ -78,5 +64,5 @@ endblock %} {% block content %}
   </table>
 </div>
 {% else %}
-<p class="text-muted">Aún no has registrado ningún paciente.</p>
+<p class="text-muted">Aún no has registrado ningún niño o niña.</p>
 {% endif %} {% endblock %}

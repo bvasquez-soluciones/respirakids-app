@@ -1,60 +1,51 @@
-from flask import render_template, redirect, url_for, flash, request, abort
-from flask_login import login_required, current_user
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
+from app import db, limiter
+from app.forms import MensajeForm, primer_error
 from app.mensajes import mensajes_bp
-from app.models import Nino, Mensaje, Autorizacion
-from app import db
-
-
-def obtener_nino_con_permiso(nino_id):
-    """
-    Verifica que el usuario actual (cuidador dueño o profesional autorizado)
-    tenga permiso para ver/participar en la conversación de este niño.
-    Devuelve el objeto Nino si tiene permiso, o aborta con 403.
-    """
-    nino = Nino.query.get_or_404(nino_id)
-
-    if current_user.rol in ('cuidador', 'admin') and hasattr(current_user, 'ninos'):
-        if nino.cuidador_id == current_user.id:
-            return nino
-
-    if current_user.rol == 'profesional':
-        autorizado = Autorizacion.query.filter_by(
-            nino_id=nino.id, profesional_id=current_user.id, activa=True
-        ).first()
-        if autorizado:
-            return nino
-
-    abort(403)
+from app.models import Mensaje
+from app.services.acceso import autorizaciones_vigentes_nino, es_profesional, nino_accesible
+from app.services.auditoria import registrar_actividad
+from app.services.notificaciones import notificar
 
 
 @mensajes_bp.route('/nino/<int:nino_id>', methods=['GET', 'POST'])
 @login_required
+@limiter.limit('30 per minute', methods=['POST'])
 def conversacion(nino_id):
-    nino = obtener_nino_con_permiso(nino_id)
+    nino = nino_accesible(nino_id)
+    form = MensajeForm()
 
     if request.method == 'POST':
-        contenido = request.form.get('contenido', '').strip()
+        if not form.validate_on_submit():
+            flash(primer_error(form), 'danger')
+            return redirect(url_for('mensajes.conversacion', nino_id=nino.id))
 
-        if contenido:
-            if current_user.rol == 'profesional':
-                nuevo_mensaje = Mensaje(
-                    nino_id=nino.id,
-                    autor_tipo='profesional',
-                    autor_profesional_id=current_user.id,
-                    contenido=contenido
-                )
-            else:
-                nuevo_mensaje = Mensaje(
-                    nino_id=nino.id,
-                    autor_tipo='cuidador',
-                    autor_cuidador_id=current_user.id,
-                    contenido=contenido
-                )
-
-            db.session.add(nuevo_mensaje)
-            db.session.commit()
-
+        mensaje = Mensaje(nino_id=nino.id, contenido=form.contenido.data.strip())
+        if es_profesional():
+            mensaje.autor_tipo = 'profesional'
+            mensaje.autor_profesional_id = current_user.id
+            mensaje.profesional_conversacion_id = current_user.id
+        else:
+            mensaje.autor_tipo = 'cuidador'
+            mensaje.autor_cuidador_id = current_user.id
+        db.session.add(mensaje)
+        _notificar_mensaje(nino)
+        db.session.commit()
+        registrar_actividad('enviar_mensaje', 'nino', nino.id, detalles={'mensaje_id': mensaje.id})
         return redirect(url_for('mensajes.conversacion', nino_id=nino.id))
 
     mensajes = Mensaje.query.filter_by(nino_id=nino.id).order_by(Mensaje.fecha.asc()).all()
     return render_template('mensajes/conversacion.html', nino=nino, mensajes=mensajes)
+
+
+def _notificar_mensaje(nino):
+    """Avisa a la otra parte de la conversación: al cuidador o a los profesionales autorizados."""
+    if es_profesional():
+        notificar(nino.cuidador_id, 'cuidador', 'nuevo_mensaje', 'Nuevo mensaje de un profesional',
+                  f'{current_user.nombre_completo} escribió sobre {nino.nombre}.', 'mensajes', nino.id)
+    else:
+        for autorizacion in autorizaciones_vigentes_nino(nino.id):
+            notificar(autorizacion.profesional_id, 'profesional', 'nuevo_mensaje', 'Nuevo mensaje del cuidador',
+                      f'Hay un mensaje nuevo sobre {nino.nombre}.', 'mensajes', nino.id)

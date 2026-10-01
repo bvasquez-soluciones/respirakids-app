@@ -286,3 +286,240 @@
 .rk-panel-ia-tint {
   background: linear-gradient(135deg, var(--rk-mint-soft) 0%, #eaf9ff 100%);
 }
+
+/* ==================================================== */
+/* INICIO DEL CUIDADOR: una tarjeta por niño/a          */
+/* ==================================================== */
+.rk-inicio {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.rk-inicio__saludo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.rk-ninos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.rk-inicio__secundario {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.rk-vacio {
+  background: white;
+  border: 1.5px dashed #cfd8d3;
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.rk-nino-card {
+  background: white;
+  border: 1.5px solid #dfe6e1;
+  border-top-width: 6px;
+  border-radius: 20px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.rk-nino-card--verde { border-top-color: #2f9e5b; }
+.rk-nino-card--amarillo { border-top-color: #d39b00; }
+.rk-nino-card--rojo { border-top-color: #d64545; }
+.rk-nino-card--neutro { border-top-color: #8a96a3; }
+
+.rk-nino-card__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.rk-nino-card__nombre {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.rk-nino-card__meta {
+  color: #6c757d;
+  font-size: 0.88rem;
+  margin: 0;
+}
+.rk-nino-card__subtitulo {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5c6b66;
+  margin-bottom: 0.35rem;
+}
+.rk-nino-card__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+}
+
+/* Estado (semáforo): siempre texto + icono + color */
+.rk-estado {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border-radius: 14px;
+  padding: 0.7rem 0.85rem;
+}
+.rk-estado p { margin: 0; }
+.rk-estado__icono { font-size: 1.3rem; line-height: 1.2; }
+.rk-estado__titulo { font-weight: 700; }
+.rk-estado__detalle { font-size: 0.85rem; color: #4a5753; }
+.rk-estado--verde { background: #eef9f1; }
+.rk-estado--amarillo { background: #fff8e1; }
+.rk-estado--rojo { background: #fdeceb; }
+.rk-estado--rojo .rk-estado__titulo { color: #a32f2f; }
+.rk-estado--neutro { background: #f1f3f5; }
+
+.rk-lista-senales,
+.rk-lista-medicamentos {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+.rk-nota-fuente {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin: 0.3rem 0 0;
+}
+.rk-avatar { flex-shrink: 0; }
+
+/* ==================================================== */
+/* FICHA, RESULTADO E HISTORIAL                          */
+/* ==================================================== */
+.rk-detalle {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.rk-detalle__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.rk-estado--grande { padding: 1rem 1.1rem; }
+.rk-estado--grande .rk-estado__titulo { font-size: 1.2rem; }
+.rk-estado--grande .rk-estado__icono { font-size: 1.8rem; }
+.rk-ficha-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.rk-datos {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  font-size: 0.9rem;
+}
+.rk-datos dt { color: #5c6b66; font-weight: 600; }
+.rk-datos dd { margin: 0; }
+.rk-panel--complementario {
+  border-style: dashed;
+  background: #fafbfc;
+}
+
+.rk-linea-tiempo {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.rk-linea-tiempo__item {
+  background: white;
+  border: 1.5px solid #dfe6e1;
+  border-left-width: 6px;
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.6rem;
+}
+.rk-linea-tiempo__item--verde { border-left-color: #2f9e5b; }
+.rk-linea-tiempo__item--amarillo { border-left-color: #d39b00; }
+.rk-linea-tiempo__item--rojo { border-left-color: #d64545; }
+.rk-linea-tiempo__item--neutro { border-left-color: #8a96a3; }
+
+.rk-badge-nivel { font-weight: 600; color: #1f2d2a; }
+.rk-badge-nivel--verde { background: #dcf3e3; }
+.rk-badge-nivel--amarillo { background: #ffefc2; }
+.rk-badge-nivel--rojo { background: #fbd9d9; color: #8a2424; }
+.rk-badge-nivel--neutro { background: #e9ecef; }
+
+@media (max-width: 576px) {
+  .rk-datos { grid-template-columns: 1fr; }
+  .rk-datos dd { margin-bottom: 0.4rem; }
+}
+
+/* ==================================================== */
+/* REGISTRO DE SÍNTOMAS                                  */
+/* ==================================================== */
+.rk-form-sintomas { display: flex; flex-direction: column; gap: 1rem; }
+.rk-grupo-sintomas { border: 1.5px solid #dfe6e1; margin: 0; }
+.rk-grupo-sintomas legend { margin-bottom: 0.4rem; font-weight: 700; }
+.rk-grupo-sintomas legend + * { clear: left; }
+.rk-grupo-sintomas--alarma { border-color: #f0b8ae; background: #fffafa; }
+.rk-opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.35rem 1.25rem;
+}
+.rk-opcion { padding: 0.35rem 0 0.35rem 1.75rem; }
+.rk-opcion .form-check-input { width: 1.2em; height: 1.2em; margin-left: -1.75rem; }
+.rk-opcion .form-text { margin-top: 0; }
+
+/* ==================================================== */
+/* MEDICAMENTOS                                          */
+/* ==================================================== */
+.rk-toma {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #eef1ef;
+}
+.rk-toma:last-child { border-bottom: 0; }
+.rk-toma--vencida { background: #fff8e1; padding-left: 0.5rem; padding-right: 0.5rem; border-radius: 8px; }
+.rk-panel--inactiva { opacity: 0.75; }
+.rk-notificacion--nueva { border-left: 5px solid #0d6efd; }
+
+/* ==================================================== */
+/* ADMINISTRACIÓN                                        */
+/* ==================================================== */
+.rk-admin { max-width: 1200px; margin: 0 auto; }
+.rk-admin-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+.rk-kpi {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1.5px solid #dfe6e1;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+a.rk-kpi:hover { border-color: #1b4b43; }
+.rk-kpi__valor { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+.rk-kpi--atencion { border-color: #d39b00; background: #fffaf0; }
+.rk-estado-cuenta--aprobado { background: #dcf3e3; color: #1f5a35; }
+.rk-estado-cuenta--pendiente { background: #ffefc2; color: #6b4e00; }
+.rk-estado-cuenta--suspendido, .rk-estado-cuenta--rechazado { background: #fbd9d9; color: #8a2424; }

@@ -1,0 +1,39 @@
+{% extends "admin/_layout.html" %}
+{% from "macros/formularios.html" import campo, nota_obligatorios, resumen_errores %}
+{% block title %}Registrar profesional - Administración{% endblock %}
+{% block admin %}
+<div class="rk-panel">
+  <h2 class="h5">Registrar profesional de salud</h2>
+  <p class="small text-muted">
+    La cuenta queda <strong>pendiente de aprobación</strong> hasta que verifiques la tarjeta profesional / ReTHUS.
+    Se generará una contraseña temporal que el profesional deberá cambiar al ingresar.
+  </p>
+  <form method="POST" novalidate>
+    {{ form.csrf_token }}
+    {{ nota_obligatorios() }}
+    {{ resumen_errores(form) }}
+    <fieldset class="rk-fieldset">
+      <legend>Datos personales</legend>
+      <div class="row">
+        {{ campo(form.nombre, 'col-md-6 mb-3') }}
+        {{ campo(form.apellido, 'col-md-6 mb-3') }}
+        {{ campo(form.tipo_documento, 'col-md-6 mb-3') }}
+        {{ campo(form.numero_documento, 'col-md-6 mb-3') }}
+        {{ campo(form.correo, 'col-md-6 mb-3') }}
+        {{ campo(form.telefono, 'col-md-6 mb-3') }}
+      </div>
+    </fieldset>
+    <fieldset class="rk-fieldset">
+      <legend>Datos profesionales</legend>
+      <div class="row">
+        {{ campo(form.profesion, 'col-md-6 mb-3') }}
+        {{ campo(form.especialidad, 'col-md-6 mb-3') }}
+        {{ campo(form.tarjeta_profesional, 'col-md-6 mb-3') }}
+        {{ campo(form.registro_rethus, 'col-md-6 mb-3') }}
+      </div>
+    </fieldset>
+    <button type="submit" class="btn btn-primary">Registrar</button>
+    <a href="{{ url_for('admin.profesionales') }}" class="btn btn-link">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

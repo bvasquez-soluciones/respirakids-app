@@ -1,0 +1,5 @@
+# Los archivos que se ejecutan o se leen en el servidor Linux deben tener saltos de línea LF.
+*.sh            text eol=lf
+deploy/**       text eol=lf
+gunicorn.conf.py text eol=lf
+*.py            text eol=lf

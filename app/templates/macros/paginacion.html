@@ -1,0 +1,16 @@
+{# Paginación para listados largos. #}
+{% macro paginacion(pagina, endpoint) -%}
+{% if pagina.pages > 1 %}
+<nav aria-label="Paginación">
+  <ul class="pagination pagination-sm mb-0">
+    <li class="page-item {{ 'disabled' if not pagina.has_prev }}">
+      <a class="page-link" href="{{ url_for(endpoint, pagina=pagina.prev_num, **kwargs) if pagina.has_prev else '#' }}">Anterior</a>
+    </li>
+    <li class="page-item disabled"><span class="page-link">Página {{ pagina.page }} de {{ pagina.pages }}</span></li>
+    <li class="page-item {{ 'disabled' if not pagina.has_next }}">
+      <a class="page-link" href="{{ url_for(endpoint, pagina=pagina.next_num, **kwargs) if pagina.has_next else '#' }}">Siguiente</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{%- endmacro %}

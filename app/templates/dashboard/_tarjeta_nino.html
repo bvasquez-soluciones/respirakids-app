@@ -1,0 +1,84 @@
+{# Tarjeta de un niño/a en el dashboard del cuidador. Requiere `r` (ResumenNino). #}
+{% from "macros/avatar.html" import avatar %}
+{% set nino = r.nino %}
+{% set info = r.info_nivel %}
+{% set lista_senales = r.senales_del_nivel|map(attribute='texto')|list %}
+<article class="rk-nino-card rk-nino-card--{{ r.nivel }}" aria-labelledby="nino-{{ nino.id }}-nombre">
+  <header class="rk-nino-card__cabecera">
+    {{ avatar(nino, r.nivel, 76) }}
+    <div class="flex-grow-1">
+      <h2 class="rk-nino-card__nombre" id="nino-{{ nino.id }}-nombre">{{ nino.nombre_completo }}</h2>
+      <p class="rk-nino-card__meta">{{ nino.edad_texto() }} · {{ 'Niña' if nino.sexo == 'F' else 'Niño' }}</p>
+    </div>
+  </header>
+
+  <div class="rk-estado rk-estado--{{ r.nivel }}" role="status">
+    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+    <div>
+      <p class="rk-estado__titulo">
+        <span class="visually-hidden">Estado: </span>{{ info.titulo }}
+      </p>
+      <p class="rk-estado__detalle">
+        {% if r.ultima_evaluacion %}
+          {{ info.resumen }} · Última evaluación: {{ r.ultima_evaluacion.fecha|fecha_hora }}
+        {% else %}
+          {{ info.resumen }}
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if lista_senales %}
+  <section class="rk-nino-card__bloque">
+    <h3 class="rk-nino-card__subtitulo">Posibles señales identificadas</h3>
+    <ul class="rk-lista-senales">
+      {% for s in lista_senales[:3] %}<li>{{ s }}</li>{% endfor %}
+    </ul>
+    {% if lista_senales|length > 3 %}
+    <a class="small" href="{{ url_for('sintomas.resultado', evaluacion_id=r.ultima_evaluacion.id) }}">
+      Ver las {{ lista_senales|length }} señales
+    </a>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if r.ultimo_registro %}
+  <section class="rk-nino-card__bloque">
+    <h3 class="rk-nino-card__subtitulo">Últimos síntomas registrados</h3>
+    {% if r.hallazgos %}
+    <p class="small mb-0">{{ r.hallazgos[:5]|join(' · ') }}{% if r.hallazgos|length > 5 %} …{% endif %}</p>
+    {% else %}
+    <p class="small text-muted mb-0">Sin síntomas marcados.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if r.medicamentos_activos %}
+  <section class="rk-nino-card__bloque">
+    <h3 class="rk-nino-card__subtitulo">Medicamentos indicados por el profesional</h3>
+    <ul class="rk-lista-medicamentos">
+      {% for m in r.medicamentos_activos[:3] %}
+      <li><strong>{{ m.nombre }}</strong> · {{ m.dosis }} cada {{ m.frecuencia_horas }} h</li>
+      {% endfor %}
+    </ul>
+    <p class="rk-nota-fuente">Indicaciones registradas por un profesional de salud, no por RespiraKids.</p>
+    <a class="small" href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}">Ver tomas y recordatorios</a>
+  </section>
+  {% endif %}
+
+  {% if not nino.consentimiento_otorgado %}
+  <div class="alert alert-warning small mb-0">
+    Para registrar síntomas primero debes
+    <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="alert-link">autorizar el tratamiento de datos</a>.
+  </div>
+  {% endif %}
+
+  <footer class="rk-nino-card__acciones">
+    {% if nino.consentimiento_otorgado %}
+    <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary btn-sm">+ Registrar síntomas</a>
+    {% endif %}
+    <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Historial</a>
+    <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Ficha</a>
+    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Mensajes</a>
+  </footer>
+</article>
