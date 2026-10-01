@@ -99,9 +99,12 @@ jobs:
       - name: Instalar la aplicación como en el servidor (/srv/respirakids)
         run: |
           sudo ln -s "$GITHUB_WORKSPACE" /srv/respirakids
-          # Nginx (www-data) necesita poder atravesar las carpetas del runner para servir los estáticos.
-          sudo chmod o+x "$(dirname "$(dirname "$GITHUB_WORKSPACE")")" "$(dirname "$GITHUB_WORKSPACE")" "$GITHUB_WORKSPACE"
+          # Nginx (www-data) necesita atravesar todas las carpetas hasta el proyecto para servir los estáticos
+          # (en Ubuntu 24.04 /home/runner tiene permisos 750).
+          d="$GITHUB_WORKSPACE"; while [ "$d" != / ]; do sudo chmod o+x "$d"; d="$(dirname "$d")"; done
           chmod -R o+rX app/static deploy/nginx
+          sudo -u www-data test -r /srv/respirakids/app/static/css/base.css
+          sudo -u www-data test -r /srv/respirakids/deploy/nginx/mantenimiento.html
           python -m venv venv && venv/bin/pip install --quiet -r requirements.txt
           echo "SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')" >> "$GITHUB_ENV"
       - name: Migraciones y base de conocimiento
@@ -112,7 +115,7 @@ jobs:
         run: |
           venv/bin/gunicorn wsgi:app --daemon --pid "$RUNNER_TEMP/gunicorn.pid" --access-logfile "$RUNNER_TEMP/access.log" --error-logfile "$RUNNER_TEMP/error.log"
           for i in $(seq 1 20); do curl -s -o /dev/null http://127.0.0.1:8000/salud && break; sleep 1; done
-          curl --fail -s -H 'X-Forwarded-Proto: https' http://127.0.0.1:8000/salud | grep -q '"ok"'
+          curl --fail -sS -H 'X-Forwarded-Proto: https' http://127.0.0.1:8000/salud | grep -q '"ok"'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/auth/login)" = 302   # obliga HTTPS
       - name: Nginx con HTTPS delante de Gunicorn
         run: |
@@ -127,11 +130,11 @@ jobs:
           sudo nginx -t
           sudo systemctl restart nginx
           RESOLVER="--resolve $DOMINIO:443:127.0.0.1 --resolve $DOMINIO:80:127.0.0.1"
-          curl --fail -sk $RESOLVER https://$DOMINIO/salud | grep -q '"ok"'
+          curl --fail -sSk $RESOLVER https://$DOMINIO/salud | grep -q '"ok"'
           test "$(curl -s -o /dev/null -w '%{http_code}' $RESOLVER http://$DOMINIO/auth/login)" = 301
           curl -skI $RESOLVER https://$DOMINIO/auth/login | grep -qi 'strict-transport-security'
           curl -skI $RESOLVER https://$DOMINIO/auth/login | grep -qi 'x-request-id'
-          curl --fail -sk $RESOLVER https://$DOMINIO/static/css/base.css > /dev/null
+          curl --fail -sSk $RESOLVER https://$DOMINIO/static/css/base.css > /dev/null
       - name: Respaldo y restauración verificada
         run: |
           export DIR_RESPALDOS="$RUNNER_TEMP/respaldos" DIR_APP="$GITHUB_WORKSPACE"
