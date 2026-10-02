@@ -60,6 +60,7 @@ RESPIRAKIDS_ENV=production
 SECRET_KEY=<python -c "import secrets; print(secrets.token_hex(32))">
 DATABASE_URL=postgresql://respirakids:CLAVE@localhost:5432/respirakids_db
 RATELIMIT_STORAGE_URI=redis://localhost:6379/0
+# Obligatoria: sin ella el servidor no arranca (el asistente necesita la IA para redactar sus respuestas).
 GEMINI_API_KEY=<clave del proveedor de IA>
 # Correo saliente (recuperación de contraseña y verificación de correo). Usar un proveedor transaccional
 # (SES, Mailgun, SendGrid, Postmark...) con SPF, DKIM y DMARC configurados en el dominio.
@@ -173,6 +174,7 @@ Solo se debe desplegar código cuya integración continua esté en verde.
 - [ ] Respaldos diarios cifrados, copia externa y una restauración de prueba realizada.
 - [ ] `/salud` monitoreado con alertas.
 - [ ] Correo saliente probado: recuperación de contraseña y verificación llegan a la bandeja de entrada (no a spam).
+- [ ] Asistente probado con la clave real: responde redactando con citas [1], [2]… (si solo muestra fragmentos textuales, la clave o la cuota del proveedor de IA fallan).
 - [ ] Integración continua en verde para la versión desplegada.
 - [ ] Administrador creado con contraseña robusta; ninguna cuenta ni dato de prueba en producción.
 

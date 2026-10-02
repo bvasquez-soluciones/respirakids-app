@@ -85,6 +85,8 @@ jobs:
       # Servidor de correo ficticio: la prueba de despliegue no envía correos.
       MAIL_SERVER: smtp.respirakids.invalid
       MAIL_DEFAULT_SENDER: RespiraKids <no-responder@respirakids.invalid>
+      # Clave ficticia: la prueba de despliegue solo verifica que el servidor arranque; no consulta la IA.
+      GEMINI_API_KEY: clave-ficticia-ci
       # Solo para esta prueba técnica: NO representa una validación clínica de las reglas.
       REGLAS_CLINICAS_VALIDADAS: v1-aiepi
       PGHOST: localhost

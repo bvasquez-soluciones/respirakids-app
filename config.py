@@ -131,9 +131,10 @@ class ProductionConfig(Config):
 
     @classmethod
     def validar(cls):
-        # Sin correo saliente no hay recuperación de contraseña ni verificación de cuentas.
-        faltantes = [v for v in ('SECRET_KEY', 'DATABASE_URL', 'MAIL_SERVER', 'MAIL_DEFAULT_SENDER')
-                     if not os.environ.get(v)]
+        # Sin correo saliente no hay recuperación de contraseña ni verificación de cuentas, y sin la clave del
+        # proveedor de IA el asistente solo puede mostrar fragmentos textuales de la guía.
+        faltantes = [v for v in ('SECRET_KEY', 'DATABASE_URL', 'MAIL_SERVER', 'MAIL_DEFAULT_SENDER', 'GEMINI_API_KEY')
+                     if not os.environ.get(v, '').strip()]
         if faltantes:
             raise RuntimeError(f'Faltan variables de entorno obligatorias en producción: {", ".join(faltantes)}')
         if len(os.environ['SECRET_KEY']) < 32:
