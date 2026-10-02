@@ -81,13 +81,14 @@ def create_app(nombre_config=None):
     from app.privacidad import privacidad_bp
     from app.medicamentos import medicamentos_bp
     from app.admin import admin_bp
+    from app.ayuda import ayuda_bp
     from app.sistema import asignar_id_peticion, devolver_id_peticion, sistema_bp
 
     app.before_request(asignar_id_peticion)
     app.after_request(devolver_id_peticion)
 
     for bp in (auth_bp, dashboard_bp, pacientes_bp, sintomas_bp, mensajes_bp, asistente_bp, privacidad_bp,
-               medicamentos_bp, admin_bp, sistema_bp):
+               medicamentos_bp, admin_bp, ayuda_bp, sistema_bp):
         app.register_blueprint(bp)
 
     @app.route('/')

@@ -1,0 +1,192 @@
+/* ================================================================ Centro de ayuda (manuales de uso) */
+.rk-ayuda { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--rk-space-5); }
+.rk-ayuda > .btn-link { align-self: flex-start; }
+
+/* Portada */
+.rk-ayuda__portada {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--rk-space-5);
+  padding: var(--rk-space-6);
+  background: var(--rk-surface);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-xl);
+  box-shadow: var(--rk-shadow);
+}
+@media (max-width: 640px) {
+  .rk-ayuda__portada { grid-template-columns: 1fr; padding: var(--rk-space-4); }
+  .rk-ayuda__portada .rk-figura { display: none; }
+}
+.rk-ayuda__etiqueta {
+  margin: 0 0 var(--rk-space-1);
+  font-size: var(--rk-text-sm);
+  font-weight: 700;
+  color: var(--rk-primary-text);
+}
+.rk-ayuda__buscar { min-height: 48px; font-size: var(--rk-text-md); border-radius: var(--rk-radius-pill); }
+.rk-ayuda__urgencia { margin: 0; }
+
+.rk-ayuda__seccion {
+  padding: var(--rk-space-5);
+  background: var(--rk-surface);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-lg);
+}
+@media (max-width: 640px) { .rk-ayuda__seccion { padding: var(--rk-space-4); } }
+
+/* Primeros pasos: tarjetas numeradas */
+.rk-pasos {
+  list-style: none;
+  counter-reset: paso;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: var(--rk-space-3);
+}
+.rk-paso {
+  counter-increment: paso;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rk-space-1);
+  padding: var(--rk-space-4);
+  background: var(--rk-surface-2);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-md);
+}
+.rk-paso::before {
+  content: counter(paso);
+  position: absolute;
+  top: var(--rk-space-3);
+  right: var(--rk-space-3);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--rk-text-xs);
+  font-weight: 800;
+  color: var(--rk-on-primary);
+  background: var(--rk-primary);
+  border-radius: 50%;
+}
+.rk-paso__emoji { font-size: 1.8rem; line-height: 1; }
+.rk-paso h3 { margin: var(--rk-space-2) 0 0; }
+.rk-paso p { margin: 0; font-size: var(--rk-text-sm); color: var(--rk-text-2); flex: 1; }
+
+.rk-ir { font-size: var(--rk-text-sm); font-weight: 700; text-decoration: none; }
+.rk-ir:hover { text-decoration: underline; }
+
+/* Explorador del semáforo */
+.rk-explorador__botones { display: flex; flex-wrap: wrap; gap: var(--rk-space-2); margin-bottom: var(--rk-space-3); }
+.rk-explorador__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rk-space-1);
+  min-height: 44px;
+  padding: var(--rk-space-2) var(--rk-space-4);
+  font-weight: 700;
+  color: var(--rk-text-2);
+  background: var(--rk-surface-2);
+  border: 1.5px solid var(--rk-border);
+  border-radius: var(--rk-radius-pill);
+  cursor: pointer;
+}
+.rk-explorador__boton:focus-visible { outline: none; box-shadow: var(--rk-focus); }
+.rk-explorador__boton--rojo[aria-selected="true"] { color: var(--rk-sem-rojo-text); background: var(--rk-sem-rojo-bg); border-color: var(--rk-sem-rojo-border); }
+.rk-explorador__boton--amarillo[aria-selected="true"] { color: var(--rk-sem-amarillo-text); background: var(--rk-sem-amarillo-bg); border-color: var(--rk-sem-amarillo-border); }
+.rk-explorador__boton--verde[aria-selected="true"] { color: var(--rk-sem-verde-text); background: var(--rk-sem-verde-bg); border-color: var(--rk-sem-verde-border); }
+.rk-explorador__boton--neutro[aria-selected="true"] { color: var(--rk-sem-neutro-text); background: var(--rk-sem-neutro-bg); border-color: var(--rk-sem-neutro-border); }
+.rk-explorador__panel {
+  display: flex;
+  align-items: center;
+  gap: var(--rk-space-5);
+  padding: var(--rk-space-4);
+  border-radius: var(--rk-radius-lg);
+  animation: rk-aparecer var(--rk-dur) var(--rk-ease);
+}
+.rk-explorador__panel[hidden] { display: none; }
+.rk-estado--neutro { background: var(--rk-sem-neutro-bg); border-color: var(--rk-sem-neutro-border); }
+@media (max-width: 560px) {
+  .rk-explorador__panel { flex-direction: column; text-align: center; }
+}
+@keyframes rk-aparecer { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rk-explorador__panel { animation: none; } }
+
+/* Preguntas desplegables por tema */
+.rk-tema + .rk-tema { margin-top: var(--rk-space-5); }
+.rk-tema__titulo { margin-bottom: var(--rk-space-2); color: var(--rk-text); }
+.rk-pregunta {
+  background: var(--rk-surface-2);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-md);
+}
+.rk-pregunta + .rk-pregunta { margin-top: var(--rk-space-2); }
+.rk-pregunta > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--rk-space-3);
+  min-height: 48px;
+  padding: var(--rk-space-3) var(--rk-space-4);
+  font-weight: 700;
+  color: var(--rk-text);
+  cursor: pointer;
+  list-style: none;
+}
+.rk-pregunta > summary::-webkit-details-marker { display: none; }
+.rk-pregunta > summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--rk-primary-text);
+  transition: transform var(--rk-dur) var(--rk-ease);
+}
+.rk-pregunta[open] > summary::after { transform: rotate(45deg); }
+.rk-pregunta[open] { border-color: var(--rk-primary); }
+.rk-pregunta > summary:focus-visible { outline: none; box-shadow: var(--rk-focus); border-radius: var(--rk-radius-md); }
+.rk-pregunta__respuesta { padding: 0 var(--rk-space-4) var(--rk-space-4); color: var(--rk-text-2); }
+.rk-pregunta__respuesta ol, .rk-pregunta__respuesta ul { padding-left: 1.3rem; }
+.rk-pregunta__respuesta li + li { margin-top: var(--rk-space-1); }
+.rk-evolucion { list-style: none; padding-left: 0 !important; }
+
+.rk-ayuda__sin-resultados {
+  padding: var(--rk-space-4);
+  text-align: center;
+  color: var(--rk-text-2);
+  background: var(--rk-surface-2);
+  border-radius: var(--rk-radius-md);
+}
+.rk-ayuda__pie { display: flex; flex-direction: column; align-items: flex-start; gap: var(--rk-space-2); }
+mark.rk-resaltado { padding: 0 2px; color: inherit; background: var(--rk-highlight); border-radius: 3px; }
+
+/* Índice de manuales */
+.rk-manuales { display: grid; gap: var(--rk-space-3); }
+.rk-manual {
+  display: flex;
+  align-items: center;
+  gap: var(--rk-space-4);
+  padding: var(--rk-space-5);
+  color: var(--rk-text);
+  text-decoration: none;
+  background: var(--rk-surface);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-lg);
+  transition: border-color var(--rk-dur) var(--rk-ease), transform var(--rk-dur) var(--rk-ease);
+}
+a.rk-manual:hover { color: var(--rk-text); border-color: var(--rk-primary); transform: translateY(-2px); }
+.rk-manual small { display: block; margin-top: 2px; color: var(--rk-muted); }
+.rk-manual__emoji { font-size: 2.2rem; line-height: 1; }
+.rk-manual--pronto { opacity: 0.6; }
+
+/* Impresión: todo abierto, sin buscador ni controles */
+@media print {
+  .rk-ayuda__buscar, .rk-explorador__botones, .rk-ayuda__pie button, #resultado-busqueda { display: none !important; }
+  .rk-explorador__panel[hidden] { display: flex !important; }
+  .rk-tema[hidden], .rk-pregunta[hidden], .rk-ayuda__seccion[hidden] { display: block !important; }
+  .rk-pregunta > summary::after { content: none; }
+  .rk-ayuda__seccion, .rk-pregunta, .rk-paso { break-inside: avoid; }
+}

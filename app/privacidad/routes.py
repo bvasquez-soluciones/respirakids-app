@@ -14,8 +14,8 @@ from app.services.datos_titular import exportar_datos_cuidador, exportar_datos_p
 
 # Rutas disponibles aunque el usuario aún no haya aceptado la política vigente.
 ENDPOINTS_LIBRES = {'static', 'home', 'privacidad.politica', 'privacidad.terminos', 'privacidad.aceptar',
-                    'auth.logout', 'sistema.salud',
-                    'auth.verificar_correo', 'auth.restablecer'}
+                    'auth.logout', 'sistema.salud', 'auth.verificar_correo', 'auth.restablecer',
+                    'ayuda.indice', 'ayuda.cuidadores'}
 
 
 @privacidad_bp.before_app_request

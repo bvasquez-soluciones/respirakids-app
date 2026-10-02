@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import figura %}
+{% from "macros/iconos.html" import icono %}
+{% block title %}Guía para cuidadores - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/ayuda.css') }}" rel="stylesheet" />
+{% endblock %}
+
+{#- Una pregunta desplegable del manual. `caller()` es la respuesta; `palabras` ayuda al buscador. -#}
+{% macro pregunta(id, titulo, palabras='') -%}
+<details class="rk-pregunta" id="{{ id }}" data-buscar="{{ (titulo ~ ' ' ~ palabras)|lower }}">
+  <summary>{{ titulo }}</summary>
+  <div class="rk-pregunta__respuesta">{{ caller() }}</div>
+</details>
+{%- endmacro %}
+
+{% macro ir(endpoint, texto) -%}
+<a class="rk-ir" href="{{ url_for(endpoint) }}">{{ texto }} →</a>
+{%- endmacro %}
+
+{% block content %}
+<div class="rk-ayuda">
+  <a href="{{ url_for('ayuda.indice') }}" class="btn btn-link px-0">← Centro de ayuda</a>
+
+  {# ------------------------------------------------------------------ Portada del manual #}
+  <header class="rk-ayuda__portada">
+    <div>
+      <p class="rk-ayuda__etiqueta">📘 Manual para cuidadores</p>
+      <h1 class="h2 mb-2">Cómo usar RespiraKids para cuidar la respiración de tus niños</h1>
+      <p class="text-muted mb-3">Todo lo que necesitas saber, paso a paso. Busca tu duda o explora las secciones.</p>
+      <label class="visually-hidden" for="buscar-ayuda">Buscar en la guía</label>
+      <input type="search" id="buscar-ayuda" class="form-control rk-ayuda__buscar"
+        placeholder="🔎 Busca tu duda: fiebre, contraseña, nota de voz, semáforo…" autocomplete="off" />
+      <p class="small text-muted mt-2 mb-0" id="resultado-busqueda" aria-live="polite"></p>
+    </div>
+    {{ figura(ejemplo, 'verde', 170) }}
+  </header>
+
+  <div class="alert alert-danger rk-ayuda__urgencia" role="note">
+    <strong>🚨 RespiraKids no es un servicio de urgencias.</strong> Si tu niño o niña no puede beber, convulsiona, está
+    muy somnoliento/a, tiene los labios azulados o le cuesta mucho respirar, acude de inmediato a un servicio de salud o
+    llama a la línea de emergencias <strong>123</strong>. No esperes a registrar los síntomas ni a recibir un mensaje.
+  </div>
+
+  {# ------------------------------------------------------------------ Primeros pasos #}
+  <section class="rk-ayuda__seccion" aria-labelledby="titulo-pasos" data-seccion>
+    <h2 class="h4" id="titulo-pasos">🚀 Primeros pasos</h2>
+    <ol class="rk-pasos">
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">👤</span>
+        <h3 class="h6">Crea tu cuenta</h3>
+        <p>Regístrate con tu correo, acepta la política de datos y los términos, y confirma tu correo con el enlace que
+          te enviamos.</p>
+        {{ ir('auth.registro', 'Crear cuenta') }}
+      </li>
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">👶</span>
+        <h3 class="h6">Registra a tu niño o niña</h3>
+        <p>Nombre, fecha de nacimiento y sexo. Autoriza el tratamiento de sus datos de salud para poder registrar
+          síntomas.</p>
+        {{ ir('pacientes.nuevo', 'Registrar niño/a') }}
+      </li>
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">📝</span>
+        <h3 class="h6">Registra los síntomas</h3>
+        <p>Toca las tarjetas de lo que observes hoy. Empieza siempre por los signos de alarma.</p>
+        {{ ir('pacientes.listar', 'Ir a mis niños') }}
+      </li>
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">🚦</span>
+        <h3 class="h6">Lee el resultado y pide ayuda</h3>
+        <p>El semáforo te orienta. Si tienes dudas, habla con un profesional de la clínica desde la misma pantalla.</p>
+        {{ ir('dashboard.cuidador', 'Ir al inicio') }}
+      </li>
+    </ol>
+  </section>
+
+  {# ------------------------------------------------------------------ Explorador del semáforo #}
+  <section class="rk-ayuda__seccion" aria-labelledby="titulo-semaforo" data-seccion>
+    <h2 class="h4" id="titulo-semaforo">🚦 Entiende el semáforo</h2>
+    <p class="text-muted">Después de registrar los síntomas, RespiraKids muestra un color según los criterios de la
+      estrategia AIEPI del Ministerio de Salud. Toca cada color para ver qué significa y qué hacer.</p>
+    <div class="rk-explorador" data-explorador>
+      <div class="rk-explorador__botones" role="tablist" aria-label="Niveles del semáforo">
+        {% for clave, info in niveles %}
+        <button type="button" role="tab" id="tab-{{ clave }}" aria-controls="panel-{{ clave }}"
+          aria-selected="{{ 'true' if loop.first else 'false' }}" class="rk-explorador__boton rk-explorador__boton--{{ clave }}">
+          {{ icono_nivel(clave) }} {{ info.nombre }}</button>
+        {% endfor %}
+      </div>
+      {% for clave, info in niveles %}
+      <div class="rk-explorador__panel rk-estado rk-estado--{{ clave }}" role="tabpanel" id="panel-{{ clave }}"
+        aria-labelledby="tab-{{ clave }}" {{ 'hidden' if not loop.first }}>
+        {{ figura(ejemplo, clave if clave != 'neutro' else None, 150) }}
+        <div>
+          <p class="rk-estado__titulo">{{ icono_nivel(clave) }} {{ info.titulo }}</p>
+          <p class="rk-estado__detalle mt-1"><strong>Qué hacer:</strong>
+            {% if clave == 'rojo' %}acude <strong>de inmediato</strong> a un servicio de salud. No esperes la respuesta
+            por mensajes.
+            {% elif clave == 'amarillo' %}consulta a un profesional de salud (puedes hacerlo desde la app) y vigila
+            si aparece algún signo de alarma.
+            {% elif clave == 'verde' %}sigue observando. Si aparecen síntomas nuevos o empeora, regístralos de nuevo.
+            {% else %}registra los síntomas para obtener la primera orientación.{% endif %}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="small text-muted mt-2">Cada nivel tiene su propia forma: octágono (rojo), triángulo (amarillo), círculo con
+      ✓ (verde). Así se distinguen aunque no se vean bien los colores. <strong>El semáforo es una orientación, no un
+      diagnóstico</strong>: no reemplaza la valoración de un profesional de salud.</p>
+  </section>
+
+  {# ------------------------------------------------------------------ Preguntas por tema #}
+  <section class="rk-ayuda__seccion" aria-labelledby="titulo-preguntas">
+    <h2 class="h4" id="titulo-preguntas">❓ Paso a paso por tema</h2>
+    <p class="rk-ayuda__sin-resultados" id="sin-resultados" hidden>No encontramos esa palabra. Prueba con otra, por
+      ejemplo «fiebre», «mensaje» o «contraseña».</p>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">👤 Tu cuenta</h3>
+      {% call pregunta('crear-cuenta', '¿Cómo creo mi cuenta?', 'registro registrarme inscribirme') %}
+        <ol>
+          <li>Toca <strong>Empezar ahora</strong> en la página de inicio.</li>
+          <li>Escribe tus nombres, apellidos, correo, teléfono y una contraseña de al menos 8 caracteres con letras y
+            números.</li>
+          <li>Lee y marca las casillas de la <strong>política de datos</strong> y de los <strong>términos y
+            condiciones</strong>.</li>
+          <li>Revisa tu correo y toca <strong>Confirmar mi correo</strong>.</li>
+        </ol>
+        {{ ir('auth.registro', 'Crear cuenta') }}
+      {% endcall %}
+      {% call pregunta('confirmar-correo', '¿Por qué debo confirmar mi correo?', 'verificar enlace bandeja spam') %}
+        <p>Tu correo es la única forma de recuperar la cuenta si olvidas la contraseña. Mientras no lo confirmes verás un
+          aviso en el inicio con el botón <strong>Reenviar enlace</strong>. Si no te llega, revisa la carpeta de correo no
+          deseado. El enlace vence en 48 horas.</p>
+      {% endcall %}
+      {% call pregunta('olvide-contrasena', 'Olvidé mi contraseña', 'recuperar restablecer clave') %}
+        <ol>
+          <li>En <strong>Iniciar sesión</strong> toca <strong>¿Olvidaste tu contraseña?</strong></li>
+          <li>Escribe tu correo. Te enviaremos un enlace que sirve una sola vez y vence en 60 minutos.</li>
+          <li>Crea tu contraseña nueva. Por seguridad, se cerrarán las sesiones abiertas en otros dispositivos.</li>
+        </ol>
+        <p class="small text-muted mb-0">RespiraKids nunca te pedirá tu contraseña por correo ni por mensaje.</p>
+        {{ ir('auth.recuperar', 'Recuperar contraseña') }}
+      {% endcall %}
+      {% call pregunta('cuenta-bloqueada', 'Mi cuenta dice que está bloqueada', 'intentos fallidos bloqueo') %}
+        <p>Después de 5 intentos fallidos la cuenta se bloquea 15 minutos para protegerla. Espera y vuelve a intentarlo,
+          o recupera tu contraseña: al hacerlo, la cuenta se desbloquea.</p>
+      {% endcall %}
+      {% call pregunta('tema', '¿Cómo cambio entre modo oscuro y claro?', 'tema colores sol luna pantalla brillo') %}
+        <p>Toca el botón del <strong>sol</strong> o la <strong>luna</strong> arriba a la derecha. El modo claro se ve
+          mejor a pleno sol. La app recuerda tu elección.</p>
+      {% endcall %}
+      {% call pregunta('cerrar-sesion', '¿Cómo cierro sesión?', 'salir') %}
+        <p>Abre el menú (☰) y toca <strong>Cerrar sesión</strong>. Hazlo siempre que uses un celular o computador
+          compartido.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">👶 Tus niños y niñas</h3>
+      {% call pregunta('registrar-nino', '¿Cómo registro a mi niño o niña?', 'agregar hijo hija bebé') %}
+        <ol>
+          <li>Ve a <strong>Mis niños</strong> y toca <strong>+ Registrar niño/a</strong>.</li>
+          <li>Escribe sus nombres, apellidos, fecha de nacimiento y sexo. El peso y la talla son opcionales.</li>
+          <li>Marca la <strong>autorización de tratamiento de datos de salud</strong>: sin ella no se pueden registrar
+            síntomas.</li>
+        </ol>
+        {{ ir('pacientes.nuevo', 'Registrar niño/a') }}
+      {% endcall %}
+      {% call pregunta('autorizaciones', '¿Qué significan las casillas de autorización?', 'consentimiento permisos datos investigación acceso profesional') %}
+        <ul>
+          <li><strong>Tratamiento de datos de salud</strong> (necesaria): permite registrar síntomas, ver el semáforo y
+            llevar el historial.</li>
+          <li><strong>Acceso del profesional que lo atienda</strong> (opcional): cuando pidas atención, el profesional de
+            la clínica que tome tu solicitud podrá ver el historial completo sin volver a preguntarte. Si no la marcas, te
+            lo preguntaremos cada vez.</li>
+          <li><strong>Uso para investigación</strong> (opcional): solo con datos anonimizados, sin nombre.</li>
+        </ul>
+        <p class="mb-0">Puedes cambiarlas cuando quieras en <strong>Mis niños → Configuración → Autorización de
+          datos</strong>.</p>
+      {% endcall %}
+      {% call pregunta('editar-nino', '¿Cómo actualizo sus datos o sus condiciones de base?', 'editar peso talla asma alergias enfermedad') %}
+        <p>En <strong>Mis niños</strong>, dentro de la tarjeta de tu niño/a, abre <strong>Configuración</strong>:
+          ahí están <em>Editar datos</em> y <em>Condiciones de base</em> (por ejemplo asma o alergias diagnosticadas).</p>
+        {{ ir('pacientes.listar', 'Ir a mis niños') }}
+      {% endcall %}
+      {% call pregunta('desactivar', '¿Qué pasa si desactivo un registro?', 'eliminar borrar quitar niño') %}
+        <p>El niño/a deja de aparecer en tu inicio, pero su información se conserva y puedes reactivarlo en cualquier
+          momento desde <strong>Mis niños → Registros desactivados</strong>. Si quieres que se eliminen sus datos, pídelo
+          desde <strong>Mis datos</strong> (ver «Tus datos y privacidad»).</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">📝 Registrar síntomas</h3>
+      {% call pregunta('como-registrar', '¿Cómo registro los síntomas?', 'tarjetas marcar guardar formulario') %}
+        <ol>
+          <li>Toca <strong>+ Registrar síntomas</strong> en la tarjeta de tu niño/a.</li>
+          <li>Toca las <strong>tarjetas</strong> de lo que observes hoy: quedan marcadas con ✓. Arriba ves cuántas marcaste
+            en cada sección y abajo, el botón para guardar.</li>
+          <li>Completa lo que sepas: temperatura, días con tos o fiebre. Nada es obligatorio.</li>
+          <li>Toca <strong>Guardar y ver orientación</strong>.</li>
+        </ol>
+      {% endcall %}
+      {% call pregunta('signos-alarma', '¿Qué son los signos de alarma?', 'urgencia peligro rojo convulsión azul') %}
+        <p>Son los signos más graves, por eso aparecen primero y se marcan en rojo: no poder beber, convulsiones, mucho
+          sueño o dificultad para despertarlo/a, labios azulados, piel que se hunde bajo las costillas al respirar, quejido,
+          pausas en la respiración, entre otros. <strong>Si marcas uno, la app te pedirá acudir de inmediato a un servicio
+          de salud</strong>: no necesitas terminar el registro.</p>
+      {% endcall %}
+      {% call pregunta('contar-respiraciones', '¿Cómo cuento las respiraciones?', 'frecuencia respiratoria minuto cronómetro') %}
+        <p>En la sección <strong>Respiración</strong> toca <strong>⏱️ Contar respiraciones durante 1 minuto</strong>.
+          Cuenta cada vez que el pecho sube, con el niño/a despierto/a y tranquilo/a (sin llorar). Al terminar el minuto,
+          escribe el número.</p>
+      {% endcall %}
+      {% call pregunta('oximetro', 'Tengo un oxímetro, ¿cómo uso la saturación?', 'saturación oxígeno spo2 altitud') %}
+        <p>Escribe el porcentaje que marca el oxímetro y la <strong>altitud</strong> del lugar donde estás (por ejemplo,
+          Bogotá 2600 metros), porque la saturación normal cambia con la altura. Si no tienes oxímetro, deja el campo vacío.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">🚦 Resultado y seguimiento</h3>
+      {% call pregunta('leer-resultado', '¿Cómo leo el resultado?', 'orientación señales evaluación semáforo color') %}
+        <p>Verás el color del semáforo con un mensaje, las <strong>posibles señales identificadas</strong> (los signos o
+          síntomas que llevaron a ese color, con su fuente) y una orientación. Revisa el <strong>«Entiende el
+          semáforo»</strong> de esta guía para saber qué hacer con cada color.</p>
+      {% endcall %}
+      {% call pregunta('seguimiento', '¿Qué es «¿Cómo sigue desde la última evaluación?»', 'mejoró sigue igual empeoró evolución avatar') %}
+        <p>En la tarjeta de tu niño/a puedes contar cómo ha evolucionado:</p>
+        <ul class="rk-evolucion">
+          {% for clave, opcion in evolucion.items() %}
+          <li><span aria-hidden="true">{{ opcion.emoji }}</span> <strong>{{ opcion.texto }}</strong>:
+            {% if clave == 'mejoro' %}te pediremos registrar lo que observas hoy para actualizar el semáforo.
+            {% elif clave == 'igual' %}queda registrado en el historial.
+            {% else %}te pediremos registrar los síntomas de nuevo y, si ves signos de alarma, acudir de inmediato.{% endif %}</li>
+          {% endfor %}
+        </ul>
+        <p class="mb-0">La expresión del avatar refleja lo que indicas, pero <strong>el color del semáforo solo cambia al
+          registrar los síntomas</strong>: así se confirma si las señales desaparecieron.</p>
+      {% endcall %}
+      {% call pregunta('historial', '¿Dónde veo el historial?', 'gráfico evolución registros anteriores ficha') %}
+        <p>En la tarjeta de tu niño/a toca <strong>Historial</strong>: verás un gráfico con la evolución del nivel y la
+          temperatura, y todos los registros y seguimientos en orden. En <strong>Ficha</strong> están sus datos y
+          condiciones de base.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">👩‍⚕️ Hablar con un profesional</h3>
+      {% call pregunta('pedir-atencion', '¿Cómo hablo con un profesional de salud?', 'médico doctor doctora solicitud conectar atención') %}
+        <ol>
+          <li>Desde el <strong>resultado</strong> de tus síntomas, o en la tarjeta de tu niño/a, toca
+            <strong>Hablar con un profesional</strong>.</li>
+          <li>Cuenta qué está pasando (si vienes del resultado, el mensaje ya viene escrito) y toca
+            <strong>Conectar con un profesional</strong>.</li>
+          <li>Verás <strong>«Conectando con un profesional de salud…»</strong>. Tu solicitud llega a los profesionales de la
+            clínica disponibles y te atiende el primero que se conecte. Te avisaremos con una notificación.</li>
+          <li>Cuando se conecte, verás su foto y su especialidad y podrás escribirle.</li>
+        </ol>
+        <p class="small text-muted mb-0">Los mensajes no son un canal de urgencias.</p>
+      {% endcall %}
+      {% call pregunta('autorizar-acceso', '¿Por qué me preguntan si autorizo el acceso?', 'permiso expediente historial completo privacidad') %}
+        <p>Todos los profesionales de la clínica ven el <strong>semáforo</strong> de tu niño/a (el color y las señales),
+          para priorizar la atención. El <strong>historial completo</strong> (síntomas, evaluaciones, ficha y medicamentos)
+          solo lo ve el profesional que tú autorices. Si respondes «Sí, autorizo», podrá orientarte mejor; si respondes
+          «No, solo conversar», te atenderá con el semáforo y lo que le escribas.</p>
+        <p class="mb-0">Para no responder cada vez, marca la casilla <strong>Acceso del profesional que lo atienda</strong>
+          en la autorización de datos de tu niño/a.</p>
+      {% endcall %}
+      {% call pregunta('adjuntos', '¿Puedo enviar fotos, documentos o notas de voz?', 'imagen foto pdf examen audio voz grabar micrófono adjuntar clip') %}
+        <ul>
+          <li><strong>📎 Adjuntar:</strong> fotos (JPG, PNG, WebP) o documentos PDF, como un examen. Máximo 5 MB.</li>
+          <li><strong>🎤 Nota de voz:</strong> toca el micrófono para grabar y otra vez para terminar (máximo 2 minutos).
+            Puedes escucharla antes de enviarla. La primera vez el navegador pide permiso para usar el micrófono.</li>
+        </ul>
+        <p class="mb-0">Las fotos se guardan <strong>sin la ubicación</strong> que suele guardar el celular. Solo las ven tú
+          y el profesional de esa conversación.</p>
+      {% endcall %}
+      {% call pregunta('privacidad-mensajes', '¿Quién puede leer mis mensajes?', 'privado conversación otros médicos') %}
+        <p>Cada conversación es privada entre tú y ese profesional. Los demás profesionales de la clínica no la ven.</p>
+      {% endcall %}
+      {% call pregunta('autorizar-manual', '¿Puedo autorizar a mi propio médico?', 'pediatra correo autorizar revocar quitar acceso') %}
+        <p>Sí. En <strong>Mis niños → Configuración → Profesionales autorizados</strong> escribe el correo que tu médico usa
+          en RespiraKids (pídeselo en la consulta). Verás su foto y especialidad para confirmar que es la persona correcta.
+          Desde esa misma pantalla puedes <strong>revocar</strong> el acceso de cualquier profesional.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">💊 Medicamentos</h3>
+      {% call pregunta('medicamentos', '¿Cómo veo y registro los medicamentos?', 'dosis tomas pastilla jarabe recordatorio administrada') %}
+        <p>Los medicamentos los registra <strong>un profesional de salud</strong>; RespiraKids nunca propone medicamentos
+          ni dosis. Cuando un profesional registre una indicación recibirás una notificación.</p>
+        <ol>
+          <li>En la tarjeta de tu niño/a, en <em>Medicamentos indicados por el profesional</em>, toca
+            <strong>Ver tomas y recordatorios</strong>.</li>
+          <li>Verás las tomas de las últimas y próximas 24 horas.</li>
+          <li>Cuando le des una dosis, toca <strong>Marcar como administrada</strong>. Las tomas atrasadas aparecen como
+            <em>Pendiente</em>.</li>
+        </ol>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">🤖 Asistente virtual</h3>
+      {% call pregunta('asistente', '¿Qué puede hacer el asistente?', 'inteligencia artificial ia chat preguntas') %}
+        <p>Responde preguntas generales sobre infecciones respiratorias y fiebre en la primera infancia,
+          <strong>solo con la información de la guía oficial</strong> del Ministerio de Salud, y cita sus fuentes.
+          <strong>No diagnostica, no recomienda medicamentos y no cambia el semáforo.</strong></p>
+        <p class="mb-0">No escribas nombres ni datos personales en tus preguntas: se procesan con un proveedor externo.</p>
+        {{ ir('asistente.chat', 'Abrir el asistente') }}
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">🔐 Tus datos y privacidad</h3>
+      {% call pregunta('mis-datos', '¿Cómo descargo o elimino mis datos?', 'privacidad supresión borrar descargar copia derechos ley 1581') %}
+        <p>En el pie de página toca <strong>Mis datos</strong>. Ahí puedes:</p>
+        <ul>
+          <li><strong>Descargar una copia</strong> de toda tu información.</li>
+          <li>Radicar una <strong>solicitud</strong>: consulta, corrección, supresión (eliminar tus datos o los de un niño/a),
+            revocar la autorización o una queja. Se responde en máximo 10 días hábiles (consultas) o 15 (reclamos).</li>
+        </ul>
+        <p class="mb-0">Al aprobarse una supresión, la información se <strong>anonimiza de forma irreversible</strong> y
+          recibes una constancia en tu correo. RespiraKids <strong>no vende ni comercializa</strong> tus datos.</p>
+        {{ ir('privacidad.mis_datos', 'Ir a Mis datos') }}
+      {% endcall %}
+      {% call pregunta('notificaciones', '¿Qué son las notificaciones?', 'campana avisos alertas') %}
+        <p>La <strong>campana</strong> te avisa de mensajes nuevos, solicitudes atendidas e indicaciones de medicamentos. Se
+          actualiza sola mientras usas la app; el número indica cuántas no has leído.</p>
+      {% endcall %}
+    </div>
+  </section>
+
+  <footer class="rk-ayuda__pie">
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-imprimir>🖨️ Imprimir o guardar como PDF</button>
+    <p class="small text-muted mb-0">¿No encontraste tu respuesta? Escríbele a un profesional desde la app o consulta la
+      <a href="{{ url_for('privacidad.politica') }}">política de datos</a> y los
+      <a href="{{ url_for('privacidad.terminos') }}">términos</a>.</p>
+  </footer>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ayuda.js') }}"></script>
+{% endblock %}
