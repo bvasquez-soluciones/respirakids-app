@@ -53,7 +53,7 @@ def test_resumen_no_expone_datos_clinicos_individuales(client, app):
     crear_cuidador('admin@test.com', rol='admin')
     login(client, 'ana@test.com')
     client.post(f'/sintomas/nino/{nino.id}/nuevo', data={'tiraje_subcostal': 'y'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
     login(client, 'admin@test.com')
     for ruta in ('/admin/', '/admin/cuidadores'):
         assert 'Valentina' not in client.get(ruta).get_data(as_text=True)
@@ -84,13 +84,13 @@ def test_flujo_aprobacion_y_cambio_obligatorio_de_contrasena(client, admin):
     html = client.post('/admin/profesionales/nuevo', data=DATOS_PROFESIONAL).get_data(as_text=True)
     clave = re.search(r'id="clave">([^<]+)<', html).group(1)
     profesional = Profesional.query.one()
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     assert login(client, 'laura@clinica.co', clave).status_code == 403          # pendiente de aprobación
 
     login(client, 'admin@test.com')
     client.post(f'/admin/profesionales/{profesional.id}/estado', data={'estado': 'aprobado'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'laura@clinica.co', clave)
     aceptar_politica(profesional)
@@ -143,7 +143,7 @@ def test_atender_solicitud_notifica_al_titular(client, app):
     login(client, 'ana@test.com')
     client.post('/privacidad/solicitudes', data={'tipo': 'consulta', 'nino_id': 0,
                                                  'descripcion': 'Quiero saber qué datos tienen de mí.'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
     solicitud = SolicitudDerechos.query.one()
 
     crear_cuidador('admin@test.com', rol='admin')
@@ -156,7 +156,7 @@ def test_atender_solicitud_notifica_al_titular(client, app):
     db.session.refresh(solicitud)
     assert solicitud.estado == 'resuelta' and solicitud.fecha_respuesta
     assert Notificacion.query.filter_by(usuario_id=cuidador.id, tipo='solicitud_derechos').count() == 1
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'ana@test.com')
     assert 'Puedes descargar tus datos' in client.get('/privacidad/mis-datos').get_data(as_text=True)

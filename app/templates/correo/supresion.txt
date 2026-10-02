@@ -1,0 +1,11 @@
+Hola, {{ usuario.nombre }}:
+
+Atendimos tu solicitud de supresión de datos personales.
+{% if alcance == 'nino' %}
+La información de {{ nombre_nino }} fue anonimizada de forma irreversible: ya no es posible identificarla ni
+asociarla contigo.
+{% else %}
+Tu cuenta fue cerrada y tu información, junto con la de tus niños y niñas, fue anonimizada de forma irreversible:
+ya no es posible identificarla ni asociarla contigo.
+{% endif %}
+Conservamos únicamente la constancia de las autorizaciones que otorgaste y de esta solicitud, como exige la ley.

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/avatar.html" import pareja_ninos %}
 {% block title %}Inicio - RespiraKids{% endblock %}
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
@@ -16,12 +17,24 @@
     <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-outline-primary btn-sm">+ Registrar niño/a</a>
   </header>
 
+  {% if not current_user.correo_verificado %}
+  <div class="alert alert-info rk-aviso-verificacion" role="status">
+    <span>Confirma tu correo <strong>{{ current_user.correo }}</strong> para poder recuperar tu cuenta si olvidas
+      la contraseña. Revisa tu bandeja de entrada.</span>
+    <form method="POST" action="{{ url_for('auth.reenviar_verificacion') }}" class="m-0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn-outline-primary btn-sm">Reenviar enlace</button>
+    </form>
+  </div>
+  {% endif %}
+
   {% if resumenes %}
   <div class="rk-ninos-grid">
     {% for r in resumenes %}{% include "dashboard/_tarjeta_nino.html" %}{% endfor %}
   </div>
   {% else %}
   <section class="rk-vacio">
+    {{ pareja_ninos(150) }}
     <p class="h5">Aún no has registrado ningún niño o niña</p>
     <p class="text-muted">Regístralo para llevar su historial de síntomas y recibir orientación según su estado.</p>
     <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary">Registrar niño/a</a>

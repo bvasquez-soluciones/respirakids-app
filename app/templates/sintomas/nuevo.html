@@ -15,6 +15,20 @@
     </div>
   </header>
 
+  {% set reevaluacion = request.args.get('reevaluacion') %}
+  {% if reevaluacion == 'mejoro' %}
+  <div class="alert alert-info mb-0" role="status">
+    <strong>¡Qué bueno que {{ nino.nombre }} mejoró!</strong> Para actualizar su estado, marca solo lo que observas
+    <strong>hoy</strong> y guarda. Si ya no tiene ningún síntoma, puedes guardar sin marcar nada.
+    El semáforo se recalculará con los criterios clínicos de AIEPI.
+  </div>
+  {% elif reevaluacion == 'empeoro' %}
+  <div class="alert alert-warning mb-0" role="alert">
+    <strong>Indicaste que {{ nino.nombre }} empeoró.</strong> Marca los síntomas que observas ahora para actualizar
+    su estado. Si ves algún signo de alarma, busca atención en un servicio de salud de inmediato.
+  </div>
+  {% endif %}
+
   <div class="alert alert-danger small mb-0" id="aviso-alarma" role="alert" hidden>
     <strong>Marcaste un signo de alarma.</strong> Busca atención en un servicio de salud de inmediato;
     no es necesario terminar este registro primero.
@@ -65,42 +79,7 @@
   </form>
 </div>
 
-<script>
-  (function () {
-    // Aviso inmediato si se marca cualquier signo de alarma.
-    const aviso = document.getElementById("aviso-alarma");
-    const alarmas = document.querySelectorAll("#grupo-alarma input[type=checkbox]");
-    const revisar = () => { aviso.hidden = ![...alarmas].some((c) => c.checked); };
-    alarmas.forEach((c) => c.addEventListener("change", revisar));
-    revisar();
-
-    // Contador de 60 segundos: la fuente indica medir la frecuencia respiratoria durante 1 minuto.
-    const boton = document.getElementById("btn-contador");
-    const estado = document.getElementById("estado-contador");
-    const campo = document.getElementById("frecuencia_respiratoria");
-    let intervalo = null;
-    boton.addEventListener("click", () => {
-      if (intervalo) {
-        clearInterval(intervalo); intervalo = null;
-        boton.textContent = "⏱️ Contar respiraciones durante 1 minuto";
-        estado.textContent = "Conteo cancelado.";
-        return;
-      }
-      let restantes = 60;
-      boton.textContent = "Cancelar conteo";
-      estado.textContent = "Cuenta cada vez que el pecho sube. Quedan 60 s.";
-      intervalo = setInterval(() => {
-        restantes -= 1;
-        if (restantes > 0) {
-          estado.textContent = "Cuenta cada vez que el pecho sube. Quedan " + restantes + " s.";
-          return;
-        }
-        clearInterval(intervalo); intervalo = null;
-        boton.textContent = "⏱️ Contar de nuevo";
-        estado.textContent = "¡Tiempo! Escribe cuántas respiraciones contaste.";
-        campo.focus();
-      }, 1000);
-    });
-  })();
-</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/sintomas.js') }}"></script>
 {% endblock %}

@@ -109,12 +109,27 @@ def test_dashboard_muestra_medicamentos_indicados_por_profesional(client, app):
                                          ('rojo', 'se identificaron posibles señales de alarma'), (None, 'aún no hay evaluaciones')])
 def test_avatar_por_sexo_y_estado(app, sexo, nivel, texto):
     from app.models import Nino
-    plantilla = app.jinja_env.from_string('{% from "macros/avatar.html" import avatar %}{{ avatar(n, nivel) }}')
-    svg = plantilla.render(n=Nino(nombre='Sofía', sexo=sexo), nivel=nivel)
-    assert svg.startswith('<svg') and 'role="img"' in svg
-    assert re.search(rf'aria-label="Avatar de Sofía: {texto}', svg)
-    # Las coletas solo se dibujan en la versión de niña.
-    assert ('cx="24" cy="54"' in svg) == (sexo == 'F')
+    from app.presentacion import nivel_info
+    expresion = nivel_info(nivel)['avatar']
+    archivo = f"{'nina' if sexo == 'F' else 'nino'}-{expresion}"
+    with app.test_request_context():
+        plantilla = app.jinja_env.from_string(
+            '{% from "macros/avatar.html" import avatar, figura %}{{ avatar(n, nivel) }}{{ figura(n, nivel) }}')
+        html = plantilla.render(n=Nino(nombre='Sofía', sexo=sexo), nivel=nivel)
+    # Busto y figura completa con la ilustración del sexo y la expresión del nivel.
+    assert f'img/avatares/{archivo}.webp' in html and f'img/avatares/{archivo}-figura.webp' in html
+    # El texto alternativo comunica el estado (la imagen nunca lo transmite sola).
+    assert re.search(rf'alt="Avatar de Sofía: {texto}', html)
+    assert f'rk-avatar--{nivel or "neutro"}' in html
+
+
+def test_existen_todas_las_ilustraciones_de_avatar():
+    import pathlib
+    carpeta = pathlib.Path(__file__).resolve().parent.parent / 'app/static/img/avatares'
+    for sexo in ('nina', 'nino'):
+        for expresion in ('normal', 'feliz', 'preocupado', 'enfermo'):
+            for sufijo in ('', '-figura'):
+                assert (carpeta / f'{sexo}-{expresion}{sufijo}.webp').is_file()
 
 
 # ---------------------------------------------------------------- Resultado, ficha e historial

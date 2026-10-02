@@ -7,9 +7,18 @@
     <strong>Autorización de tratamiento de datos de salud.</strong>
     Declaro que soy el representante legal o cuidador autorizado de este niño/a, y autorizo el tratamiento de
     sus datos personales y de salud para registrar síntomas, obtener la clasificación orientativa de riesgo,
-    llevar su historial y compartirlo con los profesionales que yo autorice, según la
+    llevar su historial, compartir el resumen del semáforo (nivel y señales) con los profesionales de salud de
+    la clínica para priorizar su atención, y compartir el historial completo solo con los profesionales que yo
+    autorice, según la
     <a href="{{ url_for('privacidad.politica') }}" target="_blank" rel="noopener">política de tratamiento de datos</a>.
     Sé que los datos de salud son sensibles y que entregarlos es facultativo.
+  {% endcall %}
+  {% call casilla(form.consentimiento_atencion, 'form-check mb-3 small') %}
+    <strong>Acceso del profesional que lo atienda (opcional).</strong>
+    Autorizo que, cuando yo solicite atención por RespiraKids, el profesional de la clínica que tome la solicitud
+    acceda al historial completo de este niño/a (síntomas, evaluaciones, ficha, condiciones de base y medicamentos)
+    sin volver a preguntarme. Si no lo marco, me lo preguntarán cada vez. Puedo retirar esta autorización y revocar
+    el acceso de cualquier profesional cuando quiera.
   {% endcall %}
   {% call casilla(form.consentimiento_investigacion, 'form-check mb-0 small') %}
     <strong>Uso para investigación.</strong>

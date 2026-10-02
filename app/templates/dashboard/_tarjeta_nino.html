@@ -1,32 +1,68 @@
 {# Tarjeta de un niño/a en el dashboard del cuidador. Requiere `r` (ResumenNino). #}
-{% from "macros/avatar.html" import avatar %}
+{% from "macros/avatar.html" import figura %}
 {% set nino = r.nino %}
 {% set info = r.info_nivel %}
 {% set lista_senales = r.senales_del_nivel|map(attribute='texto')|list %}
-<article class="rk-nino-card rk-nino-card--{{ r.nivel }}" aria-labelledby="nino-{{ nino.id }}-nombre">
-  <header class="rk-nino-card__cabecera">
-    {{ avatar(nino, r.nivel, 76) }}
-    <div class="flex-grow-1">
+{% set evolucion = r.seguimiento.estado if r.seguimiento else None %}
+<article class="rk-nino-card rk-nino-card--{{ r.nivel }}" id="nino-{{ nino.id }}" aria-labelledby="nino-{{ nino.id }}-nombre">
+  {# Escenario: ilustración de cuerpo completo con la expresión del nivel + identidad del niño/a. #}
+  <header class="rk-nino-card__escenario">
+    {{ figura(nino, r.nivel, 150, evolucion) }}
+    <div class="rk-nino-card__identidad">
       <h2 class="rk-nino-card__nombre" id="nino-{{ nino.id }}-nombre">{{ nino.nombre_completo }}</h2>
       <p class="rk-nino-card__meta">{{ nino.edad_texto() }} · {{ 'Niña' if nino.sexo == 'F' else 'Niño' }}</p>
+      {% if r.ultima_evaluacion %}
+      <p class="rk-nino-card__meta">Última evaluación:<br>{{ r.ultima_evaluacion.fecha|fecha_hora }}</p>
+      {% endif %}
     </div>
   </header>
 
   <div class="rk-estado rk-estado--{{ r.nivel }}" role="status">
-    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+    <span class="rk-estado__icono">{{ icono_nivel(r.nivel) }}</span>
     <div>
       <p class="rk-estado__titulo">
         <span class="visually-hidden">Estado: </span>{{ info.titulo }}
       </p>
-      <p class="rk-estado__detalle">
-        {% if r.ultima_evaluacion %}
-          {{ info.resumen }} · Última evaluación: {{ r.ultima_evaluacion.fecha|fecha_hora }}
-        {% else %}
-          {{ info.resumen }}
-        {% endif %}
-      </p>
+      <p class="rk-estado__detalle">{{ info.resumen }}</p>
     </div>
   </div>
+
+  {% if r.ultima_evaluacion and nino.consentimiento_otorgado %}
+  {# Seguimiento: percepción del cuidador desde la última evaluación. No cambia la clasificación. #}
+  {% set seg = r.seguimiento %}
+  <section class="rk-seguimiento" aria-labelledby="seguimiento-{{ nino.id }}">
+    <h3 class="rk-nino-card__subtitulo" id="seguimiento-{{ nino.id }}">
+      ¿Cómo sigue {{ nino.nombre }} desde la última evaluación?
+    </h3>
+    <form method="POST" action="{{ url_for('sintomas.seguimiento', nino_id=nino.id) }}" class="rk-seguimiento__opciones">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {% for valor, opcion in EVOLUCION.items() %}
+      {% set activa = seg and seg.estado == valor %}
+      <button type="submit" name="estado" value="{{ valor }}" aria-pressed="{{ 'true' if activa else 'false' }}"
+        class="rk-seguimiento__opcion {{ 'is-activa' if activa }}">
+        <span class="rk-seguimiento__emoji" aria-hidden="true">{{ opcion.emoji }}</span>
+        <span>{{ opcion.texto }}</span>
+      </button>
+      {% endfor %}
+    </form>
+    {% if seg %}
+    <p class="rk-nota-fuente">Indicaste «{{ EVOLUCION[seg.estado].texto }}» el {{ seg.fecha|fecha_hora }}. Puedes actualizarlo cuando quieras.</p>
+    {% if seg.estado == 'mejoro' and r.nivel in ('rojo', 'amarillo') %}
+    <div class="alert alert-info small mb-0 mt-2" role="status">
+      ¡Qué bueno! El estado se actualiza cuando registras los síntomas de nuevo: así se confirma si las señales
+      ya no están presentes.
+      <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="alert-link d-block mt-1">Actualizar el estado →</a>
+    </div>
+    {% endif %}
+    {% if seg.estado == 'empeoro' %}
+    <div class="alert alert-warning small mb-0 mt-2" role="alert">
+      {{ EVOLUCION.empeoro.mensaje }}
+      <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="alert-link d-block mt-1">Registrar síntomas ahora →</a>
+    </div>
+    {% endif %}
+    {% endif %}
+  </section>
+  {% endif %}
 
   {% if lista_senales %}
   <section class="rk-nino-card__bloque">
@@ -79,6 +115,6 @@
     {% endif %}
     <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Historial</a>
     <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Ficha</a>
-    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Mensajes</a>
+    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Hablar con un profesional</a>
   </footer>
 </article>

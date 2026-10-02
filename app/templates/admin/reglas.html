@@ -21,7 +21,7 @@
         {% for r in reglas %}
         <tr>
           <td><code>{{ r.id }}</code></td>
-          <td><span aria-hidden="true">{{ nivel_info(r.nivel).icono }}</span> {{ nivel_info(r.nivel).nombre }}</td>
+          <td>{{ icono_nivel(r.nivel) }} {{ nivel_info(r.nivel).nombre }}</td>
           <td>{{ r.senal }}</td>
           <td>{{ 'Salvaguarda (no proviene de la fuente)' if r.origen == 'salvaguarda' else 'Fuente clínica' }}</td>
           <td>{{ r.validacion|length }}</td>

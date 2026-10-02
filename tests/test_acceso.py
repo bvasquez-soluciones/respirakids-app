@@ -66,15 +66,21 @@ def test_no_se_puede_eliminar_patologia_de_otro_nino(client, escenario):
 def test_cuidador_no_ve_resultado_de_evaluacion_ajena(client, escenario):
     login(client, 'ana@test.com')
     client.post(f'/sintomas/nino/{escenario["nino_ana"].id}/nuevo', data={'tos': 'on'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'luis@test.com')
     assert client.get('/sintomas/resultado/1').status_code == 404
 
 
-def test_profesional_sin_autorizacion_no_ve_paciente(client, escenario):
+def _solo_semaforo(client, nino_id):
+    """Sin autorización del cuidador: resumen del semáforo, nunca el expediente."""
+    html = client.get(f'/dashboard/profesional?paciente={nino_id}').get_data(as_text=True)
+    return 'Ves el resumen del semáforo' in html and 'Antecedentes y medicamentos' not in html         and 'Historial' not in html
+
+
+def test_profesional_sin_autorizacion_no_ve_el_expediente(client, escenario):
     login(client, 'dra@test.com')
-    assert client.get(f'/dashboard/profesional?paciente={escenario["nino_ana"].id}').status_code == 404
+    assert _solo_semaforo(client, escenario['nino_ana'].id)
     assert client.get(f'/mensajes/nino/{escenario["nino_ana"].id}').status_code == 404
 
 
@@ -92,8 +98,8 @@ def test_autorizacion_revocada_o_expirada_no_da_acceso(client, escenario):
     db.session.commit()
 
     login(client, 'dra@test.com')
-    assert client.get(f'/dashboard/profesional?paciente={escenario["nino_ana"].id}').status_code == 404
-    assert client.get(f'/dashboard/profesional?paciente={escenario["nino_luis"].id}').status_code == 404
+    assert _solo_semaforo(client, escenario['nino_ana'].id)
+    assert _solo_semaforo(client, escenario['nino_luis'].id)
 
 
 def test_profesional_no_usa_rutas_de_cuidador(client, escenario):

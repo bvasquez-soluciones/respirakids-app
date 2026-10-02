@@ -1,11 +1,10 @@
 import io
-import json
 import os
 from collections import Counter
 from datetime import timedelta
 
-from flask import Response, abort, current_app, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask import Response, abort, current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user
 from PIL import Image, UnidentifiedImageError
 
 from app import db
@@ -16,13 +15,15 @@ from app.fechas import fecha_hora
 from app.forms import CambioPasswordForm, PerfilCuidadorForm, PerfilProfesionalForm
 from app.ml.prediccion import concordancia_con_reglas, metadatos_modelo
 from app.models import Evaluacion, Nino, RegistroSintomas, ahora_utc
-from app.presentacion import SIGNOS_CLINICOS, SINTOMAS_REPORTADOS, datos_complementarios, hallazgos_registrados
+from app.presentacion import (
+    SIGNOS_CLINICOS, SINTOMAS_REPORTADOS, datos_complementarios, hallazgos_registrados, nivel_info,
+)
 from app.services.acceso import autorizaciones_vigentes_profesional, nino_del_profesional
 from app.services.alertas import pacientes_en_rojo
 from app.services.auditoria import registrar_actividad, registrar_seguridad
 from app.services.notificaciones import marcar_todas_leidas, recientes
 from app.services.resumen_nino import (
-    avisos_de_evaluacion, datos_evolucion, resumir, resumir_todos, senales_de_evaluacion,
+    avisos_de_evaluacion, datos_evolucion, linea_de_tiempo, resumir, resumir_todos, senales_de_evaluacion,
 )
 
 FORMATOS_IMAGEN = {'JPEG': 'jpg', 'PNG': 'png', 'WEBP': 'webp'}
@@ -54,8 +55,10 @@ def _procesar_cambio_password(form):
     if hasattr(current_user, 'debe_cambiar_password'):
         current_user.debe_cambiar_password = False
     db.session.commit()
+    # La huella de sesión cambió: las sesiones de otros dispositivos se cierran y esta se renueva.
+    login_user(current_user._get_current_object())
     registrar_seguridad('cambio_password')
-    flash('Contraseña actualizada correctamente.', 'success')
+    flash('Contraseña actualizada. Se cerraron las sesiones abiertas en otros dispositivos.', 'success')
     return True
 
 
@@ -91,19 +94,53 @@ def perfil():
 
 # ---------------------------------------------------------------- Profesional
 
+@dashboard_bp.route('/semaforo')
+@login_required
+@rol_requerido('profesional')
+def semaforo():
+    """Semáforo de la clínica: nivel y señales de la última evaluación de todos los niños/as con autorización
+    de tratamiento de datos. El expediente completo solo lo ve el profesional que el cuidador autorice."""
+    from app.models import SolicitudAtencion
+    ninos = Nino.query.filter_by(estado='activo', consentimiento_otorgado=True).all()
+    resumenes = resumir_todos(ninos)
+    autorizados = {a.nino_id for a in autorizaciones_vigentes_profesional(current_user.id)}
+    en_espera = {s.nino_id for s in SolicitudAtencion.query.filter_by(estado='pendiente').all()}
+    registrar_actividad('consultar_semaforo', 'clinica', None, detalles={'ninos': len(resumenes)})
+    return render_template('dashboard/semaforo.html', resumenes=resumenes, autorizados=autorizados,
+                           en_espera=en_espera, conteo=Counter(r.nivel for r in resumenes))
+
+
 @dashboard_bp.route('/profesional')
 @login_required
 @rol_requerido('profesional')
 def profesional():
+    """Pacientes de la clínica con su semáforo. El expediente completo solo se abre si el cuidador autorizó
+    a este profesional; si no, se muestra el resumen del semáforo."""
+    from app.models import SolicitudAtencion
+    from app.services import atencion
     autorizaciones = autorizaciones_vigentes_profesional(current_user.id)
+    autorizados = {a.nino_id for a in autorizaciones}
+    pacientes = (Nino.query.filter_by(estado='activo', consentimiento_otorgado=True)
+                 .order_by(Nino.nombre, Nino.apellido).all())
     paciente_id = request.args.get('paciente', type=int)
     rango = request.args.get('rango', '30')
     if rango not in RANGOS_GRAFICO:
         rango = '30'
 
     contexto = {'usuario': current_user, 'autorizaciones': autorizaciones, 'rango_actual': rango,
-                'nino_seleccionado': None}
-    if paciente_id:
+                'nino_seleccionado': None, 'pacientes': pacientes, 'autorizados': autorizados}
+    if paciente_id and paciente_id not in autorizados:
+        # Sin autorización del cuidador: solo el resumen del semáforo.
+        nino = db.session.get(Nino, paciente_id)
+        if nino is None or not nino.activo or not nino.consentimiento_otorgado:
+            abort(404)
+        registrar_actividad('consultar_semaforo_paciente', 'nino', nino.id)
+        contexto.update(
+            nino_seleccionado=nino, resumen=resumir(nino), sin_expediente=True,
+            puede_conversar=atencion.hay_relacion(nino.id, current_user.id),
+            solicitud_en_espera=SolicitudAtencion.query.filter_by(nino_id=nino.id, estado='pendiente').first(),
+        )
+    elif paciente_id:
         nino = nino_del_profesional(paciente_id)
         registrar_actividad('consultar_paciente', 'nino', nino.id)
         registros = (
@@ -116,6 +153,7 @@ def profesional():
         resumen = resumir(nino)
         contexto.update(
             nino_seleccionado=nino, registros=registros, resumen=resumen,
+            linea=linea_de_tiempo(registros, nino.seguimientos),
             evolucion=datos_evolucion(en_rango),
             avisos=avisos_de_evaluacion(resumen.ultima_evaluacion),
             patologias=[p for p in nino.patologias_base if p.activa],
@@ -182,10 +220,9 @@ def reportes():
 
     return render_template(
         'dashboard/reportes.html', usuario=current_user,
-        riesgo_labels=json.dumps(['Estable (verde)', 'En vigilancia (amarillo)', 'Requiere atención (rojo)', 'Sin registros']),
-        riesgo_data=json.dumps([conteo_riesgo['verde'], conteo_riesgo['amarillo'], conteo_riesgo['rojo'], conteo_riesgo['neutro']]),
-        sintomas_labels=json.dumps([s[0] for s in top_sintomas]),
-        sintomas_data=json.dumps([s[1] for s in top_sintomas]),
+        niveles=[{'nivel': n, 'nombre': nivel_info(n)['nombre'], 'total': conteo_riesgo[n]}
+                 for n in ('rojo', 'amarillo', 'verde', 'neutro')],
+        sintomas=[{'etiqueta': etiqueta, 'total': total} for etiqueta, total in top_sintomas],
         filas_tabla=filas_tabla, total_pacientes=len(autorizaciones),
     )
 
@@ -304,11 +341,23 @@ def modelo_ml():
 # ---------------------------------------------------------------- Notificaciones (todos los roles)
 
 def _enlace_notificacion(n):
+    if n.recurso == 'solicitudes':
+        return url_for('mensajes.solicitudes')
+    if n.recurso == 'atencion' and n.recurso_id:
+        return url_for('mensajes.conversacion', nino_id=n.recurso_id)
     if n.recurso == 'medicamentos' and n.recurso_id:
         return url_for('medicamentos.plan', nino_id=n.recurso_id)
     if n.recurso == 'mensajes' and n.recurso_id:
         return url_for('mensajes.conversacion', nino_id=n.recurso_id)
     return None
+
+
+@dashboard_bp.route('/estado')
+@login_required
+def estado():
+    """Contadores de notificaciones, alertas y solicitudes para actualizar la barra sin recargar."""
+    from app.services.notificaciones import contadores
+    return jsonify(contadores(current_user))
 
 
 @dashboard_bp.route('/notificaciones')

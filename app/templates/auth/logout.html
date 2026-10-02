@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Cerrar sesión - RespiraKids{% endblock %}
+{% block content %}
+<div class="rk-panel rk-angosto text-center">
+  <h1 class="h4">¿Cerrar sesión?</h1>
+  <p class="text-muted">Tendrás que volver a ingresar tu correo y contraseña para entrar.</p>
+  <form method="POST" action="{{ url_for('auth.logout') }}" class="d-flex justify-content-center gap-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="btn btn-primary">Cerrar sesión</button>
+    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

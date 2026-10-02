@@ -1,18 +1,24 @@
 {% extends "base.html" %}
-{% from "macros/formularios.html" import casilla, nota_obligatorios %} {% block title %}Autorización de tratamiento de datos - RespiraKids{% endblock %}
+{% from "macros/formularios.html" import casilla, nota_obligatorios %} {% block title %}Política de datos y términos de uso - RespiraKids{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-8">
     <div class="card shadow-sm">
       <div class="card-body p-4">
-        <h1 class="h3 mb-2">Autorización de tratamiento de datos</h1>
+        <h1 class="h3 mb-2">Política de datos y términos de uso</h1>
         <p class="text-muted">
           Para continuar usando RespiraKids necesitamos que leas y aceptes la versión vigente de nuestra política
-          de tratamiento de datos personales.
+          de tratamiento de datos personales y de los términos y condiciones de uso.
         </p>
-        <div class="border rounded p-3 mb-4 bg-light" style="max-height: 50vh; overflow-y: auto" tabindex="0"
+        <h2 class="h6">Política de tratamiento de datos personales</h2>
+        <div class="border rounded p-3 mb-3 bg-light rk-texto-legal" tabindex="0"
           aria-label="Texto de la política de tratamiento de datos">
           {% include "privacidad/_contenido_politica.html" %}
+        </div>
+        <h2 class="h6">Términos y condiciones de uso</h2>
+        <div class="border rounded p-3 mb-4 bg-light rk-texto-legal" tabindex="0"
+          aria-label="Texto de los términos y condiciones de uso">
+          {% include "privacidad/_contenido_terminos.html" %}
         </div>
         <form method="POST" novalidate>
           {{ form.csrf_token }}
@@ -21,8 +27,12 @@
             He leído y acepto la política de tratamiento de datos personales y autorizo el tratamiento de mis
             datos para las finalidades descritas.
           {% endcall %}
+          {% call casilla(form.acepta_terminos) %}
+            He leído y acepto los términos y condiciones de uso, y entiendo que RespiraKids no constituye un
+            diagnóstico médico.
+          {% endcall %}
           <button type="submit" class="btn btn-primary">Aceptar y continuar</button>
-          <a href="{{ url_for('auth.logout') }}" class="btn btn-link">No acepto, cerrar sesión</a>
+          <button type="submit" formaction="{{ url_for('auth.logout') }}" formnovalidate class="btn btn-link">No acepto, cerrar sesión</button>
         </form>
       </div>
     </div>

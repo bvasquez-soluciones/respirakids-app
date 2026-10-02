@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es">
+<body style="margin:0;padding:24px;background:#f2f6fa;font-family:Arial,Helvetica,sans-serif;color:#0f1b2d;">
+  <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px;border:1px solid #e2e8f0;">
+    <p style="margin:0 0 24px;font-size:20px;font-weight:bold;color:#0070c8;">Respira<span style="color:#0ea5e9;">Kids</span></p>
+    <p style="margin:0 0 16px;">Hola, {{ usuario.nombre }}:</p>
+    {% block cuerpo %}{% endblock %}
+    {% if enlace %}
+    <p style="margin:24px 0 0;font-size:12px;color:#526175;">Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+      <span style="word-break:break-all;color:#0369a1;">{{ enlace }}</span></p>
+    {% endif %}
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+    <p style="margin:0;font-size:12px;color:#526175;">RespiraKids nunca te pedirá tu contraseña por correo.
+      Este es un mensaje automático; no respondas a esta dirección.</p>
+  </div>
+</body>
+</html>

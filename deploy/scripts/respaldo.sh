@@ -40,9 +40,17 @@ pg_dump --format=custom --no-owner --no-privileges --dbname="$DATABASE_URL" --fi
 pg_restore --list "$DUMP" > /dev/null   # verifica que el archivo sea legible
 DUMP="$(cifrar "$DUMP")"
 
-# 2. Archivos subidos por los usuarios (fotos de perfil).
+# 2. Archivos subidos: fotos de perfil y adjuntos de mensajes (fotos, PDF y notas de voz: datos de salud).
 UPLOADS="$DIR_RESPALDOS/respirakids_uploads_$FECHA.tar.gz"
-tar -czf "$UPLOADS" -C "$DIR_APP/app/static" uploads 2>/dev/null || tar -czf "$UPLOADS" --files-from /dev/null
+CARPETAS=()
+for carpeta in app/static/uploads datos/adjuntos; do
+  if [ -d "$DIR_APP/$carpeta" ]; then CARPETAS+=("$carpeta"); fi
+done
+if [ ${#CARPETAS[@]} -gt 0 ]; then
+  tar -czf "$UPLOADS" -C "$DIR_APP" "${CARPETAS[@]}"
+else
+  tar -czf "$UPLOADS" --files-from /dev/null
+fi
 UPLOADS="$(cifrar "$UPLOADS")"
 
 # 3. Sumas de verificación para detectar respaldos dañados.

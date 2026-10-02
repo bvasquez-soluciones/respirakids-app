@@ -6,6 +6,9 @@ from app.models.base import ahora_utc
 POLITICA_DATOS = 'politica_datos'              # usuario acepta la política de tratamiento de datos
 TRATAMIENTO_NINO = 'tratamiento_datos_nino'    # representante autoriza el tratamiento de datos de salud del niño
 INVESTIGACION_NINO = 'investigacion_nino'      # uso anonimizado para investigación y mejora (opcional)
+TERMINOS_USO = 'terminos_uso'                  # usuario acepta los términos y condiciones de uso
+# Opcional: el profesional de la clínica que atienda una solicitud recibe acceso al expediente sin preguntar.
+ACCESO_ATENCION_NINO = 'acceso_profesional_atencion'
 
 TIPOS_SOLICITUD = {
     'consulta': 'Consultar qué datos tiene RespiraKids',

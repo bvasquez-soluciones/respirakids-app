@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "macros/iconos.html" import marca %}
+{% from "macros/formularios.html" import campo_auth, nota_obligatorios %}
+{% block title %}Nueva contraseña - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-auth-page">
+  <div class="rk-auth-card">
+    <div class="rk-auth-blob a"></div>
+    <div class="rk-auth-blob b"></div>
+    <div class="rk-auth-header">
+      <div class="rk-auth-logo">{{ marca(52) }}</div>
+      <h1>Crea una contraseña nueva</h1>
+      {% if form %}
+      <p>Al guardarla se cerrarán las sesiones abiertas en otros dispositivos.</p>
+      {% endif %}
+    </div>
+
+    {% if form %}
+    <form method="POST" class="rk-auth-form" novalidate>
+      {{ form.csrf_token }}
+      {{ nota_obligatorios() }}
+      {{ campo_auth(form.password, '🔒', mostrar_password=True) }}
+      {{ campo_auth(form.password_confirmar, '🔒', mostrar_password=True) }}
+      <button type="submit" class="rk-auth-submit">Guardar contraseña</button>
+    </form>
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+      Este enlace no es válido, ya se usó o venció. Por seguridad, cada enlace sirve una sola vez y por tiempo limitado.
+    </div>
+    <a class="rk-auth-submit text-decoration-none" href="{{ url_for('auth.recuperar') }}">Pedir un enlace nuevo</a>
+    {% endif %}
+
+    <div class="rk-auth-footer">
+      <a href="{{ url_for('auth.login') }}">← Volver a iniciar sesión</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

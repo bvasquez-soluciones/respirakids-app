@@ -1,68 +1,109 @@
-{% extends "base.html" %} {% block title %}Mis niños - RespiraKids{%
-endblock %} {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1 class="h2">Mis niños</h1>
-  <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary"
-    >+ Registrar niño/a</a
-  >
-</div>
+{% extends "base.html" %}
+{% from "macros/avatar.html" import figura, pareja_ninos %}
+{% from "macros/iconos.html" import icono %}
+{% block title %}Mis niños - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-inicio">
+  <header class="rk-encabezado">
+    <div>
+      <h1 class="h2 mb-1">Mis niños</h1>
+      <p class="text-muted mb-0">Registra síntomas, consulta su historial y administra quién puede ver su información.</p>
+    </div>
+    <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary">+ Registrar niño/a</a>
+  </header>
 
-{% if ninos %}
-<div class="table-responsive">
-  <table class="table table-hover align-middle">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Edad</th>
-        <th>Sexo</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for nino in ninos %}
-      <tr>
-        <td><a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}">{{ nino.nombre_completo }}</a></td>
-        <td>{{ nino.edad_texto() }}</td>
-        <td>{{ 'Masculino' if nino.sexo == 'M' else 'Femenino' }}</td>
-        <td>
-          <span
-            class="badge bg-{{ 'success' if nino.estado == 'activo' else 'secondary' }}"
-          >
-            {{ nino.estado }}
-          </span>
-        </td>
-        <td>
-          {% if nino.activo and not nino.consentimiento_otorgado %}
-          <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="btn btn-sm btn-warning">Autorizar tratamiento de datos</a>
-          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-info">Historial</a>
-          <a href="{{ url_for('pacientes.editar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
-          {% elif nino.activo %}
-          <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-sm btn-primary">Registrar síntomas</a>
-          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-info">Historial</a>
-          <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-success">Mensajes</a>
-          <a href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Profesionales autorizados</a>
-          <a href="{{ url_for('pacientes.patologias', nino_id=nino.id) }}" class="btn btn-sm btn-outline-dark">Condiciones de base</a>
-          <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Autorizaciones de datos</a>
-          <a href="{{ url_for('pacientes.editar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
-          <form method="POST" action="{{ url_for('pacientes.eliminar', nino_id=nino.id) }}" class="d-inline"
-            onsubmit="return confirm('¿Desactivar este registro? La información se conserva.');">
+  {% if resumenes %}
+  <div class="rk-ninos-grid">
+    {% for r in resumenes %}
+    {% set nino = r.nino %}
+    {% set info = r.info_nivel %}
+    {% set evolucion = r.seguimiento.estado if r.seguimiento else None %}
+    <article class="rk-gestion rk-nino-card rk-nino-card--{{ r.nivel }}" aria-labelledby="gestion-{{ nino.id }}">
+      {# 1. Identidad y estado #}
+      <header class="rk-nino-card__escenario">
+        {{ figura(nino, r.nivel, 130, evolucion) }}
+        <div class="rk-nino-card__identidad">
+          <h2 class="rk-nino-card__nombre" id="gestion-{{ nino.id }}">{{ nino.nombre_completo }}</h2>
+          <p class="rk-nino-card__meta">{{ nino.edad_texto() }} · {{ 'Niña' if nino.sexo == 'F' else 'Niño' }}</p>
+          <span class="rk-badge-nivel rk-badge-nivel--{{ r.nivel }} mt-2">{{ icono_nivel(r.nivel) }} {{ info.nombre }}</span>
+        </div>
+      </header>
+
+      {% if not nino.consentimiento_otorgado %}
+      <div class="alert alert-warning small mb-0">
+        Para registrar síntomas primero debes autorizar el tratamiento de sus datos de salud.
+        <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="alert-link d-block mt-1">Autorizar ahora →</a>
+      </div>
+      {% else %}
+      {# 2. Acción principal #}
+      <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary w-100">+ Registrar síntomas</a>
+      {% endif %}
+
+      {# 3. Accesos rápidos #}
+      <nav class="rk-accesos" aria-label="Accesos de {{ nino.nombre }}">
+        <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}">{{ icono('historial') }}<span>Historial</span></a>
+        <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}">{{ icono('ficha') }}<span>Ficha</span></a>
+        <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}">{{ icono('mensaje') }}<span>Mensajes</span></a>
+        <a href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}">{{ icono('pastilla') }}<span>Medicamentos</span></a>
+      </nav>
+
+      {# 4. Configuración (acciones menos frecuentes) #}
+      <section class="rk-config">
+        <h3 class="rk-nino-card__subtitulo">Configuración</h3>
+        <ul class="rk-config__lista">
+          <li><a href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}">{{ icono('pacientes') }}
+            <span>Profesionales autorizados</span><span class="rk-config__dato">{{ profesionales[nino.id] }}</span></a></li>
+          <li><a href="{{ url_for('pacientes.patologias', nino_id=nino.id) }}">{{ icono('corazon') }}
+            <span>Condiciones de base</span></a></li>
+          <li><a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}">{{ icono('escudo') }}
+            <span>Autorización de datos</span>
+            <span class="rk-config__dato">{{ 'Otorgada' if nino.consentimiento_otorgado else 'Pendiente' }}</span></a></li>
+          <li><a href="{{ url_for('pacientes.editar', nino_id=nino.id) }}">{{ icono('editar') }}
+            <span>Editar datos</span></a></li>
+        </ul>
+      </section>
+
+      {# 5. Acción sensible, separada #}
+      <footer class="rk-gestion__pie">
+        <form method="POST" action="{{ url_for('pacientes.eliminar', nino_id=nino.id) }}"
+          data-confirmar="¿Desactivar el registro de {{ nino.nombre }}? La información se conserva y podrás reactivarlo.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-link btn-sm rk-enlace-peligro px-0">Desactivar registro</button>
+        </form>
+      </footer>
+    </article>
+    {% endfor %}
+  </div>
+  {% elif not inactivos %}
+  <section class="rk-vacio">
+    {{ pareja_ninos(150) }}
+    <p class="h5">Aún no has registrado ningún niño o niña</p>
+    <p class="text-muted">Regístralo para llevar su historial de síntomas y recibir orientación según su estado.</p>
+    <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary">Registrar niño/a</a>
+  </section>
+  {% endif %}
+
+  {% if inactivos %}
+  <section class="rk-panel mt-4" aria-labelledby="titulo-inactivos">
+    <h2 class="h6" id="titulo-inactivos">Registros desactivados</h2>
+    <ul class="rk-inactivos">
+      {% for nino in inactivos %}
+      <li>
+        <span><strong>{{ nino.nombre_completo }}</strong> <span class="text-muted small">· {{ nino.edad_texto() }}</span></span>
+        <span class="d-flex gap-2">
+          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Historial</a>
+          <form method="POST" action="{{ url_for('pacientes.reactivar', nino_id=nino.id) }}" class="m-0">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn btn-sm btn-outline-danger">Desactivar</button>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Reactivar</button>
           </form>
-          {% else %}
-          <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-sm btn-outline-info">Historial</a>
-          <form method="POST" action="{{ url_for('pacientes.reactivar', nino_id=nino.id) }}" class="d-inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
+        </span>
+      </li>
       {% endfor %}
-    </tbody>
-  </table>
+    </ul>
+  </section>
+  {% endif %}
 </div>
-{% else %}
-<p class="text-muted">Aún no has registrado ningún niño o niña.</p>
-{% endif %} {% endblock %}
+{% endblock %}

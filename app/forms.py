@@ -157,6 +157,15 @@ class LoginForm(FlaskForm):
     )
 
 
+class RecuperarPasswordForm(FlaskForm):
+    correo = campo_correo()
+
+
+class RestablecerPasswordForm(FlaskForm):
+    password = campo_password_nueva('Nueva contraseña')
+    password_confirmar = campo_confirmar_password('password', 'Confirmar nueva contraseña')
+
+
 class RegistroForm(FlaskForm):
     nombre = campo_nombres()
     apellido = campo_apellidos()
@@ -168,12 +177,20 @@ class RegistroForm(FlaskForm):
         'Acepto la política de tratamiento de datos personales',
         validators=[DataRequired('Debes aceptar la política de tratamiento de datos para crear la cuenta.')],
     )
+    acepta_terminos = BooleanField(
+        'Acepto los términos y condiciones de uso',
+        validators=[DataRequired('Debes aceptar los términos y condiciones de uso para crear la cuenta.')],
+    )
 
 
 class AceptarPoliticaForm(FlaskForm):
     acepta_politica = BooleanField(
         'Acepto la política de tratamiento de datos personales',
         validators=[DataRequired('Debes aceptar la política de tratamiento de datos para continuar.')],
+    )
+    acepta_terminos = BooleanField(
+        'Acepto los términos y condiciones de uso',
+        validators=[DataRequired('Debes aceptar los términos y condiciones de uso para continuar.')],
     )
 
 
@@ -229,6 +246,7 @@ class NinoForm(FlaskForm):
     )
     # Solo se exige al registrar; después se gestiona en la página de consentimiento.
     consentimiento_tratamiento = BooleanField('Autorizo el tratamiento de datos de salud')
+    consentimiento_atencion = BooleanField('Autorizo el acceso del profesional que lo atienda')
     consentimiento_investigacion = BooleanField('Autorizo el uso anonimizado para investigación')
 
     def __init__(self, *args, es_nuevo=True, **kwargs):
@@ -250,6 +268,7 @@ class NinoForm(FlaskForm):
 
 class ConsentimientoNinoForm(FlaskForm):
     consentimiento_tratamiento = BooleanField('Autorizo el tratamiento de datos de salud')
+    consentimiento_atencion = BooleanField('Autorizo el acceso del profesional que lo atienda')
     consentimiento_investigacion = BooleanField('Autorizo el uso anonimizado para investigación')
 
 
@@ -271,9 +290,19 @@ class AutorizacionForm(FlaskForm):
 
 
 class MensajeForm(FlaskForm):
+    # Opcional si se adjunta un archivo o una nota de voz (la ruta exige al menos uno de los dos).
     contenido = TextAreaField(
-        'Mensaje', filters=[recortar],
-        validators=[DataRequired('Escribe un mensaje.'), Length(max=2000)], render_kw={'maxlength': 2000},
+        'Mensaje', filters=[recortar], validators=[Optional(), Length(max=2000)], render_kw={'maxlength': 2000},
+    )
+
+
+class SolicitudAtencionForm(FlaskForm):
+    motivo = TextAreaField(
+        '¿En qué te podemos ayudar?', filters=[recortar],
+        validators=[DataRequired('Cuéntale al profesional qué está pasando.'),
+                    Length(min=10, max=1000, message='Escribe entre 10 y 1000 caracteres.')],
+        render_kw={'minlength': 10, 'maxlength': 1000, 'rows': 3,
+                   'placeholder': 'Ej.: Tiene tos desde hace 3 días y hoy amaneció con fiebre de 38.5 °C.'},
     )
 
 

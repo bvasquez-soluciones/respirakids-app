@@ -5,6 +5,7 @@ from tests.conftest import PASSWORD, crear_cuidador, crear_profesional, login
 DATOS_REGISTRO = {
     'nombre': 'Ana María', 'apellido': 'Torres Gómez', 'correo': 'Ana@Test.com', 'telefono': '300 123 4567',
     'password': PASSWORD, 'confirmar_password': PASSWORD, 'acepta_politica': 'y',
+    'acepta_terminos': 'y',
 }
 
 
@@ -31,9 +32,9 @@ def test_login_redirige_segun_rol(client, app):
     crear_cuidador('admin@test.com', rol='admin')
     crear_profesional('dra@test.com')
     assert login(client, 'ana@test.com').headers['Location'].endswith('/dashboard/cuidador')
-    client.get('/auth/logout')
+    client.post('/auth/logout')
     assert login(client, 'admin@test.com').headers['Location'].endswith('/admin/')
-    client.get('/auth/logout')
+    client.post('/auth/logout')
     assert login(client, 'dra@test.com').headers['Location'].endswith('/dashboard/profesional')
 
 

@@ -115,7 +115,7 @@ def test_el_ml_nunca_cambia_la_clasificacion_ni_se_muestra_al_cuidador(client, a
     assert evaluacion.ml_nivel == 'verde' and evaluacion.ml_version == 'ml-prueba' and evaluacion.discrepancia_ml
     html = client.get(destino).get_data(as_text=True)
     assert 'Machine Learning' not in html and 'ml-prueba' not in html
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'dra@test.com')
     detalle = client.get(f'/dashboard/profesional/evaluacion/{evaluacion.id}').get_data(as_text=True)

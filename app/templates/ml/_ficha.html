@@ -7,7 +7,7 @@
 {% if ficha %}
 {% set met = ficha.metricas_prueba %}
 <div class="rk-ficha-grid">
-  <section class="rk-panel">
+  <section class="rk-panel rk-panel--complementario">
     <h2 class="h6">Modelo</h2>
     <dl class="rk-datos mb-0">
       <dt>Versión</dt><dd><code>{{ ficha.version }}</code></dd>
@@ -18,30 +18,44 @@
       <dt>Variables</dt><dd>{{ ficha.variables|length }} (las mismas del motor clínico)</dd>
     </dl>
   </section>
-  <section class="rk-panel">
+  <section class="rk-panel rk-panel--complementario">
     <h2 class="h6">Métricas en datos sintéticos de prueba</h2>
-    <dl class="rk-datos mb-2">
-      <dt>Exactitud</dt><dd>{{ '%.1f'|format(met.exactitud * 100) }} %</dd>
-      <dt>F1 macro</dt><dd>{{ '%.3f'|format(met.f1_macro) }}</dd>
+    <div class="rk-metricas">
+      <div class="rk-metrica">
+        <span class="rk-metrica__nombre">Exactitud</span>
+        <span class="rk-metrica__valor">{{ '%.1f'|format(met.exactitud * 100) }} %</span>
+      </div>
+      <div class="rk-metrica">
+        <span class="rk-metrica__nombre">F1 macro</span>
+        <span class="rk-metrica__valor">{{ '%.3f'|format(met.f1_macro) }}</span>
+      </div>
+      <div class="rk-metrica {{ 'rk-metrica--alerta' if met.rojos_predichos_como_verde }}">
+        <span class="rk-metrica__nombre">Rojos predichos como verde</span>
+        <span class="rk-metrica__valor">{{ met.rojos_predichos_como_verde }}</span>
+      </div>
+    </div>
+    <ul class="rk-sensibilidades mb-3" aria-label="Sensibilidad por clase">
       {% for clase, valor in met.sensibilidad_por_clase.items() %}
-      <dt>Sensibilidad {{ clase }}</dt><dd>{{ '%.1f'|format(valor * 100) }} %</dd>
+      <li>
+        <div class="rk-fila"><span>{{ icono_nivel(clase) }} Sensibilidad {{ clase }}</span><strong>{{ '%.1f'|format(valor * 100) }} %</strong></div>
+        <div class="rk-barra" aria-hidden="true"><span class="rk-ancho-{{ (valor * 20)|round|int * 5 }}"></span></div>
+      </li>
       {% endfor %}
-      <dt>Rojos predichos como verde</dt><dd><strong>{{ met.rojos_predichos_como_verde }}</strong></dd>
-    </dl>
+    </ul>
     <p class="rk-nota-fuente mb-0">Miden qué tan bien imita las reglas, no su capacidad de predecir riesgo real.</p>
   </section>
 </div>
 <section class="rk-panel mt-3">
   <h2 class="h6">Concordancia con las reglas en evaluaciones reales</h2>
   {% if concordancia %}
-  <table class="table table-sm mb-0">
+  <div class="table-responsive"><table class="table table-sm mb-0">
     <thead><tr><th>Versión del modelo</th><th>Predicciones</th><th>Coinciden con las reglas</th><th>Rojo de las reglas no detectado por ML</th></tr></thead>
     <tbody>
       {% for version, fila in concordancia.items() %}
       <tr><td><code>{{ version }}</code></td><td>{{ fila.total }}</td><td>{{ fila.coinciden }} ({{ fila.porcentaje }} %)</td><td>{{ fila.rojo_no_detectado }}</td></tr>
       {% endfor %}
     </tbody>
-  </table>
+  </table></div>
   {% else %}
   <p class="small text-muted mb-0">Aún no hay evaluaciones con predicción ML.</p>
   {% endif %}

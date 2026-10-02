@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar, foto_profesional %}
+{% from "macros/formularios.html" import campo %}
+{% block title %}Mensajes de {{ nino.nombre }} - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-chat-wrap">
+  <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link px-0">← Mis niños</a>
+  <header class="rk-bandeja__cabecera">
+    {{ avatar(nino, resumen.nivel, 56) }}
+    <div>
+      <h1 class="h3 mb-0">Mensajes sobre {{ nino.nombre }}</h1>
+      <p class="text-muted mb-0">Cada conversación es privada: solo la ven tú y ese profesional.</p>
+    </div>
+  </header>
+
+  {# Atención por mensajes con los profesionales de la clínica #}
+  {% if solicitud and solicitud.estado == 'pendiente' %}
+  <a class="rk-atencion rk-atencion--conectando" href="{{ url_for('mensajes.solicitud', solicitud_id=solicitud.id) }}">
+    <span class="rk-pulso" aria-hidden="true"></span>
+    <span><strong>Conectando con un profesional de salud…</strong><br>
+      <span class="small">Tu solicitud está en espera. Toca para ver el estado.</span></span>
+  </a>
+  {% elif solicitud and solicitud.estado == 'asignada' and solicitud.acceso is none %}
+  <a class="rk-atencion" href="{{ url_for('mensajes.solicitud', solicitud_id=solicitud.id) }}">
+    {{ foto_profesional(solicitud.profesional, 46) }}
+    <span><strong>Te conectaste con {{ solicitud.profesional.nombre_con_titulo }}</strong><br>
+      <span class="small">Responde si autorizas el acceso a la información de {{ nino.nombre }}.</span></span>
+  </a>
+  {% elif not solicitud and nino.consentimiento_otorgado %}
+  <section class="rk-panel rk-atencion-form" aria-labelledby="titulo-hablar">
+    <h2 class="h6" id="titulo-hablar">Hablar con un profesional de salud</h2>
+    <p class="small text-muted">Tu mensaje llega a los profesionales de la clínica disponibles y te atiende el primero
+      que se conecte. No es un canal de urgencias.</p>
+    {% if resumen.nivel == 'rojo' %}
+    <div class="alert alert-danger small" role="alert">
+      La última evaluación de {{ nino.nombre }} identificó posibles señales de alarma. <strong>Acude a un servicio
+      de salud de inmediato</strong>; no esperes la respuesta por mensajes.
+    </div>
+    {% endif %}
+    <form method="POST" action="{{ url_for('mensajes.solicitar', nino_id=nino.id) }}" novalidate>
+      {{ form.csrf_token }}
+      {{ campo(form.motivo) }}
+      <button type="submit" class="btn btn-primary">Conectar con un profesional</button>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if conversaciones %}
+  <h2 class="h6 mt-4">Tus conversaciones</h2>
+  <ul class="rk-bandeja" aria-label="Conversaciones con profesionales">
+    {% for c in conversaciones %}
+    {% set p = c.profesional %}
+    <li>
+      <a class="rk-bandeja__item" href="{{ url_for('mensajes.hilo', nino_id=nino.id, profesional_id=p.id) }}">
+        {{ foto_profesional(p, 46) }}
+        <span class="rk-bandeja__texto">
+          <span class="rk-bandeja__nombre">{{ p.nombre_con_titulo }}</span>
+          <span class="rk-bandeja__rol">
+            {{ p.especialidad_texto }}
+            {% if not c.puede_escribir %}· <span class="rk-bandeja__solo-lectura">Solo lectura</span>{% endif %}
+          </span>
+          <span class="rk-bandeja__ultimo">
+            {% if c.ultimo %}{{ 'Tú: ' if c.ultimo.autor_tipo == 'cuidador' }}{% if c.ultimo.contenido %}{{ c.ultimo.contenido|truncate(80) }}{% elif c.ultimo.adjuntos and c.ultimo.adjuntos[0].tipo == 'audio' %}🎤 Nota de voz{% else %}📎 Archivo adjunto{% endif %}
+            {% else %}Aún no hay mensajes. Escribe el primero.{% endif %}
+          </span>
+        </span>
+        {% if c.ultimo %}<time class="rk-bandeja__fecha" datetime="{{ c.ultimo.fecha|iso_local }}">{{ c.ultimo.fecha|fecha_hora }}</time>{% endif %}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if anteriores %}
+  <details class="rk-panel mt-3">
+    <summary class="fw-semibold">Mensajes anteriores sin destinatario ({{ anteriores|length }})</summary>
+    <p class="small text-muted mt-2">Los escribiste antes de que las conversaciones fueran privadas. Solo tú los ves.</p>
+    <ul class="list-unstyled mb-0">
+      {% for m in anteriores %}
+      <li class="small mb-2"><span class="text-muted">{{ m.fecha|fecha_hora }} ·</span> {{ m.contenido }}</li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</div>
+{% endblock %}

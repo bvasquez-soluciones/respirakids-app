@@ -1,0 +1,84 @@
+/* Portada pública (home.html): tarjeta central de cristal con la propuesta de valor. */
+.rk-portada__contenedor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--rk-space-8) var(--rk-space-4);
+}
+.rk-portada__tarjeta {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rk-space-6);
+  padding: var(--rk-space-8) var(--rk-space-6);
+  text-align: center;
+  background: var(--rk-surface);
+  backdrop-filter: blur(var(--rk-blur));
+  -webkit-backdrop-filter: blur(var(--rk-blur));
+  border: 1px solid var(--rk-border);
+  border-radius: 36px;
+  box-shadow: var(--rk-shadow-lg);
+}
+.rk-portada__marca .rk-marca__img { height: 56px; width: auto; }
+.rk-portada__imagen {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid var(--rk-border);
+  background: var(--rk-surface-2);
+}
+.rk-portada__imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rk-portada__texto h1 {
+  font-size: var(--rk-text-2xl);
+  font-weight: 800;
+  margin-bottom: var(--rk-space-3);
+}
+.rk-portada__texto p {
+  color: var(--rk-text-2);
+  margin: 0;
+}
+.rk-portada__acciones {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rk-space-3);
+}
+.rk-portada__acciones .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rk-space-2);
+  --bs-btn-padding-y: 0.8rem;
+  --bs-btn-font-size: var(--rk-text-md);
+}
+.rk-portada__aviso {
+  display: flex;
+  gap: var(--rk-space-2);
+  align-items: flex-start;
+  margin: 0;
+  padding: var(--rk-space-3) var(--rk-space-4);
+  text-align: left;
+  font-size: var(--rk-text-xs);
+  color: var(--rk-text-2);
+  background: var(--rk-surface-2);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-md);
+}
+.rk-portada__aviso svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--rk-primary-text);
+}
+.rk-portada__tema {
+  position: fixed;
+  top: var(--rk-space-4);
+  right: var(--rk-space-4);
+}

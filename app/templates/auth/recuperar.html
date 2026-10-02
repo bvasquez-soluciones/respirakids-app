@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "macros/iconos.html" import marca %}
+{% from "macros/formularios.html" import campo_auth, nota_obligatorios %}
+{% block title %}Recuperar contraseña - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-auth-page">
+  <div class="rk-auth-card">
+    <div class="rk-auth-blob a"></div>
+    <div class="rk-auth-blob b"></div>
+    <div class="rk-auth-header">
+      <div class="rk-auth-logo">{{ marca(52) }}</div>
+      <h1>Recuperar contraseña</h1>
+      <p>Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva.</p>
+    </div>
+
+    <form method="POST" class="rk-auth-form" novalidate>
+      {{ form.csrf_token }}
+      {{ nota_obligatorios() }}
+      {{ campo_auth(form.correo, '✉️') }}
+      <button type="submit" class="rk-auth-submit">Enviar enlace</button>
+    </form>
+
+    <div class="rk-auth-footer">
+      <a href="{{ url_for('auth.login') }}">← Volver a iniciar sesión</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

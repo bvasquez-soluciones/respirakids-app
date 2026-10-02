@@ -61,6 +61,14 @@ SECRET_KEY=<python -c "import secrets; print(secrets.token_hex(32))">
 DATABASE_URL=postgresql://respirakids:CLAVE@localhost:5432/respirakids_db
 RATELIMIT_STORAGE_URI=redis://localhost:6379/0
 GEMINI_API_KEY=<clave del proveedor de IA>
+# Correo saliente (recuperación de contraseña y verificación de correo). Usar un proveedor transaccional
+# (SES, Mailgun, SendGrid, Postmark...) con SPF, DKIM y DMARC configurados en el dominio.
+MAIL_SERVER=smtp.proveedor.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_DEFAULT_SENDER=RespiraKids <no-responder@TU-DOMINIO>
 ML_HABILITADO=false
 RESPONSABLE_NOMBRE=...
 RESPONSABLE_ID=...
@@ -72,7 +80,8 @@ REGLAS_CLINICAS_VALIDADAS=v1-aiepi
 ```
 
 La aplicación **se niega a arrancar en producción** si falta `SECRET_KEY` (o tiene menos de 32 caracteres), si
-`DATABASE_URL` no está definida, si el límite de peticiones no usa Redis o si las reglas clínicas no están validadas.
+`DATABASE_URL` no está definida, si no hay correo saliente (`MAIL_SERVER`, `MAIL_DEFAULT_SENDER`), si el límite de
+peticiones no usa Redis o si las reglas clínicas no están validadas.
 
 ### 3.6 Esquema, administrador y base de conocimiento
 ```bash
@@ -108,14 +117,23 @@ PostgreSQL, Redis y Gunicorn solo escuchan en `localhost`.
 
 ## 4. Respaldos
 
-- `deploy/scripts/respaldo.sh` respalda la base de datos (formato `pg_dump` custom, verificado tras crearlo) y las
-  fotos subidas, genera sumas SHA-256 y borra los respaldos más antiguos que `DIAS_RETENCION`.
+- `deploy/scripts/respaldo.sh` respalda la base de datos (formato `pg_dump` custom, verificado tras crearlo), las
+  fotos de perfil y los **adjuntos de los mensajes** (`datos/adjuntos`: fotos, PDF y notas de voz), genera sumas
+  SHA-256 y borra los respaldos más antiguos que `DIAS_RETENCION`.
+- La carpeta de adjuntos es privada: `sudo -u respirakids mkdir -p /srv/respirakids/datos/adjuntos && chmod 700
+  /srv/respirakids/datos /srv/respirakids/datos/adjuntos`. Nginx **no** debe servirla (la aplicación la entrega
+  solo a quien puede ver cada conversación). Se puede ubicar en otro disco con `ADJUNTOS_FOLDER`.
 - **Cifrado recomendado:** defina `GPG_DESTINATARIO` en `/etc/respirakids/respaldo.env`. Son datos de salud de menores.
 - Programarlo a diario (cron del usuario `respirakids`):
   ```
   30 2 * * * /srv/respirakids/deploy/scripts/respaldo.sh >> /var/log/respirakids/respaldo.log 2>&1
   ```
 - **Copia externa:** sincronizar `/var/backups/respirakids` con un almacenamiento fuera del servidor.
+- **Período de conservación** (Ley 1581): revisar cada mes las cuentas sin actividad por más de 2 años y
+  anonimizarlas (ver `docs/SEGURIDAD_Y_CUENTAS.md`). Primero sin `--ejecutar` para revisar la lista:
+  ```
+  0 3 1 * * cd /srv/respirakids && set -a && . /etc/respirakids/respirakids.env && set +a && FLASK_APP=wsgi.py venv/bin/flask privacidad conservacion >> /var/log/respirakids/conservacion.log 2>&1
+  ```
 - **Prueba de restauración mensual** (en una base nueva, nunca sobre producción):
   ```bash
   deploy/scripts/restaurar.sh /var/backups/respirakids/respirakids_db_FECHA.dump.gpg respirakids_verificacion
@@ -154,6 +172,7 @@ Solo se debe desplegar código cuya integración continua esté en verde.
 - [ ] `SECRET_KEY` única y larga; `/etc/respirakids/respirakids.env` con permisos 600.
 - [ ] Respaldos diarios cifrados, copia externa y una restauración de prueba realizada.
 - [ ] `/salud` monitoreado con alertas.
+- [ ] Correo saliente probado: recuperación de contraseña y verificación llegan a la bandeja de entrada (no a spam).
 - [ ] Integración continua en verde para la versión desplegada.
 - [ ] Administrador creado con contraseña robusta; ninguna cuenta ni dato de prueba en producción.
 
@@ -163,7 +182,8 @@ Solo se debe desplegar código cuya integración continua esté en verde.
 
 **Legal y privacidad**
 - [ ] Política de tratamiento revisada por un abogado; datos del responsable completos (ver `/admin/configuracion`).
-- [ ] Período de conservación de los datos definido en la política.
+- [ ] Período de conservación revisado por el abogado (hoy: 2 años de inactividad) y tarea mensual de conservación programada.
+- [ ] Términos y condiciones de uso revisados por un abogado.
 - [ ] Acuerdo de tratamiento de datos con el proveedor de IA (transferencia internacional) y con el proveedor del servidor.
 - [ ] Registro de la base de datos ante la SIC si aplica.
 - [ ] Evaluación regulatoria como software de uso en salud (INVIMA) antes de comercializar.

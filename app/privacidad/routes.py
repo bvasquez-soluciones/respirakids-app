@@ -9,27 +9,34 @@ from app.models import SolicitudDerechos
 from app.privacidad import privacidad_bp
 from app.services.acceso import es_cuidador
 from app.services.auditoria import registrar_actividad
-from app.services.consentimiento import aceptar_politica, historial_consentimientos, politica_aceptada
+from app.services.consentimiento import aceptar_politica, documentos_aceptados, historial_consentimientos
 from app.services.datos_titular import exportar_datos_cuidador, exportar_datos_profesional
 
 # Rutas disponibles aunque el usuario aún no haya aceptado la política vigente.
-ENDPOINTS_LIBRES = {'static', 'home', 'privacidad.politica', 'privacidad.aceptar', 'auth.logout', 'sistema.salud'}
+ENDPOINTS_LIBRES = {'static', 'home', 'privacidad.politica', 'privacidad.terminos', 'privacidad.aceptar',
+                    'auth.logout', 'sistema.salud',
+                    'auth.verificar_correo', 'auth.restablecer'}
 
 
 @privacidad_bp.before_app_request
 def exigir_politica_vigente():
     if not current_user.is_authenticated or request.endpoint in ENDPOINTS_LIBRES or request.endpoint is None:
         return None
-    if politica_aceptada(current_user):
+    if documentos_aceptados(current_user):
         return None
     if request.is_json or request.path.startswith('/asistente/preguntar'):
-        return {'error': 'Debes aceptar la política de tratamiento de datos para continuar.'}, 403
+        return {'error': 'Debes aceptar la política de datos y los términos de uso vigentes para continuar.'}, 403
     return redirect(url_for('privacidad.aceptar', next=request.full_path if request.method == 'GET' else None))
 
 
 @privacidad_bp.route('/')
 def politica():
     return render_template('privacidad/politica.html')
+
+
+@privacidad_bp.route('/terminos')
+def terminos():
+    return render_template('privacidad/terminos.html')
 
 
 @privacidad_bp.route('/aceptar', methods=['GET', 'POST'])
@@ -42,7 +49,7 @@ def aceptar():
         aceptar_politica(current_user)
         db.session.commit()
         registrar_actividad('aceptar_politica', 'politica', None)
-        flash('Gracias. Registramos tu autorización para el tratamiento de datos.', 'success')
+        flash('Gracias. Registramos tu aceptación de la política de datos y de los términos de uso.', 'success')
 
         destino = request.args.get('next', '')
         if destino.startswith('/') and not destino.startswith('//'):

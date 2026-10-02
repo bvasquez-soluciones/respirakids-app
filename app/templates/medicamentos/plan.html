@@ -115,7 +115,7 @@
 
     {% if es_profesional and receta.activa and receta.profesional_id == current_user.id %}
     <form method="POST" action="{{ url_for('medicamentos.suspender', receta_id=receta.id) }}" class="mt-2"
-      onsubmit="return confirm('¿Suspender esta indicación? Se notificará al cuidador.');">
+      data-confirmar="¿Suspender esta indicación? Se notificará al cuidador.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <button type="submit" class="btn btn-sm btn-outline-danger">Suspender indicación</button>
     </form>

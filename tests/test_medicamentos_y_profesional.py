@@ -90,11 +90,11 @@ def test_solo_quien_la_registro_puede_suspenderla(client, escenario):
     login(client, 'dra@test.com')
     _receta(client, escenario['nino'].id)
     receta = Receta.query.one()
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'otro@test.com')
     assert client.post(f'/medicamentos/receta/{receta.id}/suspender').status_code == 403
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'dra@test.com')
     client.post(f'/medicamentos/receta/{receta.id}/suspender')
@@ -165,7 +165,7 @@ def test_profesional_ve_el_plan_y_cumplimiento(client, escenario):
 def test_mensajes_generan_notificaciones_a_la_otra_parte(client, escenario):
     login(client, 'dra@test.com')
     client.post(f'/mensajes/nino/{escenario["nino"].id}', data={'contenido': 'Hola, ¿cómo sigue?'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'ana@test.com')
     assert 'rk-bell-badge' in client.get('/dashboard/cuidador').get_data(as_text=True)
@@ -173,8 +173,54 @@ def test_mensajes_generan_notificaciones_a_la_otra_parte(client, escenario):
     assert 'Nuevo mensaje de un profesional' in html
     assert Notificacion.query.filter_by(usuario_tipo='cuidador', leida=False).count() == 0   # quedaron leídas
 
-    client.post(f'/mensajes/nino/{escenario["nino"].id}', data={'contenido': 'Mejor, gracias'})
-    assert Notificacion.query.filter_by(usuario_tipo='profesional', tipo='nuevo_mensaje').count() == 2
+    # El cuidador responde dentro de la conversación de la Dra.: solo ella recibe el aviso.
+    nino, dra, otro = escenario['nino'], escenario['dra'], escenario['otro']
+    client.post(f'/mensajes/nino/{nino.id}/profesional/{dra.id}', data={'contenido': 'Mejor, gracias'})
+    avisos = Notificacion.query.filter_by(usuario_tipo='profesional', tipo='nuevo_mensaje').all()
+    assert [a.usuario_id for a in avisos] == [dra.id]
+
+
+# ---------------------------------------------------------------- Conversaciones privadas
+
+def test_cada_profesional_solo_ve_su_conversacion(client, escenario):
+    nino, dra, otro = escenario['nino'], escenario['dra'], escenario['otro']
+    login(client, 'ana@test.com')
+    client.post(f'/mensajes/nino/{nino.id}/profesional/{dra.id}', data={'contenido': 'Mensaje solo para la pediatra'})
+    client.post(f'/mensajes/nino/{nino.id}/profesional/{otro.id}', data={'contenido': 'Pregunta para el especialista'})
+    bandeja = client.get(f'/mensajes/nino/{nino.id}').get_data(as_text=True)
+    assert 'Cada conversación es privada' in bandeja and 'Mensaje solo para la pediatra' in bandeja
+    assert client.post(f'/mensajes/nino/{nino.id}', data={'contenido': 'sin destinatario'}).status_code == 400
+    client.post('/auth/logout')
+
+    login(client, 'dra@test.com')
+    client.post(f'/mensajes/nino/{nino.id}', data={'contenido': 'Respuesta de la pediatra'})
+    html = client.get(f'/mensajes/nino/{nino.id}').get_data(as_text=True)
+    assert 'Mensaje solo para la pediatra' in html and 'Pregunta para el especialista' not in html
+    client.post('/auth/logout')
+
+    login(client, 'otro@test.com')
+    html = client.get(f'/mensajes/nino/{nino.id}').get_data(as_text=True)
+    assert 'Pregunta para el especialista' in html
+    assert 'Mensaje solo para la pediatra' not in html and 'Respuesta de la pediatra' not in html
+    # Un profesional no puede abrir la conversación de otro.
+    assert client.get(f'/mensajes/nino/{nino.id}/profesional/{dra.id}').status_code == 404
+
+
+def test_conversacion_con_autorizacion_revocada_queda_en_solo_lectura(client, escenario):
+    from app import db
+    from app.models import Autorizacion, Profesional
+    nino, dra = escenario['nino'], escenario['dra']
+    login(client, 'ana@test.com')
+    ruta = f'/mensajes/nino/{nino.id}/profesional/{dra.id}'
+    client.post(ruta, data={'contenido': 'Antes de revocar'})
+    Autorizacion.query.filter_by(nino_id=nino.id, profesional_id=dra.id).one().activa = False
+    db.session.commit()
+    html = client.get(ruta).get_data(as_text=True)
+    assert 'Antes de revocar' in html and 'ya no está vigente' in html
+    assert client.post(ruta, data={'contenido': 'Después'}).status_code == 403
+    # Un profesional que nunca fue autorizado no tiene conversación.
+    sin_acceso = Profesional.query.filter_by(correo='sinacceso@test.com').one()
+    assert client.get(f'/mensajes/nino/{nino.id}/profesional/{sin_acceso.id}').status_code == 404
 
 
 # ---------------------------------------------------------------- Panel del profesional
@@ -182,7 +228,7 @@ def test_mensajes_generan_notificaciones_a_la_otra_parte(client, escenario):
 def test_detalle_clinico_de_la_evaluacion(client, escenario):
     login(client, 'ana@test.com')
     client.post(f'/sintomas/nino/{escenario["nino"].id}/nuevo', data={'tiraje_subcostal': 'y', 'tos': 'y'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'dra@test.com')
     panel = client.get(f'/dashboard/profesional?paciente={escenario["nino"].id}').get_data(as_text=True)
@@ -195,6 +241,6 @@ def test_detalle_clinico_de_la_evaluacion(client, escenario):
 def test_detalle_clinico_no_accesible_sin_autorizacion(client, escenario):
     login(client, 'ana@test.com')
     client.post(f'/sintomas/nino/{escenario["nino"].id}/nuevo', data={'tos': 'y'})
-    client.get('/auth/logout')
+    client.post('/auth/logout')
     login(client, 'sinacceso@test.com')
     assert client.get('/dashboard/profesional/evaluacion/1').status_code == 404

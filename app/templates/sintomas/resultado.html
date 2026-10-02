@@ -1,30 +1,32 @@
 {% extends "base.html" %}
-{% from "macros/avatar.html" import avatar %}
+{% from "macros/avatar.html" import figura, foto_profesional %}
+{% from "macros/formularios.html" import campo %}
 {% block title %}Resultado de la evaluación - RespiraKids{% endblock %}
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
 {% endblock %}
 {% block content %}
 {% set nino = evaluacion.nino %}
 {% set info = nivel_info(evaluacion.nivel_riesgo) %}
 <div class="rk-detalle">
-  <header class="rk-detalle__cabecera">
-    {{ avatar(nino, evaluacion.nivel_riesgo, 72) }}
-    <div>
-      <p class="text-muted small mb-0">Evaluación del {{ evaluacion.fecha|fecha_hora }}</p>
-      <h1 class="h4 mb-0">{{ nino.nombre_completo }}</h1>
+  {# Cabecera con la ilustración del niño/a: su expresión acompaña (no reemplaza) el texto del estado. #}
+  <header class="rk-heroe rk-heroe--{{ evaluacion.nivel_riesgo }}">
+    {{ figura(nino, evaluacion.nivel_riesgo, 190) }}
+    <div class="rk-heroe__texto">
+      <p class="text-muted small mb-1">Evaluación del {{ evaluacion.fecha|fecha_hora }}</p>
+      <h1 class="h3 mb-3">{{ nino.nombre_completo }}</h1>
+      <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }} rk-estado--grande" role="status">
+        <span class="rk-estado__icono">{{ icono_nivel(evaluacion.nivel_riesgo) }}</span>
+        <div>
+          <p class="rk-estado__titulo">
+            <span class="visually-hidden">Clasificación {{ info.nombre }}: </span>{{ info.titulo }}
+          </p>
+          <p class="rk-estado__detalle">{{ info.resumen }}</p>
+        </div>
+      </section>
     </div>
   </header>
-
-  <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }} rk-estado--grande" role="status">
-    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
-    <div>
-      <p class="rk-estado__titulo">
-        <span class="visually-hidden">Clasificación {{ info.nombre }}: </span>{{ info.titulo }}
-      </p>
-      <p class="rk-estado__detalle">{{ info.resumen }}</p>
-    </div>
-  </section>
 
   {% set rojas = senales|selectattr('nivel', 'equalto', 'rojo')|list %}
   {% set amarillas = senales|selectattr('nivel', 'equalto', 'amarillo')|list %}
@@ -35,8 +37,8 @@
       Con base en lo que registraste, se identificaron signos o síntomas descritos en la fuente clínica.
       Esto no es un diagnóstico.
     </p>
-    {% for titulo, grupo in (('🔴 Posibles señales de alarma', rojas), ('🟡 Señales que requieren valoración', amarillas)) if grupo %}
-    <p class="small fw-bold mb-1">{{ titulo }}</p>
+    {% for nivel_grupo, titulo, grupo in (('rojo', 'Posibles señales de alarma', rojas), ('amarillo', 'Señales que requieren valoración', amarillas)) if grupo %}
+    <p class="small fw-bold mb-1">{{ icono_nivel(nivel_grupo) }} {{ titulo }}</p>
     <ul class="rk-lista-senales mb-3">
       {% for s in grupo %}
       <li>
@@ -64,6 +66,33 @@
     <h2 class="h6">Orientación</h2>
     <p class="mb-0">{{ evaluacion.recomendaciones }}</p>
   </section>
+
+  {# Hablar con un profesional de la clínica sobre este resultado #}
+  {% if solicitud and solicitud.estado == 'pendiente' %}
+  <a class="rk-atencion rk-atencion--conectando" href="{{ url_for('mensajes.solicitud', solicitud_id=solicitud.id) }}">
+    <span class="rk-pulso" aria-hidden="true"></span>
+    <span><strong>Conectando con un profesional de salud…</strong><br>
+      <span class="small">Ya enviaste una solicitud. Toca para ver el estado.</span></span>
+  </a>
+  {% elif solicitud and solicitud.estado == 'asignada' %}
+  <a class="rk-atencion" href="{{ url_for('mensajes.hilo', nino_id=nino.id, profesional_id=solicitud.profesional_id) }}">
+    {{ foto_profesional(solicitud.profesional, 46) }}
+    <span><strong>{{ solicitud.profesional.nombre_con_titulo }} está atendiendo a {{ nino.nombre }}</strong><br>
+      <span class="small">Escríbele sobre este resultado.</span></span>
+  </a>
+  {% elif nino.consentimiento_otorgado and nino.activo %}
+  <section class="rk-panel rk-atencion-form" aria-labelledby="titulo-hablar">
+    <h2 class="h6" id="titulo-hablar">¿Quieres que un profesional revise este resultado?</h2>
+    <p class="small text-muted">Tu mensaje llega a los profesionales de la clínica disponibles y te atiende el primero
+      que se conecte.{% if evaluacion.nivel_riesgo == 'rojo' %} <strong>Con señales de alarma, acude primero a un servicio
+      de salud: no esperes la respuesta.</strong>{% endif %}</p>
+    <form method="POST" action="{{ url_for('mensajes.solicitar', nino_id=nino.id) }}" novalidate>
+      {{ form_atencion.csrf_token }}
+      {{ campo(form_atencion.motivo) }}
+      <button type="submit" class="btn btn-primary">Hablar con un profesional</button>
+    </form>
+  </section>
+  {% endif %}
 
   <section class="rk-panel">
     <h2 class="h6">Lo que registraste</h2>
@@ -94,7 +123,6 @@
 
   <div class="d-flex flex-wrap gap-2">
     <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-primary">Ver historial</a>
-    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary">Escribir a un profesional</a>
     <a href="{{ url_for('asistente.chat', evaluacion=evaluacion.id) }}" class="btn btn-outline-secondary">Preguntar al asistente sobre esta evaluación</a>
     <a href="{{ url_for('dashboard.cuidador') }}" class="btn btn-link">Volver al inicio</a>
   </div>

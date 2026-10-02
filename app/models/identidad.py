@@ -1,4 +1,6 @@
 """Usuarios del sistema: cuidadores (incluye administradores) y profesionales de salud."""
+import hashlib
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -17,8 +19,13 @@ class UsuarioMixin(UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def huella_sesion(self):
+        """Resumen corto de la contraseña actual. Va dentro del id de sesión: al cambiar o restablecer la
+        contraseña cambia la huella y todas las sesiones abiertas con la anterior dejan de ser válidas."""
+        return hashlib.sha256((self.password_hash or '').encode()).hexdigest()[:16]
+
     def get_id(self):
-        return f'{self.TIPO}-{self.id}'
+        return f'{self.TIPO}-{self.id}-{self.huella_sesion()}'
 
     @property
     def tipo_usuario(self):
@@ -87,6 +94,8 @@ class Profesional(UsuarioMixin, db.Model):
     tarjeta_profesional = db.Column(db.String(50))
     registro_rethus = db.Column(db.String(50))
     estado_aprobacion = db.Column(db.String(20), nullable=False, default='aprobado', server_default='aprobado')
+    # Recibe nuevas solicitudes de atención (además del cupo de casos abiertos, ver CUPO_CASOS_POR_PROFESIONAL).
+    disponible = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
     # Cuentas creadas por el administrador con contraseña temporal: deben cambiarla al ingresar.
     debe_cambiar_password = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
 
@@ -102,6 +111,18 @@ class Profesional(UsuarioMixin, db.Model):
     @property
     def aprobado(self):
         return self.estado_aprobacion == 'aprobado'
+
+    @property
+    def nombre_con_titulo(self):
+        """'Dr(a). Nombre', sin duplicar el título si ya está escrito en el nombre ('Dra. Laura Gómez')."""
+        nombre = self.nombre_completo
+        if nombre.lower().replace('.', ' ').split(' ')[0] in ('dr', 'dra', 'doctor', 'doctora'):
+            return nombre
+        return f'Dr(a). {nombre}'
+
+    @property
+    def especialidad_texto(self):
+        return self.especialidad or self.profesion or 'Profesional de salud'
 
     def __repr__(self):
         return f'<Profesional {self.id}>'

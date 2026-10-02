@@ -10,7 +10,7 @@
   <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link ps-0">← Ficha de {{ nino.nombre }}</a>
 
   <header class="rk-detalle__cabecera">
-    {{ avatar(nino, registros[0].evaluacion.nivel_riesgo if registros and registros[0].evaluacion else None, 64) }}
+    {{ avatar(nino, registros[0].evaluacion.nivel_riesgo if registros and registros[0].evaluacion else None, 64, evolucion_actual) }}
     <div class="flex-grow-1">
       <h1 class="h4 mb-0">Historial de {{ nino.nombre_completo }}</h1>
       <p class="text-muted small mb-0">{{ registros|length }} registro{{ 's' if registros|length != 1 }}</p>
@@ -35,16 +35,28 @@
   {% endif %}
 
   <section aria-labelledby="titulo-registros">
-    <h2 class="h6" id="titulo-registros">Registros</h2>
+    <h2 class="h6" id="titulo-registros">Registros y seguimientos</h2>
     {% if registros %}
     <ol class="rk-linea-tiempo">
-      {% for r in registros %}
+      {% for evento in linea %}
+      {% if evento.tipo == 'seguimiento' %}
+      {# Seguimiento reportado por el cuidador: percepción de la evolución, no una evaluación. #}
+      {% set evo = EVOLUCION[evento.item.estado] %}
+      <li class="rk-linea-tiempo__item rk-linea-tiempo__item--seguimiento">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+          <time datetime="{{ evento.fecha|iso_local }}" class="fw-semibold">{{ evento.fecha|fecha_hora }}</time>
+          <span class="rk-badge-evolucion"><span aria-hidden="true">{{ evo.emoji }}</span> {{ evo.texto }}</span>
+        </div>
+        <p class="small text-muted mb-0">Seguimiento: indicaste cómo evolucionó desde la evaluación anterior.</p>
+      </li>
+      {% else %}
+      {% set r = evento.item %}
       {% set info = nivel_info(r.evaluacion.nivel_riesgo if r.evaluacion else None) %}
       <li class="rk-linea-tiempo__item rk-linea-tiempo__item--{{ r.evaluacion.nivel_riesgo if r.evaluacion else 'neutro' }}">
         <div class="d-flex justify-content-between flex-wrap gap-2">
           <time datetime="{{ r.fecha|iso_local }}" class="fw-semibold">{{ r.fecha|fecha_hora }}</time>
-          <span class="badge rk-badge-nivel rk-badge-nivel--{{ r.evaluacion.nivel_riesgo if r.evaluacion else 'neutro' }}">
-            <span aria-hidden="true">{{ info.icono }}</span> {{ info.nombre }}
+          <span class="rk-badge-nivel rk-badge-nivel--{{ r.evaluacion.nivel_riesgo if r.evaluacion else 'neutro' }}">
+            {{ icono_nivel(r.evaluacion.nivel_riesgo if r.evaluacion else None) }} {{ info.nombre }}
           </span>
         </div>
         {% set hallazgos = hallazgos_registrados(r) %}
@@ -56,6 +68,7 @@
         <a class="small" href="{{ url_for('sintomas.resultado', evaluacion_id=r.evaluacion.id) }}">Ver detalle de la evaluación</a>
         {% endif %}
       </li>
+      {% endif %}
       {% endfor %}
     </ol>
     {% else %}
@@ -71,7 +84,10 @@
 
 {% if evolucion.etiquetas|length >= 2 %}
 <script id="datos-evolucion" type="application/json">{{ evolucion|tojson }}</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="{{ url_for('static', filename='js/grafico_evolucion.js') }}"></script>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/graficos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/grafico_evolucion.js') }}"></script>
 {% endblock %}

@@ -38,14 +38,14 @@
             <div class="d-flex flex-wrap gap-1">
               {% for nuevo, texto, clase in (('aprobado', 'Aprobar', 'success'), ('suspendido', 'Suspender', 'warning'), ('rechazado', 'Rechazar', 'danger')) if p.estado_aprobacion != nuevo and not (nuevo == 'rechazado' and p.estado_aprobacion != 'pendiente') %}
               <form method="POST" action="{{ url_for('admin.estado_profesional', profesional_id=p.id) }}"
-                onsubmit="return confirm('¿{{ texto }} a {{ p.nombre_completo }}?');">
+                data-confirmar="¿{{ texto }} a {{ p.nombre_completo }}?">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <input type="hidden" name="estado" value="{{ nuevo }}" />
                 <button type="submit" class="btn btn-sm btn-outline-{{ clase }}">{{ texto }}</button>
               </form>
               {% endfor %}
               <form method="POST" action="{{ url_for('admin.restablecer_profesional', profesional_id=p.id) }}"
-                onsubmit="return confirm('¿Generar una nueva contraseña temporal para {{ p.nombre_completo }}?');">
+                data-confirmar="¿Generar una nueva contraseña temporal para {{ p.nombre_completo }}?">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <button type="submit" class="btn btn-sm btn-outline-secondary">Nueva contraseña</button>
               </form>

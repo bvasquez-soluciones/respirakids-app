@@ -30,7 +30,7 @@
   {% endif %}
 {% endfor %}
 {% if errores %}
-<div class="alert alert-danger rk-resumen-errores" role="alert" tabindex="-1" id="resumen-errores">
+<div class="alert alert-danger rk-resumen-errores" role="alert" tabindex="-1" id="resumen-errores" data-enfocar>
   <p class="fw-semibold mb-1">Revisa {{ 'el siguiente campo' if errores|length == 1 else 'los siguientes campos' }}:</p>
   <ul class="mb-0">
     {% for field, etiqueta in errores %}
@@ -38,7 +38,6 @@
     {% endfor %}
   </ul>
 </div>
-<script>document.getElementById('resumen-errores').focus();</script>
 {% endif %}
 {%- endmacro %}
 

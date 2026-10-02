@@ -9,6 +9,7 @@ from tests.conftest import crear_cuidador, login
 ENTORNO_VALIDO = {
     'SECRET_KEY': 'x' * 40, 'DATABASE_URL': 'postgresql://u:p@localhost/db',
     'RATELIMIT_STORAGE_URI': 'redis://localhost:6379/0', 'REGLAS_CLINICAS_VALIDADAS': 'v1-aiepi',
+    'MAIL_SERVER': 'smtp.respirakids.test', 'MAIL_DEFAULT_SENDER': 'RespiraKids <no-responder@respirakids.test>',
 }
 
 
@@ -52,6 +53,7 @@ def test_produccion_arranca_con_configuracion_completa(monkeypatch):
     ('RATELIMIT_STORAGE_URI', 'memory://', 'Redis'),
     ('SECRET_KEY', 'corta', '32 caracteres'),
     ('REGLAS_CLINICAS_VALIDADAS', '', 'no están validadas'),
+    ('MAIL_SERVER', '', 'MAIL_SERVER'),
 ])
 def test_produccion_rechaza_configuracion_insegura(monkeypatch, variable, valor, mensaje):
     for clave, v in ENTORNO_VALIDO.items():

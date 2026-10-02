@@ -1,0 +1,8 @@
+Hola, {{ usuario.nombre }}:
+
+Gracias por crear tu cuenta en RespiraKids. Confirma que este es tu correo abriendo este enlace
+(vence en {{ horas }} horas):
+
+{{ enlace }}
+
+Si no creaste esta cuenta, ignora este mensaje.

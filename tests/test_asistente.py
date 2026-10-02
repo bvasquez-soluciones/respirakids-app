@@ -134,7 +134,7 @@ def test_contexto_de_evaluacion_solo_para_su_cuidador(client, base_conocimiento)
     client.post(f'/sintomas/nino/{nino.id}/nuevo', data={'tiraje_subcostal': 'y'})
     html = client.get('/asistente/?evaluacion=1').get_data(as_text=True)
     assert 'Tiraje subcostal' in html and 'sin cambiar esa clasificación' in html
-    client.get('/auth/logout')
+    client.post('/auth/logout')
 
     login(client, 'luis@test.com')
     html = client.get('/asistente/?evaluacion=1').get_data(as_text=True)

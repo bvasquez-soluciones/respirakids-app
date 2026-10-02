@@ -1,4 +1,5 @@
-"""Ficha del niño, sus condiciones de base y las autorizaciones de acceso a profesionales."""
+"""Ficha del niño, sus condiciones de base, las autorizaciones de acceso a profesionales y el seguimiento
+de evolución que reporta el cuidador."""
 from datetime import date
 
 from app import db
@@ -9,7 +10,8 @@ class Nino(db.Model):
     __tablename__ = 'ninos'
 
     id = db.Column(db.Integer, primary_key=True)
-    cuidador_id = db.Column(db.Integer, db.ForeignKey('cuidadores.id'), nullable=False, index=True)
+    # Vacío solo en registros anonimizados (supresión): quedan desvinculados de cualquier persona.
+    cuidador_id = db.Column(db.Integer, db.ForeignKey('cuidadores.id'), index=True)
 
     nombre = db.Column(db.String(100), nullable=False)
     apellido = db.Column(db.String(100))
@@ -19,7 +21,7 @@ class Nino(db.Model):
     sexo = db.Column(db.String(1), nullable=False)  # 'M' o 'F'
     peso_kg = db.Column(db.Float)
     talla_cm = db.Column(db.Float)
-    estado = db.Column(db.String(20), default='activo')  # 'activo' o 'inactivo'
+    estado = db.Column(db.String(20), default='activo')  # 'activo', 'inactivo' o 'anonimizado' (supresión)
     fecha_registro = db.Column(db.DateTime, default=ahora_utc)
 
     # Consentimiento del representante legal
@@ -41,6 +43,8 @@ class Nino(db.Model):
     mensajes = db.relationship('Mensaje', back_populates='nino', lazy=True)
     patologias_base = db.relationship('PatologiaBase', back_populates='nino', lazy=True)
     recetas = db.relationship('Receta', back_populates='nino', lazy=True)
+    seguimientos = db.relationship('SeguimientoEvolucion', back_populates='nino', lazy=True,
+                                   order_by='SeguimientoEvolucion.fecha')
 
     def __repr__(self):
         return f'<Nino {self.id}>'
@@ -128,3 +132,31 @@ class Autorizacion(db.Model):
 
     def __repr__(self):
         return f'<Autorizacion nino={self.nino_id} profesional={self.profesional_id}>'
+
+
+class SeguimientoEvolucion(db.Model):
+    """Cómo percibe el cuidador la evolución del niño/a desde su última evaluación (mejoró, sigue igual, empeoró).
+
+    Es información de seguimiento reportada por el cuidador: NO es una evaluación clínica, no se envía al motor
+    de reglas y nunca cambia la clasificación AIEPI. Si el cuidador indica que empeoró, la aplicación le sugiere
+    registrar los síntomas de nuevo para obtener una orientación actualizada con el motor existente.
+    """
+    __tablename__ = 'seguimientos_evolucion'
+    __table_args__ = (
+        db.CheckConstraint("estado IN ('mejoro', 'igual', 'empeoro')", name='ck_seguimientos_evolucion_estado'),
+    )
+    ESTADOS = ('mejoro', 'igual', 'empeoro')
+
+    id = db.Column(db.Integer, primary_key=True)
+    nino_id = db.Column(db.Integer, db.ForeignKey('ninos.id'), nullable=False, index=True)
+    cuidador_id = db.Column(db.Integer, db.ForeignKey('cuidadores.id'), index=True)  # vacío si se anonimizó
+    # Evaluación de referencia ("desde la última evaluación"); se conserva aunque luego haya otras.
+    evaluacion_id = db.Column(db.Integer, db.ForeignKey('evaluaciones.id'), index=True)
+    estado = db.Column(db.String(10), nullable=False)
+    fecha = db.Column(db.DateTime, nullable=False, default=ahora_utc, index=True)
+
+    nino = db.relationship('Nino', back_populates='seguimientos')
+    evaluacion = db.relationship('Evaluacion')
+
+    def __repr__(self):
+        return f'<SeguimientoEvolucion nino={self.nino_id} {self.estado}>'

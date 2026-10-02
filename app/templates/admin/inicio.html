@@ -19,7 +19,7 @@
     {% set e = datos.evaluaciones_30_dias %}
     <ul class="list-unstyled mb-2">
       {% for nivel in ('rojo', 'amarillo', 'verde') %}
-      <li><span aria-hidden="true">{{ nivel_info(nivel).icono }}</span> {{ nivel_info(nivel).nombre }}: <strong>{{ e.get(nivel, 0) }}</strong></li>
+      <li>{{ icono_nivel(nivel) }} {{ nivel_info(nivel).nombre }}: <strong>{{ e.get(nivel, 0) }}</strong></li>
       {% endfor %}
     </ul>
     <p class="rk-nota-fuente mb-0">Cifras agregadas. El administrador no accede a la información clínica de cada niño/a.</p>

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Solicitudes de atención - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-pro-wrap">
+  <header class="rk-encabezado">
+    <div>
+      <h1 class="h3 mb-1">Solicitudes de atención</h1>
+      <p class="text-muted mb-0">Cuidadores que buscan orientación. Te atiende el caso quien lo acepta primero.</p>
+    </div>
+    <form method="POST" action="{{ url_for('mensajes.disponibilidad') }}" class="rk-disponibilidad">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <span class="rk-disponibilidad__estado {{ 'is-on' if current_user.disponible }}">
+        {{ 'Disponible' if current_user.disponible else 'No disponible' }}</span>
+      <button type="submit" name="disponible" value="{{ 'no' if current_user.disponible else 'si' }}"
+        class="btn btn-outline-secondary btn-sm">{{ 'Pausar nuevas solicitudes' if current_user.disponible else 'Recibir solicitudes' }}</button>
+    </form>
+  </header>
+
+  <section class="rk-kpis mb-4" aria-label="Tu carga de casos">
+    <div class="rk-kpi-nivel">
+      <span class="rk-kpi-nivel__nombre">Casos abiertos</span>
+      <span class="rk-kpi-nivel__valor">{{ mis_casos|length }}<span class="rk-kpi-nivel__pie"> / {{ cupo }}</span></span>
+      <span class="rk-kpi-nivel__pie">{{ cupo - mis_casos|length }} cupos libres</span>
+    </div>
+    <div class="rk-kpi-nivel">
+      <span class="rk-kpi-nivel__nombre">Solicitudes en espera</span>
+      <span class="rk-kpi-nivel__valor">{{ pendientes|length }}</span>
+      <span class="rk-kpi-nivel__pie">de toda la clínica</span>
+    </div>
+  </section>
+
+  {% if not puede_recibir %}
+  <div class="alert alert-warning">
+    {% if not current_user.disponible %}Pausaste las nuevas solicitudes.
+    {% else %}Alcanzaste tu cupo de {{ cupo }} casos abiertos: cierra los casos que hayas terminado para recibir nuevos.{% endif %}
+  </div>
+  {% endif %}
+
+  <section class="mb-4" aria-labelledby="titulo-espera">
+    <h2 class="h6" id="titulo-espera">En espera</h2>
+    {% for s in pendientes %}
+    {% set r = resumenes[s.nino_id] %}
+    <article class="rk-solicitud rk-solicitud--{{ r.nivel }}">
+      {{ avatar(s.nino, r.nivel, 52) }}
+      <div class="rk-solicitud__texto">
+        <p class="mb-1"><strong>{{ s.nino.nombre_completo }}</strong>
+          <span class="text-muted small">· {{ s.nino.edad_texto() }} · solicitada el {{ s.fecha_creacion|fecha_hora }}</span></p>
+        <span class="rk-badge-nivel rk-badge-nivel--{{ r.nivel }}">{{ icono_nivel(r.nivel) }} {{ r.info_nivel.titulo }}</span>
+        {% if r.senales_del_nivel %}<p class="small text-muted mb-1 mt-1">{{ r.senales_del_nivel|map(attribute='texto')|join(' · ') }}</p>{% endif %}
+        <blockquote class="rk-motivo">“{{ s.motivo }}”</blockquote>
+      </div>
+      {% if puede_recibir %}
+      <form method="POST" action="{{ url_for('mensajes.atender', solicitud_id=s.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-primary btn-sm">Atender</button>
+      </form>
+      {% endif %}
+    </article>
+    {% else %}
+    <p class="text-muted">No hay solicitudes en espera.</p>
+    {% endfor %}
+  </section>
+
+  <section aria-labelledby="titulo-mis-casos">
+    <h2 class="h6" id="titulo-mis-casos">Mis casos abiertos</h2>
+    {% for s in mis_casos %}
+    {% set r = resumenes[s.nino_id] %}
+    <article class="rk-solicitud rk-solicitud--{{ r.nivel }}">
+      {{ avatar(s.nino, r.nivel, 52) }}
+      <div class="rk-solicitud__texto">
+        <p class="mb-1"><strong>{{ s.nino.nombre_completo }}</strong>
+          <span class="text-muted small">· desde {{ s.fecha_asignacion|fecha_hora }}</span></p>
+        <span class="small {{ 'text-success' if s.acceso == 'otorgado' else 'text-muted' }}">
+          {% if s.acceso == 'otorgado' %}✓ El cuidador autorizó el expediente completo
+          {% elif s.acceso == 'denegado' %}Sin acceso al expediente: solo semáforo y conversación
+          {% else %}Esperando que el cuidador responda la autorización{% endif %}</span>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('mensajes.conversacion', nino_id=s.nino_id) }}" class="btn btn-outline-secondary btn-sm">Conversación</a>
+        <form method="POST" action="{{ url_for('mensajes.cerrar', solicitud_id=s.id) }}"
+          data-confirmar="¿Cerrar el caso de {{ s.nino.nombre }}? La conversación seguirá disponible.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-outline-primary btn-sm">Cerrar caso</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <p class="text-muted">No tienes casos abiertos.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

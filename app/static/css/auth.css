@@ -1,200 +1,164 @@
+/* =============================================================================
+   RespiraKids · Inicio de sesión y registro
+   Tarjeta de cristal centrada con halos de color de la marca.
+   ========================================================================== */
 .rk-auth-page {
-  min-height: 70vh;
+  min-height: 78vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 0;
+  padding: var(--rk-space-8) 0;
 }
-
 .rk-auth-card {
   position: relative;
   overflow: hidden;
-  max-width: 420px;
   width: 100%;
-  background: white;
+  max-width: 440px;
+  padding: var(--rk-space-8) var(--rk-space-8) var(--rk-space-6);
+  background: var(--rk-surface);
+  backdrop-filter: blur(var(--rk-blur));
+  -webkit-backdrop-filter: blur(var(--rk-blur));
+  border: 1px solid var(--rk-border);
   border-radius: 28px;
-  box-shadow: 0 20px 50px rgba(0, 103, 127, 0.1);
-  padding: 2.2rem 2rem;
-  border: 1px solid #e3eef2;
+  box-shadow: var(--rk-shadow-lg);
 }
-
+@media (max-width: 480px) {
+  .rk-auth-card { padding: var(--rk-space-6) var(--rk-space-5); }
+}
 .rk-auth-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(35px);
-  opacity: 0.25;
+  filter: blur(48px);
+  opacity: 0.35;
   pointer-events: none;
 }
-.rk-auth-blob.a {
-  width: 130px;
-  height: 130px;
-  background: var(--rk-coral);
-  top: -30px;
-  right: -30px;
-}
-.rk-auth-blob.b {
-  width: 160px;
-  height: 160px;
-  background: var(--rk-mint);
-  bottom: -50px;
-  left: -40px;
-}
+.rk-auth-blob.a { width: 160px; height: 160px; background: var(--rk-primary); top: -60px; right: -50px; }
+.rk-auth-blob.b { width: 180px; height: 180px; background: var(--rk-ia); bottom: -80px; left: -60px; opacity: 0.25; }
 
 .rk-auth-header {
   position: relative;
   z-index: 2;
   text-align: center;
-  margin-bottom: 1.6rem;
+  margin-bottom: var(--rk-space-6);
 }
 .rk-auth-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: var(--rk-mint-soft);
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  margin: 0 auto 0.8rem;
+  margin: 0 auto var(--rk-space-5);
 }
+.rk-auth-logo .rk-marca__img { height: 52px; width: auto; }
 .rk-auth-header h1 {
-  color: var(--rk-deep);
-  font-size: 1.5rem;
-  margin-bottom: 0.2rem;
+  font-size: var(--rk-text-2xl);
+  font-weight: 800;
+  margin-bottom: var(--rk-space-1);
 }
-.rk-auth-header p {
-  color: #5b6b70;
-  font-size: 0.9rem;
-  margin: 0;
-}
+.rk-auth-header p { color: var(--rk-text-2); font-size: var(--rk-text-sm); margin: 0; }
 
-.rk-auth-form {
-  position: relative;
-  z-index: 2;
-}
-
-.rk-input-group {
-  margin-bottom: 1rem;
-}
+.rk-auth-form { position: relative; z-index: 2; }
+.rk-input-group { margin-bottom: var(--rk-space-4); }
 .rk-input-group label {
   display: block;
-  font-size: 0.78rem;
+  margin: 0 0 var(--rk-space-1) var(--rk-space-1);
+  font-size: var(--rk-text-sm);
   font-weight: 600;
-  color: #5b6b70;
-  margin-bottom: 0.35rem;
-  margin-left: 0.4rem;
+  color: var(--rk-text-2);
 }
-.rk-input-wrap {
-  position: relative;
-}
+.rk-input-wrap { position: relative; }
 .rk-input-icon {
   position: absolute;
-  left: 0.9rem;
+  left: var(--rk-space-4);
   top: 50%;
   transform: translateY(-50%);
   font-size: 1rem;
-  opacity: 0.6;
+  opacity: 0.7;
+  pointer-events: none;
 }
 .rk-input-wrap input {
   width: 100%;
-  height: 48px;
-  border: 1.5px solid #dde8eb;
-  border-radius: 999px;
-  padding: 0 2.6rem;
-  font-size: 0.92rem;
-  outline: none;
-  background: #fbfdfe;
+  height: 50px;
+  padding: 0 2.75rem;
+  font-size: var(--rk-text-md);
+  color: var(--rk-text);
+  background: var(--rk-surface-2);
+  border: 1px solid var(--rk-border-strong);
+  border-radius: var(--rk-radius-pill);
+  transition: border-color var(--rk-dur) var(--rk-ease), box-shadow var(--rk-dur) var(--rk-ease);
 }
-.rk-input-wrap input:focus {
-  border-color: var(--rk-coral);
-  box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.15);
-}
+.rk-input-wrap input::placeholder { color: var(--rk-muted); }
+.rk-input-wrap input:focus { outline: none; border-color: var(--rk-primary); box-shadow: var(--rk-focus); }
+.rk-input-wrap.is-invalid input { border-color: var(--rk-danger); }
 .rk-toggle-password {
   position: absolute;
-  right: 0.9rem;
+  right: var(--rk-space-2);
   top: 50%;
   transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
   background: none;
   border: none;
-  font-size: 1rem;
-  opacity: 0.6;
+  border-radius: 50%;
   cursor: pointer;
+  opacity: 0.8;
 }
+.rk-toggle-password:hover { opacity: 1; background: var(--rk-surface-3); }
 
 .rk-auth-forgot {
   display: block;
-  text-align: right;
-  font-size: 0.8rem;
-  color: var(--rk-deep);
-  margin: 0.3rem 0.4rem 0;
+  width: fit-content;
+  margin: calc(-1 * var(--rk-space-2)) var(--rk-space-1) var(--rk-space-2) auto;
+  font-size: var(--rk-text-sm);
+  font-weight: 600;
+  color: var(--rk-primary-text);
   text-decoration: none;
 }
-.rk-auth-forgot:hover {
-  text-decoration: underline;
-}
+.rk-auth-forgot:hover { text-decoration: underline; }
 
 .rk-auth-submit {
   width: 100%;
-  height: 48px;
-  border: none;
-  border-radius: 999px;
-  background: var(--rk-coral);
-  color: var(--rk-coral-ink);
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-top: 0.6rem;
+  height: 50px;
+  margin-top: var(--rk-space-3);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--rk-space-2);
+  font-size: var(--rk-text-md);
+  font-weight: 800;
+  color: var(--rk-on-primary);
+  background: var(--rk-primary);
+  border: none;
+  border-radius: var(--rk-radius-pill);
+  box-shadow: 0 8px 24px rgba(var(--rk-primary-rgb), 0.25);
+  transition: background var(--rk-dur) var(--rk-ease);
 }
-.rk-auth-submit:hover {
-  background: var(--rk-coral-dark);
-}
+.rk-auth-submit:hover { background: var(--rk-primary-hover); }
+.rk-auth-submit:focus-visible { outline: none; box-shadow: var(--rk-focus); }
 
 .rk-auth-footer {
   position: relative;
   z-index: 2;
+  margin-top: var(--rk-space-5);
   text-align: center;
-  margin-top: 1.2rem;
-  font-size: 0.85rem;
-  color: #5b6b70;
+  font-size: var(--rk-text-sm);
+  color: var(--rk-text-2);
 }
-.rk-auth-footer a {
-  color: var(--rk-deep);
-  font-weight: 700;
-  text-decoration: none;
-}
-.rk-auth-footer a:hover {
-  text-decoration: underline;
-}
-
+.rk-auth-footer a { color: var(--rk-primary-text); font-weight: 700; text-decoration: none; }
+.rk-auth-footer a:hover { text-decoration: underline; }
 .rk-auth-links {
+  margin-top: var(--rk-space-6);
   text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.8rem;
-  color: #8a9a9e;
+  font-size: var(--rk-text-xs);
+  color: var(--rk-muted);
 }
-.rk-auth-links a {
-  color: #8a9a9e;
-  text-decoration: none;
-  margin: 0 0.4rem;
-}
-.rk-auth-links a:hover {
-  color: var(--rk-deep);
-}
+.rk-auth-links a { color: var(--rk-muted); margin: 0 var(--rk-space-2); text-decoration: none; }
+.rk-auth-links a:hover { color: var(--rk-primary-text); }
 
 /* Campos en dos columnas (p. ej. Nombres y Apellidos); en móvil pasan a una columna. */
 .rk-auth-fila {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0 12px;
+  gap: 0 var(--rk-space-3);
 }
 @media (max-width: 480px) {
-  .rk-auth-fila {
-    grid-template-columns: 1fr;
-  }
-}
-.rk-input-wrap.is-invalid input {
-  border-color: #c0392b;
+  .rk-auth-fila { grid-template-columns: 1fr; }
 }

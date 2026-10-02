@@ -1,14 +1,51 @@
 {% extends "base.html" %}
-{% from "macros/formularios.html" import campo, nota_obligatorios %} {% block title %}Autorizaciones - RespiraKids{%
-endblock %} {% block content %}
-<h2>Autorizaciones de acceso</h2>
-<p class="text-muted">Paciente: {{ nino.nombre_completo }}</p>
+{% from "macros/formularios.html" import campo, nota_obligatorios %}
+{% from "macros/avatar.html" import avatar, foto_profesional %}
+{% block title %}Profesionales autorizados - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-chat-wrap">
+  <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link px-0">← Mis niños</a>
+  <header class="rk-bandeja__cabecera">
+    {{ avatar(nino, None, 56) }}
+    <div>
+      <h1 class="h3 mb-0">Profesionales de {{ nino.nombre }}</h1>
+      <p class="text-muted mb-0">Quienes autorices podrán ver su historial, evaluaciones y medicamentos, y escribirte.</p>
+    </div>
+  </header>
 
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <h5 class="card-title">Autorizar a un profesional</h5>
+  {% if candidato %}
+  {# Paso 2: confirmar que es la persona correcta antes de compartir datos de salud. #}
+  <section class="rk-panel rk-confirmar-profesional" aria-labelledby="titulo-confirmar">
+    <h2 class="h6" id="titulo-confirmar">¿Es este el profesional que quieres autorizar?</h2>
+    <div class="rk-bandeja__item rk-bandeja__item--estatico">
+      {{ foto_profesional(candidato, 56) }}
+      <span class="rk-bandeja__texto">
+        <span class="rk-bandeja__nombre">{{ candidato.nombre_con_titulo }}</span>
+        <span class="rk-bandeja__rol">{{ candidato.especialidad_texto }}</span>
+        <span class="rk-verificado">✓ Profesional verificado por RespiraKids</span>
+      </span>
+    </div>
+    <p class="small text-muted mt-3">
+      Podrá ver la información de salud de {{ nino.nombre }} hasta que revoques el acceso. Si no reconoces a este
+      profesional, no lo autorices.
+    </p>
+    <form method="POST" class="d-flex flex-wrap gap-2">
+      {{ form.csrf_token }}
+      <input type="hidden" name="correo_profesional" value="{{ form.correo_profesional.data }}" />
+      <input type="hidden" name="confirmar" value="si" />
+      <button type="submit" class="btn btn-primary">Sí, autorizar</button>
+      <a href="{{ url_for('pacientes.autorizaciones', nino_id=nino.id) }}" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+  </section>
+  {% else %}
+  <section class="rk-panel" aria-labelledby="titulo-autorizar">
+    <h2 class="h6" id="titulo-autorizar">Autorizar a un profesional</h2>
     <p class="small text-muted">
-      El profesional podrá ver el historial y las evaluaciones de {{ nino.nombre }} hasta que revoques el acceso.
+      Escribe el correo que el profesional usa en RespiraKids: pídeselo en la consulta. Así solo compartes la
+      información con quien de verdad atiende a {{ nino.nombre }}.
     </p>
     <form method="POST" novalidate>
       {{ form.csrf_token }}
@@ -16,40 +53,36 @@ endblock %} {% block content %}
       <div class="row align-items-end">
         {{ campo(form.correo_profesional, 'col-md-8 mb-3', placeholder='correo@profesional.com') }}
         <div class="col-md-4 mb-3">
-          <button type="submit" class="btn btn-primary w-100">Autorizar</button>
+          <button type="submit" class="btn btn-primary w-100">Buscar</button>
         </div>
       </div>
     </form>
-  </div>
+  </section>
+  {% endif %}
+
+  <section class="mt-4" aria-labelledby="titulo-autorizados">
+    <h2 class="h6" id="titulo-autorizados">Con acceso a la información de {{ nino.nombre }}</h2>
+    {% if autorizaciones %}
+    <ul class="rk-bandeja">
+      {% for a in autorizaciones %}
+      {% set p = a.profesional %}
+      <li class="rk-bandeja__item rk-bandeja__item--estatico">
+        {{ foto_profesional(p, 46) }}
+        <span class="rk-bandeja__texto">
+          <span class="rk-bandeja__nombre">{{ p.nombre_con_titulo }}</span>
+          <span class="rk-bandeja__rol">{{ p.especialidad_texto }} · Desde {{ a.fecha_autorizacion|fecha }}</span>
+        </span>
+        <form method="POST" action="{{ url_for('pacientes.revocar_autorizacion', nino_id=nino.id, autorizacion_id=a.id) }}"
+          data-confirmar="¿Revocar el acceso de {{ p.nombre_con_titulo }} a la información de {{ nino.nombre }}?" class="m-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-sm btn-outline-danger">Revocar</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">Aún no has autorizado a ningún profesional.</p>
+    {% endif %}
+  </section>
 </div>
-
-<h5>Profesionales autorizados</h5>
-{% if autorizaciones %}
-<ul class="list-group">
-  {% for a in autorizaciones %}
-  <li class="list-group-item d-flex justify-content-between align-items-center">
-    <div>
-      <strong>{{ a.profesional.nombre }}</strong>
-      <span class="text-muted">({{ a.profesional.especialidad }})</span>
-    </div>
-    <form
-      method="POST"
-      action="{{ url_for('pacientes.revocar_autorizacion', nino_id=nino.id, autorizacion_id=a.id) }}"
-      onsubmit="return confirm('¿Revocar acceso a este profesional?');"
-    >
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <button type="submit" class="btn btn-sm btn-outline-danger">
-        Revocar
-      </button>
-    </form>
-  </li>
-  {% endfor %}
-</ul>
-{% else %}
-<p class="text-muted">Aún no has autorizado a ningún profesional.</p>
-{% endif %}
-
-<a href="{{ url_for('pacientes.listar') }}" class="btn btn-link mt-3"
-  >← Volver a mis pacientes</a
->
 {% endblock %}

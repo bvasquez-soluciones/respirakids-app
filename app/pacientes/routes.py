@@ -6,10 +6,10 @@ from app.decorators import rol_requerido
 from app.forms import AutorizacionForm, ConsentimientoNinoForm, NinoForm, PatologiaForm
 from app.models import Autorizacion, Evaluacion, Nino, PatologiaBase, Profesional
 from app.pacientes import pacientes_bp
-from app.services.acceso import nino_del_cuidador
+from app.services.acceso import autorizaciones_vigentes_nino, nino_del_cuidador
 from app.services.auditoria import registrar_actividad
-from app.services.consentimiento import registrar_consentimiento_nino
-from app.services.resumen_nino import resumir
+from app.services.consentimiento import acceso_atencion_otorgado, registrar_consentimiento_nino
+from app.services.resumen_nino import resumir, resumir_todos
 
 ROLES_CUIDADOR = ('cuidador', 'admin')
 
@@ -27,12 +27,14 @@ def _aplicar_formulario(nino, form):
 @login_required
 @rol_requerido(*ROLES_CUIDADOR)
 def listar():
-    ninos = (
-        Nino.query.filter_by(cuidador_id=current_user.id)
-        .order_by(Nino.estado, Nino.nombre)
-        .all()
+    ninos = Nino.query.filter_by(cuidador_id=current_user.id).order_by(Nino.nombre).all()
+    activos = [n for n in ninos if n.estado == 'activo']
+    return render_template(
+        'pacientes/listar.html', ninos=ninos,
+        resumenes=resumir_todos(activos),
+        inactivos=[n for n in ninos if n.estado != 'activo'],
+        profesionales={n.id: len(autorizaciones_vigentes_nino(n.id)) for n in activos},
     )
-    return render_template('pacientes/listar.html', ninos=ninos)
 
 
 @pacientes_bp.route('/<int:nino_id>')
@@ -72,6 +74,7 @@ def nuevo():
             current_user, nino,
             tratamiento=form.consentimiento_tratamiento.data,
             investigacion=form.consentimiento_investigacion.data,
+            atencion=form.consentimiento_atencion.data,
         )
         db.session.commit()
         registrar_actividad('crear', 'nino', nino.id)
@@ -134,12 +137,14 @@ def consentimiento(nino_id):
     form = ConsentimientoNinoForm(data=None if request.method == 'POST' else {
         'consentimiento_tratamiento': nino.consentimiento_otorgado,
         'consentimiento_investigacion': nino.consentimiento_investigacion_otorgado,
+        'consentimiento_atencion': acceso_atencion_otorgado(nino),
     })
 
     if request.method == 'POST' and form.validate_on_submit():
         tratamiento = form.consentimiento_tratamiento.data
         revoca = nino.consentimiento_otorgado and not tratamiento
-        registrar_consentimiento_nino(current_user, nino, tratamiento, form.consentimiento_investigacion.data)
+        registrar_consentimiento_nino(current_user, nino, tratamiento, form.consentimiento_investigacion.data,
+                                      atencion=form.consentimiento_atencion.data)
         if revoca:
             # Sin autorización de tratamiento, ningún profesional puede seguir accediendo a la información.
             for autorizacion in Autorizacion.query.filter_by(nino_id=nino.id, activa=True):
@@ -177,21 +182,25 @@ def autorizaciones(nino_id):
             return _render_autorizaciones(nino, form), 400
         if Autorizacion.query.filter_by(nino_id=nino.id, profesional_id=profesional.id, activa=True).first():
             flash('Ese profesional ya tiene autorización activa.', 'warning')
+        elif request.form.get('confirmar') != 'si':
+            # Paso 2: el cuidador ve quién es (foto, nombre, especialidad) y confirma antes de compartir datos.
+            return _render_autorizaciones(nino, form, candidato=profesional)
         else:
             autorizacion = Autorizacion(nino_id=nino.id, profesional_id=profesional.id, activa=True)
             db.session.add(autorizacion)
             db.session.commit()
             registrar_actividad('otorgar_acceso', 'nino', nino.id, detalles={'profesional_id': profesional.id})
-            flash(f'Autorización otorgada a {profesional.nombre}.', 'success')
+            flash(f'Autorización otorgada a {profesional.nombre_con_titulo}.', 'success')
 
         return redirect(url_for('pacientes.autorizaciones', nino_id=nino.id))
 
     return _render_autorizaciones(nino, form)
 
 
-def _render_autorizaciones(nino, form):
+def _render_autorizaciones(nino, form, candidato=None):
     lista = Autorizacion.query.filter_by(nino_id=nino.id, activa=True).all()
-    return render_template('pacientes/autorizaciones.html', nino=nino, autorizaciones=lista, form=form)
+    return render_template('pacientes/autorizaciones.html', nino=nino, autorizaciones=lista, form=form,
+                           candidato=candidato)
 
 
 @pacientes_bp.route('/<int:nino_id>/autorizaciones/<int:autorizacion_id>/revocar', methods=['POST'])
