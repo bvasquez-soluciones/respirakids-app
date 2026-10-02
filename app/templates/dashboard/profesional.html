@@ -11,10 +11,10 @@
 {% block content %}
 <div class="rk-pro-layout">
   <!-- PANEL IZQUIERDO -->
-  <aside class="rk-pro-sidebar">
+  <aside class="rk-pro-sidebar" data-guia="lista-pacientes">
     <div class="rk-pro-sidebar-head">
       <h1 class="h5 mb-0">Pacientes <span class="text-muted small fw-normal">({{ pacientes|length }})</span></h1>
-      <div class="rk-pro-search-icons">
+      <div class="rk-pro-search-icons" data-guia="filtros">
         <button type="button" class="rk-icon-btn" id="btn-toggle-filter" aria-label="Filtrar por nivel"
           aria-expanded="false" aria-controls="filter-bar">{{ icono('filtro') }}</button>
         <button type="button" class="rk-icon-btn" id="btn-toggle-search" aria-label="Buscar paciente"
@@ -72,7 +72,7 @@
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <section class="rk-pro-main" aria-label="Detalle del paciente">
+  <section class="rk-pro-main" aria-label="Detalle del paciente" data-guia="detalle-paciente">
     {% if nino_seleccionado and sin_expediente %}
       {% set nino = nino_seleccionado %}
       {% set info = resumen.info_nivel %}

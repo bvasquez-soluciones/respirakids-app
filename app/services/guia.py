@@ -1,4 +1,4 @@
-"""Guía interactiva para cuidadores nuevos: ilumina el botón que deben usar y explica qué hacer.
+"""Guía interactiva para usuarios nuevos (cuidadores y profesionales): ilumina el botón a usar y explica qué hacer.
 
 La etapa se deduce de lo que el cuidador ya hizo (no se guarda nada en la base de datos):
   registrar_nino     -> aún no tiene niños/as activos
@@ -10,13 +10,14 @@ La etapa se deduce de lo que el cuidador ya hizo (no se guarda nada en la base d
 Cada paso apunta a un elemento con `data-guia="<clave>"` en las plantillas; static/js/guia.js los recorre.
 Si el elemento no está en la página, ese paso se omite.
 """
-from flask import request
+from flask import current_app, request
 
 from app.models import Evaluacion, Nino
 
-# Pantallas donde la guía puede aparecer.
+# Pantallas donde la guía puede aparecer, por rol.
 ENDPOINTS = {'dashboard.cuidador', 'pacientes.listar', 'pacientes.nuevo', 'pacientes.consentimiento',
              'sintomas.nuevo', 'sintomas.resultado'}
+ENDPOINTS_PROFESIONAL = {'dashboard.ajustes', 'dashboard.profesional', 'mensajes.solicitudes'}
 
 BIENVENIDA = {
     'titulo': '¡Bienvenido a RespiraKids! 👋',
@@ -137,11 +138,93 @@ def _pasos_recorrido():
     ]
 
 
+# ---------------------------------------------------------------- Profesionales de salud
+# Etapas: clave (primer ingreso con contraseña temporal, en Ajustes), panel (recorrido del panel de pacientes) y
+# solicitudes (primera visita a Solicitudes). Las dos últimas quedan marcadas como vistas en el navegador (guia.js).
+
+def _bienvenida_profesional(usuario, texto):
+    return {'titulo': f'¡Bienvenido/a a RespiraKids, {usuario.nombre_con_titulo}! 👋', 'texto': texto}
+
+
+def _pasos_clave():
+    return [
+        _paso('cambiar-clave', 'Primero, crea tu propia contraseña',
+              'Escribe la contraseña temporal que te dio el administrador y tu contraseña nueva (mínimo 8 caracteres, '
+              'con letras y números). Luego presiona «Actualizar contraseña».'),
+        _paso('perfil-profesional', 'Completa tu perfil',
+              'Sube tu foto y escribe tu especialidad: es lo que ven las familias cuando te conectas con ellas. Puedes '
+              'hacerlo ahora o más tarde desde «Ajustes».'),
+    ]
+
+
+def _pasos_panel(usuario):
+    pasos = [
+        _paso('lista-pacientes', 'Todos los pacientes de la clínica',
+              'Aquí están todos los niños y niñas con su semáforo, para priorizar: rojo, signos de alarma; amarillo, '
+              'vigilancia; verde, sin señales. Toca uno para ver su resumen.'),
+        _paso('filtros', 'Busca y filtra',
+              'Filtra por color o por «Mis pacientes» (los que te autorizaron) y busca por nombre.'),
+        _paso('detalle-paciente', 'Resumen o expediente completo',
+              'Todos los profesionales ven el semáforo. El expediente completo (historial, ficha y medicamentos) solo '
+              'lo ves si el cuidador te autoriza.'),
+        _paso('nav-semaforo', 'Semáforo de la clínica',
+              'El conteo de niños por color y la lista ordenada para priorizar.'),
+        _paso('nav-solicitudes', 'Solicitudes de atención',
+              'Aquí llegan las familias que piden hablar con un profesional. Atiende el caso quien lo toma primero.'),
+        _paso('alertas', 'Pacientes en rojo',
+              'Este ícono cuenta a tus pacientes autorizados cuya última evaluación quedó en rojo.'),
+        _paso('ayuda-pro', '¿Dudas? Aquí está tu manual',
+              'El botón «?» abre el manual para profesionales, con buscador y preguntas frecuentes.'),
+    ]
+    if not (usuario.foto and usuario.especialidad):
+        pasos.append(_paso('nav-ajustes', 'Completa tu perfil',
+                           'Aún te falta la foto o la especialidad. Las familias las ven al conectarse contigo.'))
+    return pasos
+
+
+def _pasos_solicitudes():
+    return [
+        _paso('disponibilidad', 'Tu disponibilidad',
+              'Mientras estés disponible recibes nuevas solicitudes. Al terminar tu turno, presiona «Pausar nuevas '
+              'solicitudes»: tus casos abiertos siguen activos.'),
+        _paso('cupo', 'Tu cupo de casos',
+              f'Puedes tener hasta {current_app.config["CUPO_CASOS_POR_PROFESIONAL"]} casos abiertos a la vez. Aquí '
+              'ves cuántos tienes y cuántas solicitudes esperan en la clínica.'),
+        _paso('en-espera', 'Solicitudes en espera',
+              'Se ordenan por color (rojo primero) y antigüedad. Presiona «Atender» para tomar el caso y abrir la '
+              'conversación con la familia.'),
+        _paso('mis-casos', 'Tus casos abiertos',
+              'Cuando termines de orientar a la familia, presiona «Cerrar caso» para liberar el cupo. La conversación '
+              'queda disponible.'),
+    ]
+
+
+def _pasos_profesional(usuario, endpoint):
+    """(etapa, pasos, bienvenida) del profesional en la página actual."""
+    if endpoint == 'dashboard.ajustes' and usuario.debe_cambiar_password:
+        return 'clave', _pasos_clave(), _bienvenida_profesional(
+            usuario, 'Antes de empezar, crea tu propia contraseña y completa tu perfil. Luego te mostramos el panel.')
+    if endpoint == 'dashboard.profesional' and not request.args.get('paciente'):
+        return 'panel', _pasos_panel(usuario), _bienvenida_profesional(
+            usuario, 'Te mostramos en un minuto cómo ver a los pacientes de la clínica por su semáforo y atender las '
+                     'solicitudes de las familias.')
+    if endpoint == 'mensajes.solicitudes':
+        return 'solicitudes', _pasos_solicitudes(), None
+    return None, [], None
+
+
 def pasos_de_la_pagina(usuario):
     """Datos de la guía para la página actual, o None si no corresponde mostrarla."""
     endpoint = request.endpoint
-    if (not usuario.is_authenticated or getattr(usuario, 'rol', None) != 'cuidador'
-            or endpoint not in ENDPOINTS):
+    if not usuario.is_authenticated:
+        return None
+    if getattr(usuario, 'rol', None) == 'profesional' and endpoint in ENDPOINTS_PROFESIONAL:
+        actual, pasos, bienvenida = _pasos_profesional(usuario, endpoint)
+        if not pasos:
+            return None
+        return {'etapa': actual, 'pasos': pasos, 'bienvenida': bienvenida, 'usuario': f'p{usuario.id}',
+                'forzada': request.args.get('guia') == '1'}
+    if getattr(usuario, 'rol', None) != 'cuidador' or endpoint not in ENDPOINTS:
         return None
     actual, nino = etapa(usuario)
     pasos, bienvenida = [], None
@@ -163,5 +246,5 @@ def pasos_de_la_pagina(usuario):
     if not pasos:
         return None
     # `forzada`: la pidió desde Ayuda; se muestra aunque antes la haya saltado.
-    return {'etapa': actual, 'pasos': pasos, 'bienvenida': bienvenida, 'usuario': usuario.id,
+    return {'etapa': actual, 'pasos': pasos, 'bienvenida': bienvenida, 'usuario': f'c{usuario.id}',
             'forzada': request.args.get('guia') == '1'}

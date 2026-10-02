@@ -19,6 +19,9 @@
       <p class="text-muted mb-3">Pacientes, semáforo, solicitudes de atención, mensajes, indicaciones y reportes, paso a
         paso. Busca tu duda o explora las secciones.</p>
       {{ buscador('expediente, cupo, cerrar caso, indicación, PDF') }}
+      {% if current_user.is_authenticated and current_user.rol == 'profesional' %}
+      <a href="{{ url_for('dashboard.profesional', guia=1) }}" class="btn btn-primary btn-sm mt-3">▶️ Ver la guía interactiva</a>
+      {% endif %}
     </div>
     {{ figura(ejemplo, 'verde', 170) }}
   </header>
@@ -92,6 +95,13 @@
 
     <div class="rk-tema" data-tema>
       <h3 class="h6 rk-tema__titulo">🔑 Tu cuenta</h3>
+      {% call pregunta('guia-interactiva', '¿Qué es la guía que aparece al entrar?', 'tutorial guía paso a paso bienvenida tour recorrido') %}
+        <p>En tu primer ingreso, RespiraKids te acompaña: primero a crear tu contraseña y completar tu perfil, luego te
+          muestra el panel de pacientes y, la primera vez que abres «Solicitudes», cómo atender y cerrar casos. Ilumina
+          cada sección y explica para qué sirve.</p>
+        <p class="mb-0">Puedes saltarla cuando quieras. Para verla de nuevo, toca <strong>▶️ Ver la guía
+          interactiva</strong> al inicio de este manual.</p>
+      {% endcall %}
       {% call pregunta('primer-ingreso', '¿Cómo obtengo mi cuenta y entro por primera vez?', 'registro clave temporal contraseña administrador') %}
         <ol>
           <li>Las cuentas de profesionales las crea el <strong>administrador de la clínica</strong>: no hay registro

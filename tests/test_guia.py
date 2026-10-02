@@ -104,14 +104,65 @@ def test_la_guia_se_puede_volver_a_ver_desde_ayuda(client, app):
     _objetivos_presentes(datos, html)
 
 
-def test_profesionales_y_administradores_no_ven_la_guia(client, app):
-    crear_profesional('dra@test.com')
-    login(client, 'dra@test.com')
-    assert _guia(client, '/dashboard/profesional')[0] is None
-    client.post('/auth/logout')
+def test_administradores_no_ven_la_guia(client, app):
     crear_cuidador('admin@test.com', rol='admin')
     login(client, 'admin@test.com')
     assert _guia(client, '/dashboard/cuidador')[0] is None
+
+
+# ---------------------------------------------------------------- Profesionales
+
+def test_profesional_con_clave_temporal_empieza_por_su_contrasena(client, app):
+    dra = crear_profesional('dra@test.com')
+    dra.debe_cambiar_password = True
+    db.session.commit()
+    login(client, 'dra@test.com')
+    datos, html = _guia(client, '/dashboard/ajustes')
+    assert datos['etapa'] == 'clave'
+    assert [p['objetivo'] for p in datos['pasos']] == ['cambiar-clave', 'perfil-profesional']
+    assert 'Bienvenido/a a RespiraKids' in datos['bienvenida']['titulo']
+    _objetivos_presentes(datos, html)
+
+
+def test_profesional_recorre_el_panel_y_las_solicitudes(client, app):
+    crear_nino(crear_cuidador('ana@test.com'), 'Sofía')
+    crear_profesional('dra@test.com')
+    login(client, 'dra@test.com')
+    datos, html = _guia(client, '/dashboard/profesional')
+    assert datos['etapa'] == 'panel' and datos['bienvenida']
+    objetivos = [p['objetivo'] for p in datos['pasos']]
+    assert objetivos[:3] == ['lista-pacientes', 'filtros', 'detalle-paciente']
+    assert objetivos[-1] == 'nav-ajustes'  # sin foto ni especialidad: le recuerda completar el perfil
+    _objetivos_presentes(datos, html)
+    datos, html = _guia(client, '/mensajes/solicitudes')
+    assert datos['etapa'] == 'solicitudes' and datos['bienvenida'] is None
+    _objetivos_presentes(datos, html)
+    # Con un paciente abierto no se interrumpe con el recorrido.
+    assert _guia(client, '/dashboard/profesional?paciente=1')[0] is None
+
+
+def test_profesional_con_perfil_completo_no_recibe_ese_paso(client, app):
+    dra = crear_profesional('dra@test.com')
+    dra.foto, dra.especialidad = 'uploads/avatars/profesional_1.png', 'Pediatría'
+    db.session.commit()
+    login(client, 'dra@test.com')
+    datos, _ = _guia(client, '/dashboard/profesional')
+    assert 'nav-ajustes' not in [p['objetivo'] for p in datos['pasos']]
+
+
+def test_profesional_puede_volver_a_ver_la_guia_desde_su_manual(client, app):
+    crear_profesional('dra@test.com')
+    login(client, 'dra@test.com')
+    assert 'guia=1' in client.get('/ayuda/profesionales').get_data(as_text=True)
+    datos, _ = _guia(client, '/dashboard/profesional?guia=1')
+    assert datos['forzada'] is True
+
+
+def test_guias_de_cuidador_y_profesional_no_comparten_memoria(client, app):
+    """Los ids de cuidadores y profesionales son de tablas distintas: la clave en el navegador lleva el tipo."""
+    crear_profesional('dra@test.com')
+    login(client, 'dra@test.com')
+    assert _guia(client, '/dashboard/profesional')[0]['usuario'].startswith('p')
 
 
 def test_la_guia_no_expone_datos_de_otros_ni_codigo_ejecutable(client, app):

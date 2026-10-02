@@ -9,7 +9,7 @@
 <div class="rk-pro-wrap rk-angosto">
   <h4 class="mb-4">⚙️ Ajustes</h4>
 
-  <div class="rk-panel mb-4">
+  <div class="rk-panel mb-4" data-guia="perfil-profesional">
     <h6 class="mb-3">Perfil profesional</h6>
     <form method="POST" enctype="multipart/form-data" novalidate>
       {{ form_perfil.csrf_token }}
@@ -58,7 +58,7 @@
     </form>
   </div>
 
-  <div class="rk-panel">
+  <div class="rk-panel" data-guia="cambiar-clave">
     <h6 class="mb-3">Cambiar contraseña</h6>
     {% include "dashboard/_form_password.html" %}
   </div>

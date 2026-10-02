@@ -12,7 +12,7 @@
       <h1 class="h3 mb-1">Solicitudes de atención</h1>
       <p class="text-muted mb-0">Cuidadores que buscan orientación. Te atiende el caso quien lo acepta primero.</p>
     </div>
-    <form method="POST" action="{{ url_for('mensajes.disponibilidad') }}" class="rk-disponibilidad">
+    <form method="POST" action="{{ url_for('mensajes.disponibilidad') }}" class="rk-disponibilidad" data-guia="disponibilidad">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <span class="rk-disponibilidad__estado {{ 'is-on' if current_user.disponible }}">
         {{ 'Disponible' if current_user.disponible else 'No disponible' }}</span>
@@ -21,7 +21,7 @@
     </form>
   </header>
 
-  <section class="rk-kpis mb-4" aria-label="Tu carga de casos">
+  <section class="rk-kpis mb-4" aria-label="Tu carga de casos" data-guia="cupo">
     <div class="rk-kpi-nivel">
       <span class="rk-kpi-nivel__nombre">Casos abiertos</span>
       <span class="rk-kpi-nivel__valor">{{ mis_casos|length }}<span class="rk-kpi-nivel__pie"> / {{ cupo }}</span></span>
@@ -41,7 +41,7 @@
   </div>
   {% endif %}
 
-  <section class="mb-4" aria-labelledby="titulo-espera">
+  <section class="mb-4" aria-labelledby="titulo-espera" data-guia="en-espera">
     <h2 class="h6" id="titulo-espera">En espera</h2>
     {% for s in pendientes %}
     {% set r = resumenes[s.nino_id] %}
@@ -66,7 +66,7 @@
     {% endfor %}
   </section>
 
-  <section aria-labelledby="titulo-mis-casos">
+  <section aria-labelledby="titulo-mis-casos" data-guia="mis-casos">
     <h2 class="h6" id="titulo-mis-casos">Mis casos abiertos</h2>
     {% for s in mis_casos %}
     {% set r = resumenes[s.nino_id] %}

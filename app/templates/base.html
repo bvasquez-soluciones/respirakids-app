@@ -41,14 +41,14 @@
           <a href="{{ url_for('dashboard.profesional') }}" class="rk-pro-nav-link {{ 'active' if en_pacientes }}"
             {% if en_pacientes %}aria-current="page"{% endif %}>Pacientes</a>
           <a href="{{ url_for('mensajes.solicitudes') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'mensajes.solicitudes' }}"
-            {% if request.endpoint == 'mensajes.solicitudes' %}aria-current="page"{% endif %} data-contador="solicitudes" data-clase-contador="rk-contador">Solicitudes{% if solicitudes_count %}
+            {% if request.endpoint == 'mensajes.solicitudes' %}aria-current="page"{% endif %} data-guia="nav-solicitudes" data-contador="solicitudes" data-clase-contador="rk-contador">Solicitudes{% if solicitudes_count %}
             <span class="rk-contador">{{ solicitudes_count }}</span>{% endif %}</a>
           <a href="{{ url_for('dashboard.semaforo') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.semaforo' }}"
-            {% if request.endpoint == 'dashboard.semaforo' %}aria-current="page"{% endif %}>Semáforo</a>
+            {% if request.endpoint == 'dashboard.semaforo' %}aria-current="page"{% endif %} data-guia="nav-semaforo">Semáforo</a>
           <a href="{{ url_for('dashboard.reportes') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.reportes' }}"
             {% if request.endpoint == 'dashboard.reportes' %}aria-current="page"{% endif %}>Reportes</a>
           <a href="{{ url_for('dashboard.ajustes') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.ajustes' }}"
-            {% if request.endpoint == 'dashboard.ajustes' %}aria-current="page"{% endif %}>Ajustes</a>
+            {% if request.endpoint == 'dashboard.ajustes' %}aria-current="page"{% endif %} data-guia="nav-ajustes">Ajustes</a>
         </div>
         {% endif %}
 
@@ -58,9 +58,9 @@
           </button>
 
           {% if es_profesional %}
-          <a href="{{ url_for('ayuda.profesionales') }}" class="rk-bell-btn" title="Ayuda" aria-label="Manual para profesionales">
+          <a href="{{ url_for('ayuda.profesionales') }}" class="rk-bell-btn" title="Ayuda" aria-label="Manual para profesionales" data-guia="ayuda-pro">
             {{ icono('ayuda') }}</a>
-          <a href="{{ url_for('dashboard.alertas') }}" class="rk-bell-btn" title="Pacientes en rojo" data-contador="alertas"
+          <a href="{{ url_for('dashboard.alertas') }}" class="rk-bell-btn" title="Pacientes en rojo" data-guia="alertas" data-contador="alertas"
             aria-label="Pacientes con señales de alarma{{ ': ' ~ alertas_count if alertas_count }}">
             {{ icono('alerta') }}
             {% if alertas_count and alertas_count > 0 %}<span class="rk-bell-badge">{{ alertas_count }}</span>{% endif %}
