@@ -70,13 +70,16 @@
     const paso = pasos[indice];
     const r = paso.el.getBoundingClientRect();
     const margen = 8;
-    foco.style.top = (r.top + window.scrollY - margen) + "px";
-    foco.style.left = (r.left + window.scrollX - margen) + "px";
-    foco.style.width = (r.width + margen * 2) + "px";
-    foco.style.height = (r.height + margen * 2) + "px";
-
     const anchoVisible = document.documentElement.clientWidth;  // sin la barra de desplazamiento
     const altoVisible = document.documentElement.clientHeight;
+    // El recuadro no se sale de la pantalla (p. ej. el último botón de la barra inferior).
+    const izquierda = Math.max(2, r.left - margen);
+    const derecha = Math.min(anchoVisible - 2, r.right + margen);
+    foco.style.top = (r.top + window.scrollY - margen) + "px";
+    foco.style.left = (izquierda + window.scrollX) + "px";
+    foco.style.width = (derecha - izquierda) + "px";
+    foco.style.height = (r.height + margen * 2) + "px";
+
     const celular = anchoVisible < 576;
     burbuja.classList.toggle("rk-guia-burbuja--celular", celular);
     if (celular) {

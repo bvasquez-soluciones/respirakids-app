@@ -336,6 +336,30 @@ hr {
 }
 .rk-nav-item .rk-nav-icon { font-size: 1.15rem; line-height: 1.2; }
 
+/* Navegación inferior del profesional: visible hasta 991 px (desde 992 px está la barra superior). */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .rk-bottom-nav--pro { display: flex; }
+}
+.rk-bottom-nav--pro .rk-nav-item { position: relative; min-width: 58px; }
+.rk-nav-insignia {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  min-width: 1.35em;
+  padding: 0 0.35em;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.35em;
+  text-align: center;
+  color: var(--rk-on-primary);
+  background: var(--rk-primary);
+  border-radius: var(--rk-radius-pill);
+}
+body.rk-con-nav-inferior-pro .rk-footer { padding-bottom: 6rem !important; }
+@media (min-width: 992px) {
+  body.rk-con-nav-inferior-pro .rk-footer { padding-bottom: var(--rk-space-6) !important; }
+}
+
 /* Pie de página */
 .rk-footer {
   flex-shrink: 0;

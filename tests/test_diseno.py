@@ -135,3 +135,28 @@ def test_csp_no_permite_codigo_en_linea():
     from app import CSP
     assert "'unsafe-inline'" not in CSP['script-src']
     assert "'unsafe-inline'" not in CSP['style-src']
+
+
+def test_profesional_tiene_navegacion_inferior_en_celular(client, app):
+    """En celular la barra superior del profesional no cabe: tiene su propia navegación inferior."""
+    from tests.conftest import crear_cuidador, crear_nino, crear_profesional, login
+    from app.services import atencion
+    ana = crear_cuidador('ana@test.com')
+    atencion.crear_solicitud(crear_nino(ana, 'Sofía'), ana, 'Tiene tos desde ayer.')
+    crear_profesional('dra@test.com')
+    login(client, 'dra@test.com')
+    html = client.get('/mensajes/solicitudes').get_data(as_text=True)
+    nav = re.search(r'<nav class="rk-bottom-nav rk-bottom-nav--pro".*?</nav>', html, re.S).group(0)
+    for ruta in ('/dashboard/profesional', '/mensajes/solicitudes', '/dashboard/semaforo', '/dashboard/reportes',
+                 '/dashboard/ajustes'):
+        assert f'href="{ruta}"' in nav, ruta
+    assert 'aria-current="page"' in nav and 'data-contador="solicitudes"' in nav
+    assert '<span class="rk-nav-insignia">1</span>' in nav
+    assert 'rk-con-nav-inferior-pro' in html
+
+
+def test_cuidador_no_recibe_la_navegacion_del_profesional(client, app):
+    from tests.conftest import crear_cuidador, login
+    crear_cuidador('ana@test.com')
+    login(client, 'ana@test.com')
+    assert 'rk-bottom-nav--pro' not in client.get('/dashboard/cuidador').get_data(as_text=True)

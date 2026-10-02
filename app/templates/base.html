@@ -22,7 +22,7 @@
   </head>
   {% set es_cuidador = current_user.is_authenticated and current_user.rol in ('cuidador', 'admin') %}
   {% set es_profesional = current_user.is_authenticated and current_user.rol == 'profesional' %}
-  <body class="{{ 'rk-con-nav-inferior' if es_cuidador }} {% block body_class %}{% endblock %}"
+  <body class="{{ 'rk-con-nav-inferior' if es_cuidador }}{{ 'rk-con-nav-inferior-pro' if es_profesional }} {% block body_class %}{% endblock %}"
     {% if current_user.is_authenticated %}data-estado-url="{{ url_for('dashboard.estado') }}" data-pagina="{{ request.endpoint }}"{% endif %}>
     <a class="rk-saltar" href="#contenido">Saltar al contenido</a>
 
@@ -159,6 +159,28 @@
       {% for endpoint, nombre_icono, texto, activo in items %}
       <a href="{{ url_for(endpoint) }}" class="rk-nav-item {{ 'active' if activo }}" {% if activo %}aria-current="page"{% endif %}>
         <span class="rk-nav-icon">{{ icono(nombre_icono) }}</span> {{ texto }}
+      </a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if es_profesional %}
+    {# Navegación inferior del profesional en celular y tableta (en pantallas grandes está la barra superior) #}
+    <nav class="rk-bottom-nav rk-bottom-nav--pro" aria-label="Navegación inferior">
+      {% set en_pacientes_movil = request.endpoint in ('dashboard.profesional', 'dashboard.profesional_evaluacion', 'dashboard.alertas') %}
+      {% set items_pro = [
+        ('dashboard.profesional', 'pacientes', 'Pacientes', en_pacientes_movil, ''),
+        ('mensajes.solicitudes', 'mensaje', 'Solicitudes', request.endpoint == 'mensajes.solicitudes', 'nav-solicitudes'),
+        ('dashboard.semaforo', 'semaforo', 'Semáforo', request.endpoint == 'dashboard.semaforo', 'nav-semaforo'),
+        ('dashboard.reportes', 'reportes', 'Reportes', request.endpoint == 'dashboard.reportes', ''),
+        ('dashboard.ajustes', 'ajustes', 'Ajustes', request.endpoint == 'dashboard.ajustes', 'nav-ajustes'),
+      ] %}
+      {% for endpoint, nombre_icono, texto, activo, guia in items_pro %}
+      <a href="{{ url_for(endpoint) }}" class="rk-nav-item {{ 'active' if activo }}" {% if activo %}aria-current="page"{% endif %}
+        {% if guia %}data-guia="{{ guia }}"{% endif %}
+        {% if endpoint == 'mensajes.solicitudes' %}data-contador="solicitudes" data-clase-contador="rk-nav-insignia"{% endif %}>
+        <span class="rk-nav-icon">{{ icono(nombre_icono) }}</span> {{ texto }}
+        {% if endpoint == 'mensajes.solicitudes' and solicitudes_count %}<span class="rk-nav-insignia">{{ solicitudes_count }}</span>{% endif %}
       </a>
       {% endfor %}
     </nav>
