@@ -109,6 +109,27 @@ def expresion_avatar(nivel, evolucion=None):
     return nivel_info(nivel)['avatar']
 
 
+# Emojis del formulario de síntomas: solo ayudan a reconocer cada opción de un vistazo; el texto sigue siendo lo
+# que la describe. No se usan círculos rojo/amarillo/verde: esos colores son exclusivos del semáforo.
+EMOJIS_GRUPOS = {'alarma': '🚨', 'respiracion': '🫁', 'tos_fiebre': '🌡️', 'otros': '🤧', 'antecedentes': '📋'}
+EMOJIS_SINTOMAS = {
+    # Signos de alarma
+    'incapacidad_beber_liquidos': '🍼', 'convulsion': '⚡', 'alteracion_conciencia': '😴', 'cianosis': '👄',
+    'tiraje_subcostal': '🫁', 'quejido': '😣', 'aleteo_nasal': '👃', 'apnea': '⏸️', 'estridor': '🔊',
+    'rigidez_cuello': '🧣', 'abombamiento_fontanela': '👶', 'petequias': '🔎', 'edema_retroauricular': '👂',
+    # Respiración
+    'dificultad_respiratoria': '😮‍💨', 'respiracion_rapida': '💨', 'sibilancias': '🎵',
+    # Tos y fiebre
+    'tos': '😷', 'tos_paroxistica': '🌀', 'vomito_tras_tos': '🤢',
+    # Otros síntomas
+    'congestion_nasal': '😪', 'secrecion_nasal': '🧻', 'estornudos': '🤧', 'dolor_garganta': '🗣️',
+    'decaimiento': '😔', 'disminucion_actividad': '🧸', 'perdida_apetito': '🍽️', 'perdida_peso': '⚖️',
+    'irritabilidad': '😠', 'vomito': '🤮', 'diarrea': '🚽',
+    # Antecedentes y contexto
+    'contacto_tuberculosis': '🏠', 'factor_riesgo_bar': '📋', 'condicion_asma': '🌬️', 'condicion_alergias': '🌼',
+}
+
+
 # Etiquetas de lo que el cuidador puede registrar, en el orden en que se muestran.
 SINTOMAS_REPORTADOS = {
     'dificultad_respiratoria': 'Dificultad para respirar',

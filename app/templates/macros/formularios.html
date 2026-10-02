@@ -91,6 +91,19 @@
 
 
 {#- Opción de una lista de "marca lo que observes" (casilla con su texto de ayuda, sin marca de obligatoriedad). -#}
+{#- Síntoma como tarjeta que se toca: la casilla real sigue dentro (teclado, lector de pantalla y envío). -#}
+{% macro opcion_tarjeta(field, emoji='') -%}
+<label class="rk-tarjeta-sintoma" for="{{ field.id }}">
+  {{ field(**atributos_campo(field, None, 'rk-tarjeta-sintoma__casilla')) }}
+  {% if emoji %}<span class="rk-tarjeta-sintoma__emoji" aria-hidden="true">{{ emoji }}</span>{% endif %}
+  <span class="rk-tarjeta-sintoma__texto">
+    <span class="rk-tarjeta-sintoma__titulo">{{ field.label.text }}</span>
+    {% if field.description %}<span id="{{ field.id }}-ayuda" class="rk-tarjeta-sintoma__ayuda">{{ field.description }}</span>{% endif %}
+  </span>
+  <span class="rk-tarjeta-sintoma__marca" aria-hidden="true">✓</span>
+</label>
+{%- endmacro %}
+
 {% macro opcion(field) -%}
 <div class="form-check rk-opcion">
   {{ field(**atributos_campo(field, None, 'form-check-input')) }}

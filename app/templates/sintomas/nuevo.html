@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/formularios.html" import campo, opcion, resumen_errores %}
+{% from "macros/formularios.html" import campo, opcion_tarjeta, resumen_errores %}
 {% from "macros/avatar.html" import avatar %}
 {% block title %}Registrar síntomas de {{ nino.nombre }} - RespiraKids{% endblock %}
 {% block extra_css %}
@@ -34,20 +34,31 @@
     no es necesario terminar este registro primero.
   </div>
 
-  <form method="POST" novalidate class="rk-form-sintomas">
+  <form method="POST" novalidate class="rk-form-sintomas" id="form-sintomas">
     {{ form.csrf_token }}
-    <p class="rk-nota-obligatorios">Ningún campo es obligatorio: responde solo lo que hayas observado.</p>
+    <p class="rk-nota-obligatorios">Toca lo que observes en {{ nino.nombre }}. Ningún campo es obligatorio: responde solo
+      lo que hayas visto.</p>
     {{ resumen_errores(form) }}
+
+    {# Atajos a cada sección con el número de opciones marcadas (static/js/sintomas.js) #}
+    <nav class="rk-secciones" aria-label="Secciones del registro">
+      {% for clave, titulo, ayuda, campos in form.GRUPOS %}
+      <a href="#grupo-{{ clave }}" class="rk-secciones__item{{ ' rk-secciones__item--alarma' if clave == 'alarma' }}">
+        <span aria-hidden="true">{{ EMOJIS_GRUPOS[clave] }}</span> {{ titulo }}
+        <span class="rk-secciones__cuenta" data-cuenta="{{ clave }}" hidden></span>
+      </a>
+      {% endfor %}
+    </nav>
 
     {% for clave, titulo, ayuda, campos in form.GRUPOS %}
     <fieldset class="rk-panel rk-grupo-sintomas{{ ' rk-grupo-sintomas--alarma' if clave == 'alarma' }}" id="grupo-{{ clave }}">
-      <legend class="h6">{{ titulo }}</legend>
+      <legend class="h6"><span aria-hidden="true">{{ EMOJIS_GRUPOS[clave] }}</span> {{ titulo }}</legend>
       {% if ayuda %}<p class="small text-muted">{{ ayuda }}</p>{% endif %}
-      <div class="rk-opciones">
+      <div class="rk-tarjetas-sintomas" data-grupo="{{ clave }}">
         {% for nombre in campos %}
           {% set field = form[nombre] %}
           {% if field.type == 'BooleanField' %}
-            {{ opcion(field) }}
+            {{ opcion_tarjeta(field, EMOJIS_SINTOMAS.get(nombre, '')) }}
           {% endif %}
         {% endfor %}
       </div>
@@ -72,9 +83,13 @@
     </fieldset>
     {% endfor %}
 
-    <div class="d-flex flex-wrap gap-2">
-      <button type="submit" class="btn btn-primary">Guardar y ver orientación</button>
-      <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link">Cancelar</a>
+    {# Barra fija: siempre a la mano el resumen y el botón de guardar #}
+    <div class="rk-barra-envio">
+      <span class="rk-barra-envio__resumen" id="resumen-marcados" aria-live="polite">Aún no has marcado nada</span>
+      <span class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link btn-sm">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar y ver orientación</button>
+      </span>
     </div>
   </form>
 </div>

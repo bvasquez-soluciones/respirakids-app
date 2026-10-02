@@ -610,3 +610,150 @@ a.rk-kpi:hover { border-color: var(--rk-primary); color: var(--rk-text); transfo
 .rk-estado-cuenta--pendiente { background: var(--rk-warning-soft); color: var(--rk-warning-text); border-color: var(--rk-warning); }
 .rk-estado-cuenta--suspendido,
 .rk-estado-cuenta--rechazado { background: var(--rk-danger-soft); color: var(--rk-danger-text); border-color: var(--rk-danger); }
+
+/* ---------------------------------------------------------------- Registro de síntomas interactivo
+   Cada síntoma es una tarjeta que se toca (la casilla real sigue dentro: teclado y lector de pantalla). */
+.rk-secciones {
+  position: sticky;
+  top: 4.6rem; /* bajo la barra superior */
+  z-index: 5;
+  display: flex;
+  gap: var(--rk-space-2);
+  overflow-x: auto;
+  padding: var(--rk-space-2) 0;
+  margin-bottom: var(--rk-space-2);
+  background: var(--rk-bg);
+  scrollbar-width: none;
+}
+.rk-secciones::-webkit-scrollbar { display: none; }
+.rk-secciones__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rk-space-1);
+  flex-shrink: 0;
+  padding: var(--rk-space-1) var(--rk-space-3);
+  font-size: var(--rk-text-sm);
+  font-weight: 700;
+  color: var(--rk-text-2);
+  text-decoration: none;
+  background: var(--rk-surface-2);
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-pill);
+}
+.rk-secciones__item:hover { color: var(--rk-text); border-color: var(--rk-primary); }
+.rk-secciones__cuenta {
+  min-width: 1.4em;
+  padding: 0 0.4em;
+  font-size: var(--rk-text-xs);
+  text-align: center;
+  color: var(--rk-on-primary);
+  background: var(--rk-primary);
+  border-radius: var(--rk-radius-pill);
+}
+.rk-secciones__item--alarma .rk-secciones__cuenta { color: var(--rk-on-danger); background: var(--rk-danger); }
+
+.rk-tarjetas-sintomas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--rk-space-2);
+}
+.rk-tarjeta-sintoma {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rk-space-3);
+  min-height: 64px;
+  padding: var(--rk-space-3) var(--rk-space-8) var(--rk-space-3) var(--rk-space-3);
+  background: var(--rk-surface-2);
+  border: 1.5px solid var(--rk-border);
+  border-radius: var(--rk-radius-md);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--rk-dur) var(--rk-ease), background var(--rk-dur) var(--rk-ease),
+    transform var(--rk-dur) var(--rk-ease);
+}
+.rk-tarjeta-sintoma:hover { border-color: var(--rk-border-strong); transform: translateY(-1px); }
+.rk-tarjeta-sintoma:active { transform: scale(0.98); }
+/* La casilla queda accesible pero invisible: toda la tarjeta es el control. */
+.rk-tarjeta-sintoma__casilla {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.rk-tarjeta-sintoma:has(.rk-tarjeta-sintoma__casilla:focus-visible) { box-shadow: var(--rk-focus); }
+.rk-tarjeta-sintoma__emoji {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  background: var(--rk-surface-3);
+  border-radius: 50%;
+  transition: transform var(--rk-dur) var(--rk-ease);
+}
+.rk-tarjeta-sintoma__texto { display: flex; flex-direction: column; gap: 2px; }
+.rk-tarjeta-sintoma__titulo { font-weight: 700; line-height: 1.3; color: var(--rk-text); }
+.rk-tarjeta-sintoma__ayuda { font-size: var(--rk-text-xs); color: var(--rk-muted); line-height: 1.4; }
+.rk-tarjeta-sintoma__marca {
+  position: absolute;
+  top: var(--rk-space-2);
+  right: var(--rk-space-2);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: transparent;
+  border: 1.5px solid var(--rk-border-strong);
+  border-radius: 50%;
+}
+/* Marcada */
+.rk-tarjeta-sintoma:has(.rk-tarjeta-sintoma__casilla:checked) {
+  background: var(--rk-primary-soft);
+  border-color: var(--rk-primary);
+}
+.rk-tarjeta-sintoma:has(.rk-tarjeta-sintoma__casilla:checked) .rk-tarjeta-sintoma__emoji { transform: scale(1.1); }
+.rk-tarjeta-sintoma:has(.rk-tarjeta-sintoma__casilla:checked) .rk-tarjeta-sintoma__marca {
+  color: var(--rk-on-primary);
+  background: var(--rk-primary);
+  border-color: var(--rk-primary);
+}
+/* En signos de alarma, la selección se ve en rojo */
+.rk-grupo-sintomas--alarma .rk-tarjeta-sintoma:has(.rk-tarjeta-sintoma__casilla:checked) {
+  background: var(--rk-danger-soft);
+  border-color: var(--rk-danger);
+}
+.rk-grupo-sintomas--alarma .rk-tarjeta-sintoma:has(.rk-tarjeta-sintoma__casilla:checked) .rk-tarjeta-sintoma__marca {
+  color: var(--rk-on-danger);
+  background: var(--rk-danger);
+  border-color: var(--rk-danger);
+}
+
+.rk-barra-envio {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--rk-space-2);
+  padding: var(--rk-space-3) var(--rk-space-4);
+  background: var(--rk-nav);
+  backdrop-filter: blur(var(--rk-blur));
+  -webkit-backdrop-filter: blur(var(--rk-blur));
+  border: 1px solid var(--rk-border);
+  border-radius: var(--rk-radius-lg);
+  box-shadow: var(--rk-shadow-lg);
+}
+body.rk-con-nav-inferior .rk-barra-envio { bottom: 76px; } /* sobre la navegación inferior del celular */
+@media (min-width: 768px) {
+  body.rk-con-nav-inferior .rk-barra-envio { bottom: var(--rk-space-3); }
+}
+.rk-barra-envio__resumen { font-size: var(--rk-text-sm); font-weight: 700; color: var(--rk-text-2); }

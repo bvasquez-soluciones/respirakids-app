@@ -99,7 +99,8 @@ def create_app(nombre_config=None):
     from app.forms import atributos_campo
     app.jinja_env.filters.update(FILTROS)
     from app.presentacion import (
-        AVISO_NO_DIAGNOSTICO, EVOLUCION, expresion_avatar, hallazgos_registrados, icono_nivel, nivel_info,
+        AVISO_NO_DIAGNOSTICO, EMOJIS_GRUPOS, EMOJIS_SINTOMAS, EVOLUCION, expresion_avatar, hallazgos_registrados,
+        icono_nivel, nivel_info,
     )
     app.jinja_env.globals.update(
         hoy_iso=lambda: date.today().isoformat(),
@@ -111,6 +112,8 @@ def create_app(nombre_config=None):
         ahora_utc=ahora_utc,
         AVISO_NO_DIAGNOSTICO=AVISO_NO_DIAGNOSTICO,
         EVOLUCION=EVOLUCION,
+        EMOJIS_SINTOMAS=EMOJIS_SINTOMAS,
+        EMOJIS_GRUPOS=EMOJIS_GRUPOS,
     )
 
     @app.context_processor

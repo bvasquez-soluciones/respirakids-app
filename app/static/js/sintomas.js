@@ -35,3 +35,27 @@
     }, 1000);
   });
 })();
+
+/* Contadores de opciones marcadas por sección y resumen de la barra inferior. */
+(function () {
+  "use strict";
+  const form = document.getElementById("form-sintomas");
+  if (!form) return;
+  const resumen = document.getElementById("resumen-marcados");
+
+  function actualizar() {
+    let total = 0;
+    document.querySelectorAll("[data-grupo]").forEach(function (grupo) {
+      const marcadas = grupo.querySelectorAll("input[type=checkbox]:checked").length;
+      total += marcadas;
+      const cuenta = document.querySelector('[data-cuenta="' + grupo.getAttribute("data-grupo") + '"]');
+      if (cuenta) { cuenta.textContent = marcadas; cuenta.hidden = marcadas === 0; }
+    });
+    const alarmas = document.querySelectorAll("#grupo-alarma input[type=checkbox]:checked").length;
+    resumen.textContent = total === 0 ? "Aún no has marcado nada"
+      : total + (total === 1 ? " opción marcada" : " opciones marcadas") +
+        (alarmas ? " · " + alarmas + (alarmas === 1 ? " signo de alarma" : " signos de alarma") : "");
+  }
+  form.addEventListener("change", actualizar);
+  actualizar();
+})();
