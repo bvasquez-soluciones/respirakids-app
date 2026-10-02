@@ -16,7 +16,7 @@
     <div class="rk-heroe__texto">
       <p class="text-muted small mb-1">Evaluación del {{ evaluacion.fecha|fecha_hora }}</p>
       <h1 class="h3 mb-3">{{ nino.nombre_completo }}</h1>
-      <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }} rk-estado--grande" role="status">
+      <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }} rk-estado--grande" role="status" data-guia="estado-resultado">
         <span class="rk-estado__icono">{{ icono_nivel(evaluacion.nivel_riesgo) }}</span>
         <div>
           <p class="rk-estado__titulo">
@@ -81,7 +81,7 @@
       <span class="small">Escríbele sobre este resultado.</span></span>
   </a>
   {% elif nino.consentimiento_otorgado and nino.activo %}
-  <section class="rk-panel rk-atencion-form" aria-labelledby="titulo-hablar">
+  <section class="rk-panel rk-atencion-form" aria-labelledby="titulo-hablar" data-guia="hablar-profesional">
     <h2 class="h6" id="titulo-hablar">¿Quieres que un profesional revise este resultado?</h2>
     <p class="small text-muted">Tu mensaje llega a los profesionales de la clínica disponibles y te atiende el primero
       que se conecte.{% if evaluacion.nivel_riesgo == 'rojo' %} <strong>Con señales de alarma, acude primero a un servicio

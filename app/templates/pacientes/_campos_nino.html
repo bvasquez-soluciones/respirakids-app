@@ -1,6 +1,6 @@
 {# Campos del niño/a, compartidos por registro y edición. Requiere `form` (NinoForm). #}
 {% from "macros/formularios.html" import campo %}
-<fieldset class="rk-fieldset">
+<fieldset class="rk-fieldset" data-guia="datos-nino">
   <legend>Identificación</legend>
   <div class="row">
     {{ campo(form.nombre, 'col-sm-6 mb-3', placeholder='Ej. Sofía Valentina') }}

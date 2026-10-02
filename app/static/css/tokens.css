@@ -51,7 +51,10 @@
 
   /* ---- Capas ---- */
   --rk-z-nav: 1030;
+  --rk-z-guia: 1090;  /* guía interactiva: sobre la barra y los menús */
   --rk-blur: 18px;
+  /* Oscurecido de la guía interactiva (igual en ambos temas: resalta el elemento iluminado) */
+  --rk-scrim: rgba(2, 6, 23, 0.66);
 }
 
 /* -----------------------------------------------------------------------------

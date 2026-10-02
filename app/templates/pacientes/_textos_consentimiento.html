@@ -1,7 +1,7 @@
 {# Casillas de autorización sobre los datos de un niño/a. Requiere `form` con
    consentimiento_tratamiento y consentimiento_investigacion. #}
 {% from "macros/formularios.html" import casilla %}
-<fieldset class="rk-fieldset border rounded p-3 bg-light">
+<fieldset class="rk-fieldset border rounded p-3 bg-light" data-guia="autorizacion">
   <legend class="float-none w-auto px-1">Autorizaciones de datos</legend>
   {% call casilla(form.consentimiento_tratamiento, 'form-check mb-3 small') %}
     <strong>Autorización de tratamiento de datos de salud.</strong>

@@ -35,11 +35,13 @@
       {% if not nino.consentimiento_otorgado %}
       <div class="alert alert-warning small mb-0">
         Para registrar síntomas primero debes autorizar el tratamiento de sus datos de salud.
-        <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="alert-link d-block mt-1">Autorizar ahora →</a>
+        <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="alert-link d-block mt-1" data-guia="autorizar"
+          data-guia-nino="{{ nino.id }}">Autorizar ahora →</a>
       </div>
       {% else %}
       {# 2. Acción principal #}
-      <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary w-100">+ Registrar síntomas</a>
+      <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary w-100" data-guia="registrar-sintomas"
+        data-guia-nino="{{ nino.id }}">+ Registrar síntomas</a>
       {% endif %}
 
       {# 3. Accesos rápidos #}
@@ -82,7 +84,7 @@
     {{ pareja_ninos(150) }}
     <p class="h5">Aún no has registrado ningún niño o niña</p>
     <p class="text-muted">Regístralo para llevar su historial de síntomas y recibir orientación según su estado.</p>
-    <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary">Registrar niño/a</a>
+    <a href="{{ url_for('pacientes.nuevo') }}" class="btn btn-primary" data-guia="registrar-nino">Registrar niño/a</a>
   </section>
   {% endif %}
 

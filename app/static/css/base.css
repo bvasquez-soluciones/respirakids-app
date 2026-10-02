@@ -803,3 +803,85 @@ input[type="range"] { accent-color: var(--rk-primary); }
 @media (min-width: 768px) {
   .rk-aviso-flotante { bottom: var(--rk-space-6); }
 }
+
+/* ---------------------------------------------------------------- Guía interactiva (static/js/guia.js)
+   El foco ilumina el elemento del paso y oscurece el resto con una sombra enorme; no bloquea los clics. */
+.rk-guia-foco {
+  position: absolute;
+  z-index: var(--rk-z-guia);
+  border-radius: var(--rk-radius-md);
+  box-shadow: 0 0 0 4px var(--rk-primary), 0 0 0 9999px var(--rk-scrim);
+  pointer-events: none;
+  transition: top 280ms var(--rk-ease), left 280ms var(--rk-ease), width 280ms var(--rk-ease),
+    height 280ms var(--rk-ease);
+}
+/* Paso de acción: un anillo que late alrededor del botón (independiente del oscurecido). */
+.rk-guia-foco--accion::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 3px solid var(--rk-primary);
+  border-radius: inherit;
+  animation: rk-guia-latido 1.6s var(--rk-ease) infinite;
+}
+@keyframes rk-guia-latido {
+  0% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+.rk-guia-burbuja {
+  position: fixed;
+  z-index: calc(var(--rk-z-guia) + 1);
+  width: min(360px, calc(100vw - 32px));
+  padding: var(--rk-space-4);
+  color: var(--rk-text);
+  background: var(--rk-surface-solid);
+  border: 1px solid var(--rk-primary);
+  border-radius: var(--rk-radius-lg);
+  box-shadow: var(--rk-shadow-lg);
+  transition: top 280ms var(--rk-ease), left 280ms var(--rk-ease);
+}
+.rk-guia-burbuja--celular { left: 16px; right: 16px; width: auto; bottom: 88px; }
+.rk-guia-burbuja--celular.rk-guia-burbuja--arriba { top: 84px; bottom: auto; }
+.rk-guia-burbuja__contador {
+  margin: 0 0 var(--rk-space-1);
+  font-size: var(--rk-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rk-primary-text);
+}
+.rk-guia-burbuja__titulo { margin: 0 0 var(--rk-space-2); font-size: var(--rk-text-lg); font-weight: 800; outline: none; }
+.rk-guia-burbuja__texto { margin: 0 0 var(--rk-space-3); color: var(--rk-text-2); line-height: 1.5; }
+.rk-guia-burbuja__acciones { display: flex; align-items: center; flex-wrap: wrap; gap: var(--rk-space-2); }
+.rk-guia-burbuja__saltar { margin-right: auto; padding-left: 0; }
+.rk-guia-burbuja__pista { font-size: var(--rk-text-sm); font-weight: 700; color: var(--rk-primary-text); }
+
+.rk-guia-bienvenida {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--rk-z-guia) + 2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--rk-space-4);
+  background: var(--rk-scrim);
+}
+.rk-guia-bienvenida__caja {
+  width: min(440px, 100%);
+  padding: var(--rk-space-6);
+  text-align: center;
+  background: var(--rk-surface-solid);
+  border: 1px solid var(--rk-primary);
+  border-radius: var(--rk-radius-xl);
+  box-shadow: var(--rk-shadow-lg);
+  animation: rk-guia-entrada 320ms var(--rk-ease);
+}
+.rk-guia-bienvenida__titulo { margin-bottom: var(--rk-space-2); font-size: var(--rk-text-2xl); font-weight: 800; }
+.rk-guia-bienvenida__texto { margin-bottom: var(--rk-space-5); color: var(--rk-text-2); font-size: var(--rk-text-md); }
+.rk-guia-bienvenida__acciones { display: flex; justify-content: center; gap: var(--rk-space-3); }
+@keyframes rk-guia-entrada { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .rk-guia-foco, .rk-guia-burbuja { transition: none; }
+  .rk-guia-foco--accion::after, .rk-guia-bienvenida__caja { animation: none; }
+}
+@media print { .rk-guia-foco, .rk-guia-burbuja, .rk-guia-bienvenida { display: none !important; } }

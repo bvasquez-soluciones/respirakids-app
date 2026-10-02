@@ -4,7 +4,7 @@
 {% set info = r.info_nivel %}
 {% set lista_senales = r.senales_del_nivel|map(attribute='texto')|list %}
 {% set evolucion = r.seguimiento.estado if r.seguimiento else None %}
-<article class="rk-nino-card rk-nino-card--{{ r.nivel }}" id="nino-{{ nino.id }}" aria-labelledby="nino-{{ nino.id }}-nombre">
+<article class="rk-nino-card rk-nino-card--{{ r.nivel }}" id="nino-{{ nino.id }}" data-guia="tarjeta-nino" aria-labelledby="nino-{{ nino.id }}-nombre">
   {# Escenario: ilustración de cuerpo completo con la expresión del nivel + identidad del niño/a. #}
   <header class="rk-nino-card__escenario">
     {{ figura(nino, r.nivel, 150, evolucion) }}
@@ -30,7 +30,7 @@
   {% if r.ultima_evaluacion and nino.consentimiento_otorgado %}
   {# Seguimiento: percepción del cuidador desde la última evaluación. No cambia la clasificación. #}
   {% set seg = r.seguimiento %}
-  <section class="rk-seguimiento" aria-labelledby="seguimiento-{{ nino.id }}">
+  <section class="rk-seguimiento" data-guia="seguimiento" aria-labelledby="seguimiento-{{ nino.id }}">
     <h3 class="rk-nino-card__subtitulo" id="seguimiento-{{ nino.id }}">
       ¿Cómo sigue {{ nino.nombre }} desde la última evaluación?
     </h3>
@@ -105,16 +105,19 @@
   {% if not nino.consentimiento_otorgado %}
   <div class="alert alert-warning small mb-0">
     Para registrar síntomas primero debes
-    <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="alert-link">autorizar el tratamiento de datos</a>.
+    <a href="{{ url_for('pacientes.consentimiento', nino_id=nino.id) }}" class="alert-link" data-guia="autorizar"
+      data-guia-nino="{{ nino.id }}">autorizar el tratamiento de datos</a>.
   </div>
   {% endif %}
 
   <footer class="rk-nino-card__acciones">
     {% if nino.consentimiento_otorgado %}
-    <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary btn-sm">+ Registrar síntomas</a>
+    <a href="{{ url_for('sintomas.nuevo', nino_id=nino.id) }}" class="btn btn-primary btn-sm" data-guia="registrar-sintomas"
+      data-guia-nino="{{ nino.id }}">+ Registrar síntomas</a>
     {% endif %}
     <a href="{{ url_for('sintomas.listar', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Historial</a>
     <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Ficha</a>
-    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm">Hablar con un profesional</a>
+    <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-outline-secondary btn-sm"
+      data-guia="hablar-profesional-tarjeta">Hablar con un profesional</a>
   </footer>
 </article>

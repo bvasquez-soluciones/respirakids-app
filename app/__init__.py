@@ -120,6 +120,14 @@ def create_app(nombre_config=None):
     )
 
     @app.context_processor
+    def inyectar_guia():
+        from flask import has_request_context
+        if not has_request_context():
+            return {}
+        from app.services.guia import pasos_de_la_pagina
+        return {'guia_datos': pasos_de_la_pagina(current_user)}
+
+    @app.context_processor
     def inyectar_contadores():
         if not current_user.is_authenticated:
             return {'alertas_count': 0, 'notificaciones_count': 0, 'solicitudes_count': 0}

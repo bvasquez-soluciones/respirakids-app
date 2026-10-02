@@ -18,6 +18,9 @@
       <h1 class="h2 mb-2">Cómo usar RespiraKids para cuidar la respiración de tus niños</h1>
       <p class="text-muted mb-3">Todo lo que necesitas saber, paso a paso. Busca tu duda o explora las secciones.</p>
       {{ buscador('fiebre, contraseña, nota de voz, semáforo') }}
+      {% if current_user.is_authenticated and current_user.rol == 'cuidador' %}
+      <a href="{{ url_for('dashboard.cuidador', guia=1) }}" class="btn btn-primary btn-sm mt-3">▶️ Ver la guía interactiva</a>
+      {% endif %}
     </div>
     {{ figura(ejemplo, 'verde', 170) }}
   </header>
@@ -87,6 +90,13 @@
 
     <div class="rk-tema" data-tema>
       <h3 class="h6 rk-tema__titulo">👤 Tu cuenta</h3>
+      {% call pregunta('guia-interactiva', '¿Qué es la guía que aparece al entrar?', 'tutorial guía paso a paso bienvenida tour ayuda') %}
+        <p>Cuando creas tu cuenta, RespiraKids te acompaña paso a paso: ilumina el botón que debes presionar y te explica
+          qué hacer para registrar a tu niño o niña, autorizar sus datos y registrar sus síntomas. Avanza sola según lo
+          que vas haciendo.</p>
+        <p class="mb-0">Puedes saltarla cuando quieras. Para verla de nuevo, toca <strong>▶️ Ver la guía interactiva</strong>
+          al inicio de este manual.</p>
+      {% endcall %}
       {% call pregunta('crear-cuenta', '¿Cómo creo mi cuenta?', 'registro registrarme inscribirme') %}
         <ol>
           <li>Toca <strong>Empezar ahora</strong> en la página de inicio.</li>
