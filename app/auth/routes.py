@@ -223,7 +223,7 @@ def reenviar_verificacion():
 
 # Rutas disponibles mientras un profesional no haya cambiado su contraseña temporal.
 _LIBRES_CAMBIO_PASSWORD = {'static', 'dashboard.ajustes', 'auth.logout', 'auth.restablecer', 'privacidad.politica',
-                           'privacidad.aceptar'}
+                           'privacidad.aceptar', 'ayuda.indice', 'ayuda.profesionales'}
 
 
 @auth_bp.before_app_request

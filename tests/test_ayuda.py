@@ -65,6 +65,7 @@ def test_cada_usuario_ve_solo_sus_manuales(app):
 
     claves = {rol: {m['clave'] for m in manuales_para(Usuario(rol))} for rol in (None, 'cuidador', 'admin', 'profesional')}
     assert claves['cuidador'] == {'cuidadores'}
+    assert claves['profesional'] == {'profesionales'}
     # Ningún manual de otro rol se cuela: el profesional no ve el de cuidadores
     assert 'cuidadores' not in claves['profesional']
     for m in MANUALES:
@@ -72,9 +73,42 @@ def test_cada_usuario_ve_solo_sus_manuales(app):
             assert m['clave'] not in claves['profesional']
 
 
-def test_profesional_sin_manual_no_ve_enlace_de_ayuda(client, app):
+def test_profesional_va_directo_a_su_manual(client, app):
     crear_profesional('dra@test.com')
     login(client, 'dra@test.com')
     html = client.get('/dashboard/profesional').get_data(as_text=True)
-    assert 'href="/ayuda/' not in html
-    assert 'Manual para cuidadores' not in client.get('/ayuda/').get_data(as_text=True)
+    assert 'href="/ayuda/profesionales"' in html and 'href="/ayuda/cuidadores"' not in html
+    respuesta = client.get('/ayuda/')
+    assert respuesta.status_code == 302 and respuesta.headers['Location'].endswith('/ayuda/profesionales')
+
+
+def test_cuidador_no_ve_el_manual_del_profesional(client, app):
+    crear_cuidador('ana@test.com')
+    login(client, 'ana@test.com')
+    html = client.get('/dashboard/cuidador').get_data(as_text=True)
+    assert 'href="/ayuda/profesionales"' not in html
+
+
+def test_visitante_elige_entre_cuidador_y_profesional(client):
+    html = client.get('/ayuda/').get_data(as_text=True)
+    assert 'href="/ayuda/cuidadores"' in html and 'href="/ayuda/profesionales"' in html
+
+
+def test_manual_profesional_cubre_sus_modulos(client, app):
+    html = ' '.join(client.get('/ayuda/profesionales').get_data(as_text=True).split())
+    for texto in ('Primeros pasos', 'El semáforo para priorizar', 'contraseña temporal', 'Mis pacientes',
+                  'expediente completo', 'Atender', 'Pausar nuevas solicitudes', 'Cerrar caso', '+ Indicación',
+                  'Suspender indicación', 'Exportar PDF', 'auditoría', 'no es un diagnóstico'):
+        assert texto in html, texto
+    assert f"{app.config['CUPO_CASOS_POR_PROFESIONAL']} casos abiertos" in html
+    ids = re.findall(r'<details class="rk-pregunta" id="([^"]+)"', html)
+    assert len(ids) >= 20 and len(ids) == len(set(ids))
+
+
+def test_profesional_con_clave_temporal_puede_leer_su_manual(client, app):
+    from app import db
+    dra = crear_profesional('dra@test.com')
+    dra.debe_cambiar_password = True
+    db.session.commit()
+    login(client, 'dra@test.com')
+    assert client.get('/ayuda/profesionales').status_code == 200

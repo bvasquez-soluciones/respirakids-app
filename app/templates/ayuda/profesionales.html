@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import figura %}
+{% from "macros/ayuda.html" import buscador, explorador_semaforo, ir, pregunta %}
+{% block title %}Guía para profesionales - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/ayuda.css') }}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="rk-ayuda">
+  <a href="{{ url_for('ayuda.indice') }}" class="btn btn-link px-0">← Centro de ayuda</a>
+
+  {# ------------------------------------------------------------------ Portada del manual #}
+  <header class="rk-ayuda__portada">
+    <div>
+      <p class="rk-ayuda__etiqueta">📗 Manual para profesionales de salud</p>
+      <h1 class="h2 mb-2">Cómo acompañar a las familias desde RespiraKids</h1>
+      <p class="text-muted mb-3">Pacientes, semáforo, solicitudes de atención, mensajes, indicaciones y reportes, paso a
+        paso. Busca tu duda o explora las secciones.</p>
+      {{ buscador('expediente, cupo, cerrar caso, indicación, PDF') }}
+    </div>
+    {{ figura(ejemplo, 'verde', 170) }}
+  </header>
+
+  <div class="alert alert-warning rk-ayuda__urgencia" role="note">
+    <strong>⚕️ Tu criterio clínico es el que decide.</strong> El semáforo es una orientación calculada con reglas de la
+    estrategia AIEPI a partir de lo que registra el cuidador: no es un diagnóstico y no reemplaza tu valoración. Los
+    mensajes no son un canal de urgencias: ante signos de alarma, indica al cuidador acudir de inmediato a un servicio de
+    salud o llamar al <strong>123</strong>.
+  </div>
+
+  {# ------------------------------------------------------------------ Primeros pasos #}
+  <section class="rk-ayuda__seccion" aria-labelledby="titulo-pasos" data-seccion>
+    <h2 class="h4" id="titulo-pasos">🚀 Primeros pasos</h2>
+    <ol class="rk-pasos">
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">🔑</span>
+        <h3 class="h6">Ingresa y cambia tu clave</h3>
+        <p>El administrador de la clínica crea tu cuenta y te entrega una contraseña temporal. Al ingresar, la app te
+          pedirá cambiarla.</p>
+        {{ ir('auth.login', 'Iniciar sesión') }}
+      </li>
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">🪪</span>
+        <h3 class="h6">Completa tu perfil</h3>
+        <p>Sube tu foto y escribe tu especialidad: los cuidadores las ven al conectarse contigo y así saben quién los
+          atiende.</p>
+        {{ ir('dashboard.ajustes', 'Ir a Ajustes') }}
+      </li>
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">👀</span>
+        <h3 class="h6">Revisa a los pacientes</h3>
+        <p>En <strong>Pacientes</strong> y <strong>Semáforo</strong> ves a todos los niños/as de la clínica con su nivel,
+          para priorizar.</p>
+        {{ ir('dashboard.profesional', 'Ir a Pacientes') }}
+      </li>
+      <li class="rk-paso">
+        <span class="rk-paso__emoji" aria-hidden="true">💬</span>
+        <h3 class="h6">Atiende solicitudes</h3>
+        <p>Toma los casos en espera, conversa con la familia y cierra el caso cuando termines.</p>
+        {{ ir('mensajes.solicitudes', 'Ir a Solicitudes') }}
+      </li>
+    </ol>
+  </section>
+
+  {# ------------------------------------------------------------------ Explorador del semáforo #}
+  <section class="rk-ayuda__seccion" aria-labelledby="titulo-semaforo" data-seccion>
+    <h2 class="h4" id="titulo-semaforo">🚦 El semáforo para priorizar</h2>
+    <p class="text-muted">Cada niño/a muestra el nivel de su última evaluación. Las solicitudes en espera se ordenan
+      primero por nivel (rojo, amarillo, verde) y luego por antigüedad. Toca cada color para ver cómo leerlo.</p>
+    {% call(clave) explorador_semaforo(niveles, ejemplo, 'Cómo priorizarlo') %}
+      {% if clave == 'rojo' %}hay al menos un signo de alarma registrado. Es la prioridad más alta: al cuidador ya se le
+      indicó acudir de inmediato a un servicio de salud. También aparece en el ícono de alerta de la barra superior.
+      {% elif clave == 'amarillo' %}hay señales que requieren valoración profesional y vigilancia. Revisa las señales y la
+      evolución reportada por el cuidador.
+      {% elif clave == 'verde' %}no se identificaron señales de alarma en la última evaluación. Conviene revisar si la
+      evaluación es reciente.
+      {% else %}el niño/a aún no tiene evaluaciones: no hay información para priorizar.{% endif %}
+    {% endcall %}
+    <p class="small text-muted mt-2">Junto al nivel verás la <strong>evolución reportada por el cuidador</strong>
+      ({% for clave, o in evolucion.items() %}{{ o.emoji }} {{ o.texto }}{{ ', ' if not loop.last }}{% endfor %}). Ese
+      reporte no cambia el color: el nivel solo cambia cuando el cuidador registra síntomas de nuevo y las reglas
+      clínicas los evalúan.</p>
+  </section>
+
+  {# ------------------------------------------------------------------ Preguntas por tema #}
+  <section class="rk-ayuda__seccion" aria-labelledby="titulo-preguntas">
+    <h2 class="h4" id="titulo-preguntas">❓ Paso a paso por tema</h2>
+    <p class="rk-ayuda__sin-resultados" id="sin-resultados" hidden>No encontramos esa palabra. Prueba con otra, por
+      ejemplo «expediente», «cupo» o «indicación».</p>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">🔑 Tu cuenta</h3>
+      {% call pregunta('primer-ingreso', '¿Cómo obtengo mi cuenta y entro por primera vez?', 'registro clave temporal contraseña administrador') %}
+        <ol>
+          <li>Las cuentas de profesionales las crea el <strong>administrador de la clínica</strong>: no hay registro
+            abierto para profesionales.</li>
+          <li>El administrador te entrega una <strong>contraseña temporal</strong>. Ingresa con tu correo y esa
+            contraseña.</li>
+          <li>La app te lleva a <strong>Ajustes</strong> para que crees tu propia contraseña (mínimo 8 caracteres, con
+            letras y números). Hasta que la cambies no podrás usar las demás pantallas.</li>
+        </ol>
+      {% endcall %}
+      {% call pregunta('perfil-foto', '¿Cómo pongo mi foto y mi especialidad?', 'perfil foto imagen especialidad licencia ajustes') %}
+        <p>En <strong>Ajustes</strong> puedes actualizar tus nombres, especialidad, número de licencia y foto (JPG, PNG o
+          WebP, máximo 3 MB). Tu foto, tu nombre y tu especialidad son lo que ve el cuidador cuando te conectas con él o
+          cuando te busca para autorizarte.</p>
+        {{ ir('dashboard.ajustes', 'Ir a Ajustes') }}
+      {% endcall %}
+      {% call pregunta('olvide-contrasena', 'Olvidé mi contraseña', 'recuperar restablecer clave bloqueada') %}
+        <p>En <strong>Iniciar sesión</strong> toca <strong>¿Olvidaste tu contraseña?</strong> y te llegará un enlace de un
+          solo uso que vence en 60 minutos. Si no te llega, pídele al administrador que restablezca tu contraseña: te dará
+          una nueva clave temporal.</p>
+        <p class="mb-0">Después de 5 intentos fallidos la cuenta se bloquea 15 minutos. Al cambiar la contraseña se
+          cierran las sesiones abiertas en otros dispositivos.</p>
+      {% endcall %}
+      {% call pregunta('cuenta-no-aprobada', 'Dice que mi cuenta no está aprobada', 'suspendida pendiente acceso') %}
+        <p class="mb-0">Tu cuenta está pendiente de aprobación o fue suspendida. Comunícate con el administrador de la
+          clínica: es quien aprueba, suspende o reactiva las cuentas de profesionales.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">👀 Pacientes</h3>
+      {% call pregunta('panel-pacientes', '¿Qué pacientes veo en el panel?', 'todos lista buscar filtro mis pacientes') %}
+        <p>En <strong>Pacientes</strong> aparecen <strong>todos</strong> los niños/as activos de la clínica cuyo
+          cuidador autorizó el tratamiento de datos, cada uno con su semáforo.</p>
+        <ul>
+          <li>🔎 <strong>Buscar:</strong> filtra por nombre.</li>
+          <li><strong>Filtrar:</strong> <em>Todos</em>, <em>Mis pacientes</em> (los que te autorizaron) o por nivel
+            (rojo, amarillo, verde).</li>
+        </ul>
+        {{ ir('dashboard.profesional', 'Ir a Pacientes') }}
+      {% endcall %}
+      {% call pregunta('resumen-expediente', '¿Por qué de algunos niños solo veo un resumen?', 'expediente autorización acceso privacidad resumen') %}
+        <p>Todos los profesionales ven el <strong>resumen del semáforo</strong>: nivel, fecha de la última evaluación,
+          señales identificadas y evolución reportada. Sirve para priorizar.</p>
+        <p class="mb-0">El <strong>expediente completo</strong> (historial, ficha, condiciones de base, medicamentos y
+          gráfico de evolución) solo lo ve el profesional que el cuidador autorice. Esa autorización llega cuando atiendes
+          una solicitud suya (o si el cuidador la dio de antemano), o cuando el cuidador te autoriza con tu correo. El
+          cuidador puede revocarla en cualquier momento.</p>
+      {% endcall %}
+      {% call pregunta('expediente', '¿Qué encuentro en el expediente?', 'historial gráfico evolución antecedentes ficha periodo') %}
+        <ul>
+          <li><strong>Señales de la última evaluación</strong>, con el enlace <em>ver detalle clínico</em>.</li>
+          <li><strong>Antecedentes y medicamentos</strong>: condiciones de base registradas e indicaciones vigentes.</li>
+          <li><strong>Evolución del nivel de riesgo y la temperatura</strong>: gráfico con selector de periodo.</li>
+          <li><strong>Historial</strong>: registros de síntomas y reportes de evolución del cuidador, en orden.</li>
+        </ul>
+        <p class="mb-0">Desde ahí puedes abrir <strong>Mensajes</strong>, <strong>Medicamentos</strong> y
+          <strong>+ Indicación</strong>.</p>
+      {% endcall %}
+      {% call pregunta('detalle-clinico', '¿Qué muestra el detalle clínico de una evaluación?', 'reglas criterios aiepi fuente ml modelo predicción') %}
+        <ul>
+          <li><strong>Reglas aplicadas</strong>: qué reglas se activaron y el criterio de la guía que citan.</li>
+          <li><strong>Datos registrados por el cuidador</strong>: lo que marcó y los valores que escribió.</li>
+          <li><strong>Orientación mostrada al cuidador</strong>: exactamente lo que vio la familia.</li>
+          <li><strong>Predicción complementaria de ML (experimental)</strong>, si está habilitada: modelo entrenado con
+            datos sintéticos y sin validación clínica. Es solo una referencia: la clasificación válida es la de las
+            reglas, no cambia el semáforo y no se le muestra al cuidador.</li>
+        </ul>
+      {% endcall %}
+      {% call pregunta('semaforo-clinica', '¿Para qué sirve la pantalla Semáforo?', 'clínica conteo prioridad lista') %}
+        <p>Muestra cuántos niños/as hay en cada nivel y la lista completa, ordenada para priorizar, con sus señales y la
+          evolución reportada. Si un niño/a tiene una solicitud sin atender verás <strong>Solicitud en espera</strong>; si
+          te autorizaron, <strong>Ver expediente</strong>.</p>
+        {{ ir('dashboard.semaforo', 'Ir a Semáforo') }}
+      {% endcall %}
+      {% call pregunta('alertas', '¿Qué es el ícono de alerta de la barra superior?', 'rojo alerta triángulo pacientes en rojo') %}
+        <p class="mb-0">Cuenta tus pacientes autorizados cuya última evaluación quedó en <strong>rojo</strong>. Al tocarlo
+          ves la lista para revisarlos primero. Se actualiza solo mientras usas la app.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">💬 Solicitudes de atención</h3>
+      {% call pregunta('como-llegan', '¿Cómo llegan las solicitudes?', 'cuidador pide conectar en espera notificación') %}
+        <p>El cuidador pide hablar con un profesional desde el resultado de sus síntomas o desde la tarjeta de su niño/a.
+          La solicitud llega a <strong>todos los profesionales disponibles</strong> de la clínica (recibes una
+          notificación) y la toma el primero que toque <strong>Atender</strong>. Mientras tanto, el cuidador ve
+          «Conectando con un profesional de salud…».</p>
+        {{ ir('mensajes.solicitudes', 'Ir a Solicitudes') }}
+      {% endcall %}
+      {% call pregunta('atender', '¿Qué pasa cuando toco «Atender»?', 'aceptar tomar caso asignar acceso autorizar') %}
+        <ol>
+          <li>El caso queda asignado solo a ti; si otro profesional lo tomó antes, la app te avisa.</li>
+          <li>Se abre la conversación con el cuidador.</li>
+          <li>Si el cuidador autorizó de antemano el acceso del profesional que lo atienda, ves el expediente completo de
+            inmediato. Si no, el cuidador decide en ese momento si te lo autoriza; mientras tanto ves el resumen del
+            semáforo y lo que te escriba.</li>
+        </ol>
+      {% endcall %}
+      {% call pregunta('cupo', '¿Qué es el cupo de casos?', 'límite máximo casos abiertos ' ~ cupo) %}
+        <p>Cada profesional puede tener hasta <strong>{{ cupo }} casos abiertos</strong> al mismo tiempo. En
+          <strong>Solicitudes</strong> ves cuántos tienes y cuántos cupos te quedan. Al llegar al límite no puedes tomar
+          nuevas solicitudes hasta cerrar algún caso: así ningún profesional se satura y las familias reciben respuesta.</p>
+      {% endcall %}
+      {% call pregunta('pausar', '¿Cómo dejo de recibir solicitudes?', 'disponible pausar vacaciones turno') %}
+        <p class="mb-0">En <strong>Solicitudes</strong> toca <strong>Pausar nuevas solicitudes</strong> (por ejemplo al
+          terminar tu turno). Tus casos abiertos siguen activos. Para volver, toca <strong>Recibir
+          solicitudes</strong>.</p>
+      {% endcall %}
+      {% call pregunta('cerrar-caso', '¿Cuándo y cómo cierro un caso?', 'terminar finalizar cerrar caso') %}
+        <p class="mb-0">Cuando termines de orientar a la familia, toca <strong>Cerrar caso</strong> en <em>Mis casos
+          abiertos</em> o en la conversación. Libera un cupo; la conversación queda disponible para mensajes futuros y,
+          si el cuidador te autorizó, conservas el acceso al expediente hasta que él lo revoque.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">✉️ Mensajes</h3>
+      {% call pregunta('conversaciones', '¿Quién ve mis conversaciones?', 'privado chat mensajes otros profesionales') %}
+        <p class="mb-0">Cada conversación es privada entre tú y el cuidador de ese niño/a; los demás profesionales no la
+          ven. Puedes escribirle a un cuidador cuando te autorizó o cuando atiendes un caso suyo. Los mensajes nuevos
+          aparecen solos, sin recargar la página.</p>
+      {% endcall %}
+      {% call pregunta('adjuntos', '¿Puedo enviar y recibir fotos, documentos o notas de voz?', 'imagen foto pdf audio voz micrófono adjuntar') %}
+        <ul>
+          <li><strong>📎 Adjuntar:</strong> fotos (JPG, PNG, WebP) o PDF, máximo 5 MB.</li>
+          <li><strong>🎤 Nota de voz:</strong> hasta 2 minutos; puedes escucharla antes de enviarla.</li>
+        </ul>
+        <p class="mb-0">Las fotos se guardan sin datos de ubicación. Los archivos solo los pueden abrir las dos personas de
+          la conversación.</p>
+      {% endcall %}
+      {% call pregunta('urgencias-mensajes', '¿Qué hago si en un mensaje detecto signos de alarma?', 'urgencia emergencia rojo 123') %}
+        <p class="mb-0">Indica al cuidador que acuda <strong>de inmediato</strong> a un servicio de salud o llame al
+          <strong>123</strong>. RespiraKids no reemplaza la atención presencial ni es un canal de urgencias.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">💊 Indicaciones de medicamentos</h3>
+      {% call pregunta('nueva-indicacion', '¿Cómo registro una indicación?', 'medicamento receta dosis frecuencia horas días tomas') %}
+        <ol>
+          <li>En el expediente del paciente toca <strong>+ Indicación</strong> (requiere que el cuidador te haya
+            autorizado).</li>
+          <li>Escribe el motivo, las indicaciones generales y el inicio del tratamiento.</li>
+          <li>Agrega hasta 5 medicamentos: nombre, dosis tal como debe administrarse, <em>cada cuántas horas</em> (1 a 48)
+            y, si lo indicas, <em>durante cuántos días</em> (1 a 90); con la duración se programan los recordatorios de
+            cada toma.</li>
+        </ol>
+        <p class="mb-0">El cuidador recibe una notificación y marca cada toma como administrada; tú puedes ver esas marcas
+          en <strong>Medicamentos</strong>. RespiraKids nunca sugiere medicamentos ni dosis: la indicación es
+          responsabilidad del profesional que la registra.</p>
+      {% endcall %}
+      {% call pregunta('suspender', '¿Cómo suspendo una indicación?', 'cancelar detener suspender') %}
+        <p class="mb-0">En <strong>Medicamentos</strong> del paciente toca <strong>Suspender indicación</strong> y
+          confirma. La indicación queda inactiva y el cuidador recibe una notificación.</p>
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">📊 Reportes</h3>
+      {% call pregunta('reportes', '¿Qué muestran los reportes?', 'estadísticas gráfico síntomas exportar pdf') %}
+        <p>Resumen de <strong>tus pacientes autorizados</strong>: distribución por nivel, síntomas más reportados y una
+          tabla por paciente. Toca <strong>Exportar PDF</strong> para descargarlo.</p>
+        <p class="mb-0">El PDF contiene datos de salud de menores: guárdalo solo en equipos de la clínica y no lo compartas
+          por canales no autorizados.</p>
+        {{ ir('dashboard.reportes', 'Ir a Reportes') }}
+      {% endcall %}
+    </div>
+
+    <div class="rk-tema" data-tema>
+      <h3 class="h6 rk-tema__titulo">🔐 Privacidad y buenas prácticas</h3>
+      {% call pregunta('auditoria', '¿Queda registro de lo que consulto?', 'auditoría registro trazabilidad ley 1581') %}
+        <p class="mb-0">Sí. Cada consulta de un expediente, mensaje, indicación o reporte queda en el registro de auditoría
+          de la clínica, como exige el manejo de datos de salud (Ley 1581 de 2012). Consulta solo la información que
+          necesitas para atender al paciente.</p>
+      {% endcall %}
+      {% call pregunta('buenas-practicas', 'Recomendaciones de seguridad', 'sesión computador compartido capturas') %}
+        <ul class="mb-0">
+          <li>Cierra sesión al terminar, sobre todo en equipos compartidos.</li>
+          <li>No compartas tu contraseña ni tomes capturas de pantalla de los expedientes.</li>
+          <li>Comunícate con las familias solo por RespiraKids o por los canales oficiales de la clínica.</li>
+        </ul>
+      {% endcall %}
+    </div>
+  </section>
+
+  <footer class="rk-ayuda__pie">
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-imprimir>🖨️ Imprimir o guardar como PDF</button>
+    <p class="small text-muted mb-0">¿No encontraste tu respuesta? Consulta al administrador de la clínica, la
+      <a href="{{ url_for('privacidad.politica') }}">política de datos</a> o los
+      <a href="{{ url_for('privacidad.terminos') }}">términos</a>.</p>
+  </footer>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ayuda.js') }}"></script>
+{% endblock %}

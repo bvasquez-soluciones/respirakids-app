@@ -1,23 +1,11 @@
 {% extends "base.html" %}
 {% from "macros/avatar.html" import figura %}
-{% from "macros/iconos.html" import icono %}
+{% from "macros/ayuda.html" import buscador, explorador_semaforo, ir, pregunta %}
 {% block title %}Guía para cuidadores - RespiraKids{% endblock %}
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
 <link href="{{ url_for('static', filename='css/ayuda.css') }}" rel="stylesheet" />
 {% endblock %}
-
-{#- Una pregunta desplegable del manual. `caller()` es la respuesta; `palabras` ayuda al buscador. -#}
-{% macro pregunta(id, titulo, palabras='') -%}
-<details class="rk-pregunta" id="{{ id }}" data-buscar="{{ (titulo ~ ' ' ~ palabras)|lower }}">
-  <summary>{{ titulo }}</summary>
-  <div class="rk-pregunta__respuesta">{{ caller() }}</div>
-</details>
-{%- endmacro %}
-
-{% macro ir(endpoint, texto) -%}
-<a class="rk-ir" href="{{ url_for(endpoint) }}">{{ texto }} →</a>
-{%- endmacro %}
 
 {% block content %}
 <div class="rk-ayuda">
@@ -29,10 +17,7 @@
       <p class="rk-ayuda__etiqueta">📘 Manual para cuidadores</p>
       <h1 class="h2 mb-2">Cómo usar RespiraKids para cuidar la respiración de tus niños</h1>
       <p class="text-muted mb-3">Todo lo que necesitas saber, paso a paso. Busca tu duda o explora las secciones.</p>
-      <label class="visually-hidden" for="buscar-ayuda">Buscar en la guía</label>
-      <input type="search" id="buscar-ayuda" class="form-control rk-ayuda__buscar"
-        placeholder="🔎 Busca tu duda: fiebre, contraseña, nota de voz, semáforo…" autocomplete="off" />
-      <p class="small text-muted mt-2 mb-0" id="resultado-busqueda" aria-live="polite"></p>
+      {{ buscador('fiebre, contraseña, nota de voz, semáforo') }}
     </div>
     {{ figura(ejemplo, 'verde', 170) }}
   </header>
@@ -81,31 +66,14 @@
     <h2 class="h4" id="titulo-semaforo">🚦 Entiende el semáforo</h2>
     <p class="text-muted">Después de registrar los síntomas, RespiraKids muestra un color según los criterios de la
       estrategia AIEPI del Ministerio de Salud. Toca cada color para ver qué significa y qué hacer.</p>
-    <div class="rk-explorador" data-explorador>
-      <div class="rk-explorador__botones" role="tablist" aria-label="Niveles del semáforo">
-        {% for clave, info in niveles %}
-        <button type="button" role="tab" id="tab-{{ clave }}" aria-controls="panel-{{ clave }}"
-          aria-selected="{{ 'true' if loop.first else 'false' }}" class="rk-explorador__boton rk-explorador__boton--{{ clave }}">
-          {{ icono_nivel(clave) }} {{ info.nombre }}</button>
-        {% endfor %}
-      </div>
-      {% for clave, info in niveles %}
-      <div class="rk-explorador__panel rk-estado rk-estado--{{ clave }}" role="tabpanel" id="panel-{{ clave }}"
-        aria-labelledby="tab-{{ clave }}" {{ 'hidden' if not loop.first }}>
-        {{ figura(ejemplo, clave if clave != 'neutro' else None, 150) }}
-        <div>
-          <p class="rk-estado__titulo">{{ icono_nivel(clave) }} {{ info.titulo }}</p>
-          <p class="rk-estado__detalle mt-1"><strong>Qué hacer:</strong>
-            {% if clave == 'rojo' %}acude <strong>de inmediato</strong> a un servicio de salud. No esperes la respuesta
-            por mensajes.
-            {% elif clave == 'amarillo' %}consulta a un profesional de salud (puedes hacerlo desde la app) y vigila
-            si aparece algún signo de alarma.
-            {% elif clave == 'verde' %}sigue observando. Si aparecen síntomas nuevos o empeora, regístralos de nuevo.
-            {% else %}registra los síntomas para obtener la primera orientación.{% endif %}</p>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+    {% call(clave) explorador_semaforo(niveles, ejemplo) %}
+      {% if clave == 'rojo' %}acude <strong>de inmediato</strong> a un servicio de salud. No esperes la respuesta por
+      mensajes.
+      {% elif clave == 'amarillo' %}consulta a un profesional de salud (puedes hacerlo desde la app) y vigila si aparece
+      algún signo de alarma.
+      {% elif clave == 'verde' %}sigue observando. Si aparecen síntomas nuevos o empeora, regístralos de nuevo.
+      {% else %}registra los síntomas para obtener la primera orientación.{% endif %}
+    {% endcall %}
     <p class="small text-muted mt-2">Cada nivel tiene su propia forma: octágono (rojo), triángulo (amarillo), círculo con
       ✓ (verde). Así se distinguen aunque no se vean bien los colores. <strong>El semáforo es una orientación, no un
       diagnóstico</strong>: no reemplaza la valoración de un profesional de salud.</p>

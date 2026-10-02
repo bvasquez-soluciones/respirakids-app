@@ -1,4 +1,4 @@
-from flask import redirect, render_template, url_for
+from flask import current_app, redirect, render_template, url_for
 from flask_login import current_user
 
 from app.ayuda import ayuda_bp
@@ -10,8 +10,11 @@ MANUALES = (
     {'clave': 'cuidadores', 'emoji': '📘', 'titulo': 'Manual para cuidadores', 'endpoint': 'ayuda.cuidadores',
      'descripcion': 'Registrar niños y síntomas, entender el semáforo, hablar con un profesional y cuidar tus datos.',
      'roles': {None, 'cuidador', 'admin'}},
-    # Se publican aquí cuando estén listos (con su endpoint):
-    # profesionales -> roles {None, 'profesional'}; administradores -> roles {'admin'}
+    {'clave': 'profesionales', 'emoji': '📗', 'titulo': 'Manual para profesionales de salud',
+     'endpoint': 'ayuda.profesionales',
+     'descripcion': 'Panel de pacientes y semáforo, solicitudes de atención, mensajes, indicaciones y reportes.',
+     'roles': {None, 'profesional'}},
+    # Se publica aquí cuando esté listo: administradores -> roles {'admin'}
 )
 
 
@@ -30,9 +33,17 @@ def indice():
     return render_template('ayuda/indice.html', manuales=manuales)
 
 
+def _niveles():
+    return [(n, NIVELES[n]) for n in ('rojo', 'amarillo', 'verde', 'neutro')]
+
+
 @ayuda_bp.route('/cuidadores')
 def cuidadores():
-    ejemplo = {'nombre': 'Sofía', 'sexo': 'F'}
-    orden = ('rojo', 'amarillo', 'verde', 'neutro')
-    return render_template('ayuda/cuidadores.html', ejemplo=ejemplo, niveles=[(n, NIVELES[n]) for n in orden],
+    return render_template('ayuda/cuidadores.html', ejemplo={'nombre': 'Sofía', 'sexo': 'F'}, niveles=_niveles(),
                            evolucion=EVOLUCION)
+
+
+@ayuda_bp.route('/profesionales')
+def profesionales():
+    return render_template('ayuda/profesionales.html', ejemplo={'nombre': 'Mateo', 'sexo': 'M'}, niveles=_niveles(),
+                           evolucion=EVOLUCION, cupo=current_app.config['CUPO_CASOS_POR_PROFESIONAL'])

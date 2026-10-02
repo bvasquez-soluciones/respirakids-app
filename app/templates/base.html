@@ -58,6 +58,8 @@
           </button>
 
           {% if es_profesional %}
+          <a href="{{ url_for('ayuda.profesionales') }}" class="rk-bell-btn" title="Ayuda" aria-label="Manual para profesionales">
+            {{ icono('ayuda') }}</a>
           <a href="{{ url_for('dashboard.alertas') }}" class="rk-bell-btn" title="Pacientes en rojo" data-contador="alertas"
             aria-label="Pacientes con señales de alarma{{ ': ' ~ alertas_count if alertas_count }}">
             {{ icono('alerta') }}
