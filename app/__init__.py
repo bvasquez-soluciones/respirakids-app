@@ -95,6 +95,7 @@ def create_app(nombre_config=None):
     def home():
         return render_template('home.html')
 
+    from app.ayuda.routes import manuales_para
     from app.fechas import FILTROS
     from app.models import ahora_utc
     from app.forms import atributos_campo
@@ -111,6 +112,7 @@ def create_app(nombre_config=None):
         expresion_avatar=expresion_avatar,
         hallazgos_registrados=hallazgos_registrados,
         ahora_utc=ahora_utc,
+        manuales_ayuda=manuales_para,
         AVISO_NO_DIAGNOSTICO=AVISO_NO_DIAGNOSTICO,
         EVOLUCION=EVOLUCION,
         EMOJIS_SINTOMAS=EMOJIS_SINTOMAS,

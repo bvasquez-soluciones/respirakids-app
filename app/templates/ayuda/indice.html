@@ -9,20 +9,17 @@
     <h1 class="h2 mb-1">Centro de ayuda</h1>
     <p class="text-muted mb-0">Guías paso a paso para usar RespiraKids.</p>
   </header>
+  {% if manuales %}
   <div class="rk-manuales">
-    <a class="rk-manual" href="{{ url_for('ayuda.cuidadores') }}">
-      <span class="rk-manual__emoji" aria-hidden="true">📘</span>
-      <span><strong>Manual para cuidadores</strong>
-        <small>Registrar niños y síntomas, entender el semáforo, hablar con un profesional y cuidar tus datos.</small></span>
+    {% for m in manuales %}
+    <a class="rk-manual" href="{{ url_for(m.endpoint) }}">
+      <span class="rk-manual__emoji" aria-hidden="true">{{ m.emoji }}</span>
+      <span><strong>{{ m.titulo }}</strong><small>{{ m.descripcion }}</small></span>
     </a>
-    <div class="rk-manual rk-manual--pronto" aria-disabled="true">
-      <span class="rk-manual__emoji" aria-hidden="true">📗</span>
-      <span><strong>Manual para profesionales de salud</strong><small>Próximamente.</small></span>
-    </div>
-    <div class="rk-manual rk-manual--pronto" aria-disabled="true">
-      <span class="rk-manual__emoji" aria-hidden="true">📙</span>
-      <span><strong>Manual para administradores</strong><small>Próximamente.</small></span>
-    </div>
+    {% endfor %}
   </div>
+  {% else %}
+  <p class="rk-ayuda__sin-resultados">Tu manual está en preparación. Muy pronto lo encontrarás aquí.</p>
+  {% endif %}
 </div>
 {% endblock %}
