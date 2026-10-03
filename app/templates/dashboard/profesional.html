@@ -91,6 +91,12 @@
             <button type="submit" class="btn btn-sm btn-primary">Atender solicitud en espera</button>
           </form>
           {% endif %}
+          {% if puede_llamar %}
+          <form method="POST" action="{{ url_for('videollamadas.iniciar', nino_id=nino.id) }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ icono('video') }} Videollamada</button>
+          </form>
+          {% endif %}
           {% if puede_conversar %}
           <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Mensajes</a>
           {% endif %}
@@ -145,6 +151,10 @@
           </div>
         </div>
         <div class="d-flex flex-wrap gap-2">
+          <form method="POST" action="{{ url_for('videollamadas.iniciar', nino_id=nino.id) }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ icono('video') }} Videollamada</button>
+          </form>
           <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Mensajes</a>
           <a href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Medicamentos</a>
           <a href="{{ url_for('medicamentos.nueva', nino_id=nino.id) }}" class="btn btn-sm btn-primary">+ Indicación</a>

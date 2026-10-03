@@ -20,7 +20,7 @@ def _caso():
 
 def _iniciar(client, solicitud):
     login(client, 'dra@test.com')
-    respuesta = client.post(f'/videollamada/caso/{solicitud.id}/iniciar')
+    respuesta = client.post(f'/videollamada/nino/{solicitud.nino_id}/iniciar')
     assert respuesta.status_code == 302
     return Videollamada.query.one()
 
@@ -43,22 +43,54 @@ def test_el_profesional_del_caso_inicia_y_el_cuidador_recibe_el_aviso(client, ap
     assert 'name="consentimiento"' in html and 'No se graba' in html
 
 
-def test_solo_el_profesional_que_atiende_el_caso_puede_llamar(client, app):
-    _, _, _, solicitud = _caso()
+def test_solo_el_profesional_que_atiende_al_paciente_puede_llamar(client, app):
+    _, sofia, _, _ = _caso()
     crear_profesional('otro@test.com')
     login(client, 'otro@test.com')
-    assert client.post(f'/videollamada/caso/{solicitud.id}/iniciar').status_code == 404
+    assert client.post(f'/videollamada/nino/{sofia.id}/iniciar').status_code == 404
     _cambiar_a(client, 'ana@test.com')
-    assert client.post(f'/videollamada/caso/{solicitud.id}/iniciar').status_code == 404
+    assert client.post(f'/videollamada/nino/{sofia.id}/iniciar').status_code == 404
     assert Videollamada.query.count() == 0
 
 
-def test_no_se_llama_sin_un_caso_abierto(client, app):
-    _, _, _, solicitud = _caso()
+def test_caso_cerrado_sin_autorizacion_no_permite_llamar(client, app):
+    _, sofia, _, solicitud = _caso()
     atencion.cerrar(solicitud)
     login(client, 'dra@test.com')
-    client.post(f'/videollamada/caso/{solicitud.id}/iniciar')
+    assert client.post(f'/videollamada/nino/{sofia.id}/iniciar').status_code == 404
     assert Videollamada.query.count() == 0
+
+
+def test_paciente_autorizado_sin_caso_abierto_si_se_puede_llamar(client, app):
+    from tests.conftest import autorizar
+    ana = crear_cuidador('ana@test.com')
+    sofia = crear_nino(ana, 'Sofía')
+    dra = crear_profesional('dra@test.com')
+    autorizar(sofia, dra)
+    login(client, 'dra@test.com')
+    html = client.get(f'/dashboard/profesional?paciente={sofia.id}').get_data(as_text=True)
+    assert f'/videollamada/nino/{sofia.id}/iniciar' in html  # botón en el expediente
+    assert f'/videollamada/nino/{sofia.id}/iniciar' in client.get(f'/mensajes/nino/{sofia.id}').get_data(as_text=True)
+    client.post(f'/videollamada/nino/{sofia.id}/iniciar')
+    llamada = Videollamada.query.one()
+    assert llamada.solicitud_id is None and llamada.cuidador_id == ana.id and llamada.estado == 'llamando'
+
+
+def test_revocar_la_autorizacion_corta_la_llamada(client, app):
+    from app.models import Autorizacion
+    from tests.conftest import autorizar
+    ana = crear_cuidador('ana@test.com')
+    sofia = crear_nino(ana, 'Sofía')
+    dra = crear_profesional('dra@test.com')
+    autorizacion = autorizar(sofia, dra)
+    login(client, 'dra@test.com')
+    client.post(f'/videollamada/nino/{sofia.id}/iniciar')
+    llamada = Videollamada.query.one()
+    _cambiar_a(client, 'ana@test.com')
+    client.post(f'/videollamada/{llamada.id}/responder', data={'respuesta': 'aceptar', 'consentimiento': 'si'})
+    client.post(f'/pacientes/{sofia.id}/autorizaciones/{autorizacion.id}/revocar')
+    assert db.session.get(Autorizacion, autorizacion.id).activa is False
+    assert db.session.get(Videollamada, llamada.id).estado == 'finalizada'
 
 
 def test_nadie_ajeno_entra_a_la_llamada(client, app):
@@ -158,7 +190,7 @@ def test_si_un_lado_se_desconecta_la_llamada_termina(client, app):
     assert client.get(f'/videollamada/{llamada.id}/estado').get_json()['estado'] == 'finalizada'
 
 
-def test_cerrar_el_caso_cuelga_la_llamada(client, app):
+def test_cerrar_el_caso_sin_autorizacion_cuelga_la_llamada(client, app):
     _, _, _, solicitud = _caso()
     llamada = _iniciar(client, solicitud)
     client.post(f'/mensajes/solicitud/{solicitud.id}/cerrar')
@@ -169,7 +201,7 @@ def test_boton_de_videollamada_en_la_conversacion(client, app):
     _, sofia, _, solicitud = _caso()
     login(client, 'dra@test.com')
     html = client.get(f'/mensajes/nino/{sofia.id}').get_data(as_text=True)
-    assert f'/videollamada/caso/{solicitud.id}/iniciar' in html
+    assert f'/videollamada/nino/{sofia.id}/iniciar' in html
 
 
 def test_servidores_turn_con_credenciales_temporales(app):

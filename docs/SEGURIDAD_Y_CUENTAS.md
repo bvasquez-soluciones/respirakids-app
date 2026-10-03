@@ -143,7 +143,9 @@ No hay llamadas ni videollamadas: la atención es por mensajes y no es un canal 
 La supresión anonimiza también el motivo de las solicitudes; "Mis datos" las incluye.
 
 ### 5.1 Videollamadas (telemedicina)
-- Solo el **profesional que atiende un caso abierto** puede iniciarla (`/videollamada/caso/<id>/iniciar`); solo sus
+- Solo un **profesional que atiende al niño/a** puede iniciarla (`/videollamada/nino/<id>/iniciar`): autorización
+  vigente del cuidador o un caso abierto con él (un caso ya cerrado permite conversar, no llamar). Si se revoca la
+  autorización, o se cierra el caso sin autorización, la llamada termina. Solo sus
   dos participantes pueden ver la sala, consultar su estado o enviar señales (cualquier otra persona recibe 404).
 - El cuidador debe **aceptar la atención por videollamada** para contestar; se guarda la fecha del consentimiento
   (`videollamadas.consentimiento_fecha`) y queda en la auditoría.

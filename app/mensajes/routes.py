@@ -124,13 +124,18 @@ def conversacion(nino_id):
         'mensajes/conversacion.html', nino=nino, profesional=current_user, form=form, puede_escribir=True,
         mensajes=_mensajes_de(nino.id, current_user.id), caso=caso,
         expediente=autorizacion_vigente(nino.id, current_user.id) is not None, resumen=resumir(nino),
-        llamada=_llamada_activa(caso),
+        llamada=_llamada_activa(nino.id, current_user.id), puede_llamar=_puede_llamar(nino.id, current_user.id),
     )
 
 
-def _llamada_activa(caso):
-    from app.services.videollamadas import activa_del_caso
-    return activa_del_caso(caso.id) if caso else None
+def _llamada_activa(nino_id, profesional_id):
+    from app.services.videollamadas import activa_entre
+    return activa_entre(nino_id, profesional_id)
+
+
+def _puede_llamar(nino_id, profesional_id):
+    from app.services.videollamadas import puede_llamar
+    return puede_llamar(nino_id, profesional_id)
 
 
 def _bandeja(nino):
@@ -180,7 +185,7 @@ def hilo(nino_id, profesional_id):
     caso = atencion.caso_abierto(nino.id, profesional_id)
     return render_template('mensajes/conversacion.html', nino=nino, profesional=profesional, form=form,
                            mensajes=_mensajes_de(nino.id, profesional_id), puede_escribir=puede_escribir,
-                           caso=caso, llamada=_llamada_activa(caso))
+                           caso=caso, llamada=_llamada_activa(nino.id, profesional_id))
 
 
 @mensajes_bp.route('/nino/<int:nino_id>/nuevos')
@@ -335,9 +340,9 @@ def cerrar(solicitud_id):
     item = db.session.get(SolicitudAtencion, solicitud_id)
     if item is None or item.profesional_id != current_user.id or item.estado != 'asignada':
         abort(404)
-    from app.services.videollamadas import terminar_del_caso
-    terminar_del_caso(item.id)  # una videollamada en curso termina con el caso
     atencion.cerrar(item)
+    from app.services.videollamadas import terminar_sin_permiso
+    terminar_sin_permiso(item.nino_id, current_user.id)  # sin autorización, la llamada termina con el caso
     flash(f'Cerraste el caso de {item.nino.nombre}. La conversación queda disponible para futuros mensajes.', 'success')
     return redirect(url_for('mensajes.solicitudes'))
 

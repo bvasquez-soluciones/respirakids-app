@@ -121,9 +121,10 @@ class AdjuntoMensaje(db.Model):
 
 
 class Videollamada(db.Model):
-    """Atención por video entre el profesional que tiene el caso y el cuidador (telemedicina).
+    """Atención por video entre un profesional y el cuidador de un niño/a que atiende (telemedicina).
 
-    La inicia solo el profesional, dentro de un caso abierto. El video viaja directamente entre los dos
+    La inicia solo el profesional, con un paciente que atiende: caso abierto o autorización vigente del cuidador.
+    El video viaja directamente entre los dos
     dispositivos (WebRTC, cifrado) y NO se graba: aquí solo queda el registro de quién, cuándo, cuánto duró y el
     consentimiento del cuidador. Ver services/videollamadas.py.
     """
@@ -135,7 +136,8 @@ class Videollamada(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    solicitud_id = db.Column(db.Integer, db.ForeignKey('solicitudes_atencion.id'), nullable=False, index=True)
+    # Caso de atención en el que se hizo la llamada (vacío si el profesional atiende por autorización del cuidador).
+    solicitud_id = db.Column(db.Integer, db.ForeignKey('solicitudes_atencion.id'), index=True)
     nino_id = db.Column(db.Integer, db.ForeignKey('ninos.id'), nullable=False, index=True)
     profesional_id = db.Column(db.Integer, db.ForeignKey('profesionales.id'), nullable=False, index=True)
     cuidador_id = db.Column(db.Integer, db.ForeignKey('cuidadores.id'), index=True)  # vacío si se anonimizó

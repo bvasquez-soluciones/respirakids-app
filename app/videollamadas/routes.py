@@ -4,7 +4,7 @@ from flask import abort, flash, jsonify, redirect, render_template, request, url
 from flask_login import current_user, login_required
 
 from app import db, limiter
-from app.models import SolicitudAtencion, Videollamada
+from app.models import Nino, Videollamada
 from app.services import videollamadas as servicio
 from app.services.acceso import es_profesional
 from app.services.auditoria import registrar_seguridad
@@ -34,21 +34,22 @@ def _volver(llamada):
     return url_for('mensajes.hilo', nino_id=llamada.nino_id, profesional_id=llamada.profesional_id)
 
 
-@videollamadas_bp.route('/caso/<int:solicitud_id>/iniciar', methods=['POST'])
+@videollamadas_bp.route('/nino/<int:nino_id>/iniciar', methods=['POST'])
 @login_required
 @limiter.limit('10 per minute')
-def iniciar(solicitud_id):
+def iniciar(nino_id):
+    """El profesional llama a la familia de un paciente que atiende (caso abierto o autorización vigente)."""
     if not es_profesional():
         abort(404)
-    solicitud = db.session.get(SolicitudAtencion, solicitud_id)
-    if solicitud is None or solicitud.profesional_id != current_user.id:
-        registrar_seguridad('acceso_denegado', descripcion=f'videollamada caso={solicitud_id}')
+    nino = db.session.get(Nino, nino_id)
+    if nino is None or not servicio.puede_llamar(nino_id, current_user.id):
+        registrar_seguridad('acceso_denegado', descripcion=f'videollamada nino_id={nino_id}')
         abort(404)
     try:
-        llamada = servicio.iniciar(solicitud, current_user._get_current_object())
+        llamada = servicio.iniciar(nino, current_user._get_current_object())
     except servicio.VideollamadaNoPermitida as error:
         flash(str(error), 'warning')
-        return redirect(url_for('mensajes.conversacion', nino_id=solicitud.nino_id))
+        return redirect(url_for('mensajes.conversacion', nino_id=nino.id))
     return redirect(url_for('videollamadas.sala', videollamada_id=llamada.id))
 
 

@@ -1,6 +1,7 @@
 """Videollamadas entre el profesional que atiende un caso y el cuidador (telemedicina, sin grabación).
 
-Flujo: el profesional la inicia dentro de su caso abierto -> el cuidador recibe el aviso ("llamando") -> acepta
+Flujo: el profesional la inicia con un paciente que atiende (caso abierto o autorización vigente del cuidador)
+-> el cuidador recibe el aviso ("llamando") -> acepta
 dando su consentimiento -> "en_curso" -> cualquiera cuelga -> "finalizada". Sin respuesta a tiempo queda "perdida".
 
 El video viaja directamente entre los dos navegadores (WebRTC, cifrado). El servidor solo intercambia los
@@ -17,7 +18,9 @@ from datetime import timedelta
 from flask import current_app
 
 from app import db
-from app.models import Mensaje, SenalVideollamada, SolicitudAtencion, Videollamada, ahora_utc
+from app.models import Mensaje, SenalVideollamada, Videollamada, ahora_utc
+from app.services import atencion
+from app.services.acceso import autorizacion_vigente
 from app.services.auditoria import registrar_actividad
 from app.services.notificaciones import notificar
 
@@ -41,8 +44,16 @@ def servidores_ice(identidad):
     return servidores
 
 
-def activa_del_caso(solicitud_id):
-    llamada = (Videollamada.query.filter(Videollamada.solicitud_id == solicitud_id,
+def puede_llamar(nino_id, profesional_id):
+    """El profesional atiende al niño/a: autorización vigente del cuidador o un caso abierto con él.
+    (Un caso ya cerrado permite seguir conversando, pero no llamar.)"""
+    return (autorizacion_vigente(nino_id, profesional_id) is not None
+            or atencion.caso_abierto(nino_id, profesional_id) is not None)
+
+
+def activa_entre(nino_id, profesional_id):
+    llamada = (Videollamada.query.filter(Videollamada.nino_id == nino_id,
+                                         Videollamada.profesional_id == profesional_id,
                                          Videollamada.estado.in_(Videollamada.ESTADOS_ACTIVOS))
                .order_by(Videollamada.id.desc()).first())
     if llamada is not None:
@@ -50,19 +61,20 @@ def activa_del_caso(solicitud_id):
     return llamada if llamada is not None and llamada.activa else None
 
 
-def iniciar(solicitud, profesional):
-    """El profesional llama al cuidador. Solo dentro de su propio caso abierto."""
-    if solicitud.estado != 'asignada' or solicitud.profesional_id != profesional.id or solicitud.cuidador_id is None:
-        raise VideollamadaNoPermitida('Solo puedes llamar dentro de un caso abierto que tú atiendes.')
-    existente = activa_del_caso(solicitud.id)
+def iniciar(nino, profesional):
+    """El profesional llama al cuidador de un niño/a que atiende."""
+    if not nino.activo or nino.cuidador_id is None or not puede_llamar(nino.id, profesional.id):
+        raise VideollamadaNoPermitida('Solo puedes llamar a las familias de los pacientes que atiendes.')
+    existente = activa_entre(nino.id, profesional.id)
     if existente is not None:
         return existente
-    llamada = Videollamada(solicitud_id=solicitud.id, nino_id=solicitud.nino_id, profesional_id=profesional.id,
-                           cuidador_id=solicitud.cuidador_id, estado='llamando', pulso_profesional=ahora_utc())
+    caso = atencion.caso_abierto(nino.id, profesional.id)
+    llamada = Videollamada(solicitud_id=caso.id if caso else None, nino_id=nino.id, profesional_id=profesional.id,
+                           cuidador_id=nino.cuidador_id, estado='llamando', pulso_profesional=ahora_utc())
     db.session.add(llamada)
     db.session.flush()
-    notificar(solicitud.cuidador_id, 'cuidador', 'videollamada', 'Videollamada entrante',
-              f'{profesional.nombre_con_titulo} te está llamando por video sobre {solicitud.nino.nombre}.',
+    notificar(nino.cuidador_id, 'cuidador', 'videollamada', 'Videollamada entrante',
+              f'{profesional.nombre_con_titulo} te está llamando por video sobre {nino.nombre}.',
               'videollamada', llamada.id)
     db.session.commit()
     registrar_actividad('iniciar_videollamada', 'nino', llamada.nino_id, detalles={'videollamada_id': llamada.id})
@@ -93,12 +105,15 @@ def _terminar(llamada, estado):
 
 
 def actualizar_vencida(llamada):
-    """Llamada sin contestar a tiempo -> perdida; en curso sin señal de vida de un lado -> finalizada."""
+    """Llamada sin contestar a tiempo -> perdida; en curso sin señal de vida de un lado -> finalizada; el profesional
+    dejó de atender al niño/a (se revocó la autorización o se cerró el caso) -> termina."""
     if not llamada.activa:
         return llamada
     ahora = ahora_utc()
     cfg = current_app.config
-    if llamada.estado == 'llamando' and ahora - llamada.fecha_creacion > timedelta(
+    if not puede_llamar(llamada.nino_id, llamada.profesional_id):
+        _terminar(llamada, 'cancelada' if llamada.estado == 'llamando' else 'finalizada')
+    elif llamada.estado == 'llamando' and ahora - llamada.fecha_creacion > timedelta(
             seconds=cfg['VIDEOLLAMADA_TIMBRE_SEGUNDOS']):
         _terminar(llamada, 'perdida')
     elif llamada.estado == 'en_curso':
@@ -140,11 +155,9 @@ def colgar(llamada, rol):
     return llamada
 
 
-def terminar_del_caso(solicitud_id):
-    """Al cerrar un caso se cuelga cualquier llamada que siga activa."""
-    llamada = activa_del_caso(solicitud_id)
-    if llamada is not None:
-        colgar(llamada, 'profesional')
+def terminar_sin_permiso(nino_id, profesional_id):
+    """Tras cerrar un caso o revocar una autorización: si el profesional ya no atiende al niño/a, se cuelga."""
+    activa_entre(nino_id, profesional_id)  # actualizar_vencida la termina si ya no hay permiso
 
 
 def latido(llamada, rol):
@@ -183,6 +196,3 @@ def entrante_para(cuidador):
         actualizar_vencida(llamada)
     return llamada if llamada is not None and llamada.estado == 'llamando' else None
 
-
-def caso_de(solicitud_id):
-    return db.session.get(SolicitudAtencion, solicitud_id)

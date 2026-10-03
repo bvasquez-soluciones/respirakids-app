@@ -118,6 +118,7 @@ def profesional():
     a este profesional; si no, se muestra el resumen del semáforo."""
     from app.models import SolicitudAtencion
     from app.services import atencion
+    from app.services.videollamadas import puede_llamar
     autorizaciones = autorizaciones_vigentes_profesional(current_user.id)
     autorizados = {a.nino_id for a in autorizaciones}
     pacientes = (Nino.query.filter_by(estado='activo', consentimiento_otorgado=True)
@@ -138,6 +139,7 @@ def profesional():
         contexto.update(
             nino_seleccionado=nino, resumen=resumir(nino), sin_expediente=True,
             puede_conversar=atencion.hay_relacion(nino.id, current_user.id),
+            puede_llamar=puede_llamar(nino.id, current_user.id),
             solicitud_en_espera=SolicitudAtencion.query.filter_by(nino_id=nino.id, estado='pendiente').first(),
         )
     elif paciente_id:

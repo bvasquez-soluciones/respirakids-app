@@ -212,6 +212,8 @@ def revocar_autorizacion(nino_id, autorizacion_id):
     autorizacion.activa = False
     db.session.commit()
     registrar_actividad('revocar_acceso', 'nino', nino.id, detalles={'profesional_id': autorizacion.profesional_id})
+    from app.services.videollamadas import terminar_sin_permiso
+    terminar_sin_permiso(nino.id, autorizacion.profesional_id)
     flash('Autorización revocada.', 'info')
     return redirect(url_for('pacientes.autorizaciones', nino_id=nino.id))
 
