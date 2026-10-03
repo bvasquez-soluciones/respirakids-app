@@ -19,8 +19,8 @@ from flask import current_app
 
 from app import db
 from app.models import (
-    ConsultaIA, Cuidador, Mensaje, MedicamentoRecetado, Notificacion, Profesional, Receta, SolicitudAtencion,
-    VersionRegistro,
+    ConsultaIA, Cuidador, Mensaje, MedicamentoRecetado, Notificacion, Profesional, Receta, SenalVideollamada,
+    SolicitudAtencion, VersionRegistro, Videollamada, ahora_utc,
 )
 
 TEXTO_ANONIMO = 'Anonimizado'
@@ -77,6 +77,12 @@ def anonimizar_nino(nino):
             solicitud.estado = 'cancelada'
     for seguimiento in nino.seguimientos:
         seguimiento.cuidador_id = None
+    for llamada in Videollamada.query.filter_by(nino_id=nino.id).all():
+        SenalVideollamada.query.filter_by(videollamada_id=llamada.id).delete(synchronize_session=False)
+        llamada.cuidador_id = None
+        if llamada.activa:
+            llamada.estado = 'cancelada'
+            llamada.fecha_fin = ahora_utc()
 
     nino.nombre = TEXTO_ANONIMO
     nino.nombre_ficticio = TEXTO_ANONIMO

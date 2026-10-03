@@ -116,6 +116,40 @@ sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw enable
 ```
 PostgreSQL, Redis y Gunicorn solo escuchan en `localhost`.
 
+### 3.10 Servidor TURN para las videollamadas (coturn)
+El video viaja directo y cifrado entre los dos navegadores (WebRTC). Cuando la red no lo permite (datos móviles,
+redes corporativas), pasa por un servidor TURN propio, que solo reenvía el tráfico cifrado: no puede ver ni grabar
+la llamada.
+
+```bash
+sudo apt install coturn
+```
+`/etc/turnserver.conf` (mínimo):
+```ini
+listening-port=3478
+tls-listening-port=5349
+fingerprint
+use-auth-secret
+static-auth-secret=<cadena larga y aleatoria: python -c "import secrets; print(secrets.token_hex(32))">
+realm=respirakids.ejemplo.co
+cert=/etc/letsencrypt/live/respirakids.ejemplo.co/fullchain.pem
+pkey=/etc/letsencrypt/live/respirakids.ejemplo.co/privkey.pem
+no-cli
+no-multicast-peers
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+```
+Cortafuegos: `sudo ufw allow 3478,5349/tcp && sudo ufw allow 3478,5349/udp && sudo ufw allow 49152:65535/udp`.
+En `respirakids.env`:
+```ini
+WEBRTC_STUN_URLS=stun:respirakids.ejemplo.co:3478
+TURN_URLS=turn:respirakids.ejemplo.co:3478?transport=udp,turns:respirakids.ejemplo.co:5349?transport=tcp
+TURN_SECRETO=<el mismo static-auth-secret>
+```
+RespiraKids entrega a cada participante credenciales TURN temporales (3 horas) firmadas con ese secreto; el secreto
+nunca llega al navegador. `/admin/configuracion` muestra si el TURN está configurado.
+
 ## 4. Respaldos
 
 - `deploy/scripts/respaldo.sh` respalda la base de datos (formato `pg_dump` custom, verificado tras crearlo), las
@@ -181,6 +215,9 @@ Solo se debe desplegar código cuya integración continua esté en verde.
 **Clínico**
 - [ ] Un profesional de salud revisó y firmó `docs/REGLAS_CLINICAS_v1.md`, y luego se definió `REGLAS_CLINICAS_VALIDADAS`.
 - [ ] Decidido si el modelo ML permanece apagado (recomendado: apagado hasta tener datos reales y validación).
+- [ ] Videollamadas: la clínica está habilitada en la modalidad de telemedicina (Resolución 2654 de 2019) y definió
+  cómo se registra la atención por video en su historia clínica. Si no, no usar el botón de videollamada.
+- [ ] Videollamadas probadas entre dos celulares con datos móviles (requiere el servidor TURN de la sección 3.10).
 
 **Legal y privacidad**
 - [ ] Política de tratamiento revisada por un abogado; datos del responsable completos (ver `/admin/configuracion`).

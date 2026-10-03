@@ -190,6 +190,13 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% if current_user.is_authenticated %}
     <div class="rk-aviso-flotante" id="aviso-flotante" role="status" aria-live="polite" hidden></div>
+    {% if es_cuidador %}
+    <div class="rk-llamada-entrante" id="llamada-entrante" role="alert" hidden>
+      <span class="rk-llamada-entrante__icono" aria-hidden="true">{{ icono('video') }}</span>
+      <p class="rk-llamada-entrante__texto" id="llamada-entrante-texto"></p>
+      <a class="btn btn-primary btn-sm" id="llamada-entrante-ir" href="#">Contestar</a>
+    </div>
+    {% endif %}
     <script src="{{ url_for('static', filename='js/tiempo_real.js') }}"></script>
     {% endif %}
     {% block scripts %}{% endblock %}

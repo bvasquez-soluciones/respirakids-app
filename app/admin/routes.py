@@ -317,6 +317,8 @@ def configuracion():
         ('Modelo ML complementario', 'Activado' if cfg.get('ML_HABILITADO') else 'Desactivado', None),
         ('Asistente IA: clave configurada', 'Sí' if cfg.get('GEMINI_API_KEY') else 'No', bool(cfg.get('GEMINI_API_KEY'))),
         ('Asistente IA: modelo', cfg.get('GEMINI_MODEL'), None),
+        ('Videollamadas: servidor TURN', 'Configurado' if cfg.get('TURN_URLS') and cfg.get('TURN_SECRETO')
+         else 'No configurado', bool(cfg.get('TURN_URLS') and cfg.get('TURN_SECRETO'))),
         ('Versión de la política de datos', cfg.get('POLITICA_VERSION'), None),
         ('Datos del responsable del tratamiento', 'Completos' if responsable_completo else 'Incompletos',
          responsable_completo),

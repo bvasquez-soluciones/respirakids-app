@@ -42,11 +42,22 @@
         {% else %}Sin acceso al expediente: atiendes con el semáforo y la conversación{% endif %}
       </span>
       {% if caso %}
+      <div class="d-flex flex-wrap gap-2">
+      {% if llamada %}
+      <a href="{{ url_for('videollamadas.sala', videollamada_id=llamada.id) }}" class="btn btn-primary btn-sm">
+        {{ icono('video') }} Volver a la videollamada</a>
+      {% else %}
+      <form method="POST" action="{{ url_for('videollamadas.iniciar', solicitud_id=caso.id) }}" class="m-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-primary btn-sm">{{ icono('video') }} Videollamada</button>
+      </form>
+      {% endif %}
       <form method="POST" action="{{ url_for('mensajes.cerrar', solicitud_id=caso.id) }}" class="m-0"
         data-confirmar="¿Cerrar el caso de {{ nino.nombre }}? La conversación seguirá disponible.">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <button type="submit" class="btn btn-outline-primary btn-sm">Cerrar caso</button>
       </form>
+      </div>
       {% endif %}
     </div>
     {% else %}
@@ -58,6 +69,13 @@
           Privada: solo la ven tú y este profesional.</p>
       </div>
     </div>
+    {% if llamada and llamada.estado == 'llamando' %}
+    <a href="{{ url_for('videollamadas.sala', videollamada_id=llamada.id) }}" class="btn btn-primary mt-3">
+      {{ icono('video') }} {{ profesional.nombre_con_titulo }} te está llamando · Contestar</a>
+    {% elif llamada %}
+    <a href="{{ url_for('videollamadas.sala', videollamada_id=llamada.id) }}" class="btn btn-primary mt-3">
+      {{ icono('video') }} Volver a la videollamada</a>
+    {% endif %}
     {% endif %}
   </header>
 

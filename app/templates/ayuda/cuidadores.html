@@ -257,6 +257,20 @@
         <p class="mb-0">Las fotos se guardan <strong>sin la ubicación</strong> que suele guardar el celular. Solo las ven tú
           y el profesional de esa conversación.</p>
       {% endcall %}
+      {% call pregunta('videollamada', '¿El profesional me puede atender por videollamada?', 'video cámara llamada telemedicina consulta virtual') %}
+        <p>Sí. Durante un caso abierto, el profesional que te atiende puede llamarte por video:</p>
+        <ol>
+          <li>Te aparece un aviso <strong>«📹 … te está llamando por video»</strong> (suena y vibra si tu celular lo
+            permite). Toca <strong>Contestar</strong>.</li>
+          <li>Lee las condiciones, marca que <strong>aceptas la atención por videollamada</strong> y toca
+            <strong>Contestar</strong>. Si prefieres no hacerlo, toca <strong>Rechazar</strong> y sigue por mensajes.</li>
+          <li>Permite el uso de la cámara y el micrófono cuando el navegador lo pregunte.</li>
+          <li>Durante la llamada puedes silenciar el micrófono, apagar la cámara, cambiar de cámara (en el celular) o
+            colgar.</li>
+        </ol>
+        <p class="mb-0">La videollamada va cifrada entre tu dispositivo y el del profesional y <strong>no se graba</strong>:
+          solo queda constancia de la fecha y la duración en la conversación. No reemplaza la atención de urgencias.</p>
+      {% endcall %}
       {% call pregunta('privacidad-mensajes', '¿Quién puede leer mis mensajes?', 'privado conversación otros médicos') %}
         <p>Cada conversación es privada entre tú y ese profesional. Los demás profesionales de la clínica no la ven.</p>
       {% endcall %}

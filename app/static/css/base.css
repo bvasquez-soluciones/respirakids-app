@@ -909,3 +909,40 @@ input[type="range"] { accent-color: var(--rk-primary); }
   .rk-guia-foco--accion::after, .rk-guia-bienvenida__caja { animation: none; }
 }
 @media print { .rk-guia-foco, .rk-guia-burbuja, .rk-guia-bienvenida { display: none !important; } }
+
+/* ---------------------------------------------------------------- Aviso de llamada entrante (cualquier página) */
+.rk-llamada-entrante {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  z-index: calc(var(--rk-z-nav) + 6);
+  width: min(440px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--rk-space-3);
+  padding: var(--rk-space-3) var(--rk-space-4);
+  background: var(--rk-surface-solid);
+  border: 1px solid var(--rk-primary);
+  border-radius: var(--rk-radius-lg);
+  box-shadow: var(--rk-shadow-lg);
+}
+.rk-llamada-entrante[hidden] { display: none; }
+.rk-llamada-entrante__icono {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rk-on-primary);
+  background: var(--rk-primary);
+  border-radius: 50%;
+  animation: rk-llamada-timbre 1.4s var(--rk-ease) infinite;
+}
+.rk-llamada-entrante__texto { flex: 1; margin: 0; font-size: var(--rk-text-sm); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .rk-llamada-entrante__icono { animation: none; } }
+@keyframes rk-llamada-timbre {
+  0% { box-shadow: 0 0 0 0 var(--rk-primary-soft); }
+  100% { box-shadow: 0 0 0 16px transparent; }
+}

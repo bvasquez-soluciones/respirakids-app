@@ -349,15 +349,28 @@ def _enlace_notificacion(n):
         return url_for('medicamentos.plan', nino_id=n.recurso_id)
     if n.recurso == 'mensajes' and n.recurso_id:
         return url_for('mensajes.conversacion', nino_id=n.recurso_id)
+    if n.recurso == 'videollamada' and n.recurso_id:
+        return url_for('videollamadas.sala', videollamada_id=n.recurso_id)
     return None
 
 
 @dashboard_bp.route('/estado')
 @login_required
 def estado():
-    """Contadores de notificaciones, alertas y solicitudes para actualizar la barra sin recargar."""
+    """Contadores de notificaciones, alertas y solicitudes para actualizar la barra sin recargar, y la
+    videollamada que esté sonando para el cuidador."""
     from app.services.notificaciones import contadores
-    return jsonify(contadores(current_user))
+    datos = contadores(current_user)
+    if current_user.tipo_usuario == 'cuidador':
+        from app.services.videollamadas import entrante_para
+        llamada = entrante_para(current_user)
+        if llamada is not None:
+            datos['llamada'] = {
+                'url': url_for('videollamadas.sala', videollamada_id=llamada.id),
+                'texto': f'{llamada.profesional.nombre_con_titulo} te está llamando por video sobre '
+                         f'{llamada.nino.nombre}.',
+            }
+    return jsonify(datos)
 
 
 @dashboard_bp.route('/notificaciones')

@@ -66,8 +66,9 @@ def create_app(nombre_config=None):
             force_https=app.config['FORCE_HTTPS'],
             strict_transport_security=app.config['FORCE_HTTPS'],
             session_cookie_secure=app.config['SESSION_COOKIE_SECURE'],
-            # Solo la propia aplicación puede pedir el micrófono (notas de voz); el resto de sensores, bloqueados.
-            permissions_policy={'microphone': '(self)', 'camera': '()', 'geolocation': '()', 'payment': '()'},
+            # Solo la propia aplicación puede pedir micrófono (notas de voz y videollamadas) y cámara
+            # (videollamadas); el resto de sensores, bloqueados.
+            permissions_policy={'microphone': '(self)', 'camera': '(self)', 'geolocation': '()', 'payment': '()'},
         )
 
     from app import models  # noqa: F401  (registra los modelos en SQLAlchemy)
@@ -82,13 +83,14 @@ def create_app(nombre_config=None):
     from app.medicamentos import medicamentos_bp
     from app.admin import admin_bp
     from app.ayuda import ayuda_bp
+    from app.videollamadas import videollamadas_bp
     from app.sistema import asignar_id_peticion, devolver_id_peticion, sistema_bp
 
     app.before_request(asignar_id_peticion)
     app.after_request(devolver_id_peticion)
 
     for bp in (auth_bp, dashboard_bp, pacientes_bp, sintomas_bp, mensajes_bp, asistente_bp, privacidad_bp,
-               medicamentos_bp, admin_bp, ayuda_bp, sistema_bp):
+               medicamentos_bp, admin_bp, ayuda_bp, videollamadas_bp, sistema_bp):
         app.register_blueprint(bp)
 
     @app.route('/')

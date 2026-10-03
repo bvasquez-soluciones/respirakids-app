@@ -91,6 +91,17 @@ class Config:
 
     # Atención por mensajes: casos abiertos que puede tener cada profesional antes de dejar de recibir solicitudes.
     CUPO_CASOS_POR_PROFESIONAL = 15
+
+    # Videollamadas (WebRTC, sin grabación). El video va directo entre los dos dispositivos; en redes que no lo
+    # permiten pasa cifrado por un servidor TURN propio (coturn con `use-auth-secret`). Sin TURN, muchas llamadas
+    # por datos móviles no logran conectar.
+    VIDEOLLAMADA_TIMBRE_SEGUNDOS = 60      # sin respuesta en este tiempo: llamada perdida
+    VIDEOLLAMADA_SIN_PULSO_SEGUNDOS = 45   # sin señal de vida de un lado: la llamada se da por terminada
+    WEBRTC_STUN_URLS = [u.strip() for u in os.environ.get('WEBRTC_STUN_URLS', '').split(',') if u.strip()]
+    TURN_URLS = [u.strip() for u in os.environ.get('TURN_URLS', '').split(',') if u.strip()]
+    TURN_SECRETO = os.environ.get('TURN_SECRETO', '').strip()  # el mismo `static-auth-secret` de coturn
+    TURN_VIGENCIA_SEGUNDOS = 3 * 3600
+
     # Datos del responsable del tratamiento (Ley 1581 de 2012). Deben completarse antes de operar.
     RESPONSABLE_NOMBRE = os.environ.get('RESPONSABLE_NOMBRE', '[Razón social del responsable]')
     RESPONSABLE_ID = os.environ.get('RESPONSABLE_ID', '[NIT o documento]')

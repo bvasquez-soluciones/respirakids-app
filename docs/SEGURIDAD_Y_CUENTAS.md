@@ -142,6 +142,24 @@ con `--ejecutar` las anonimiza igual que una supresión. Programarlo mensualment
 No hay llamadas ni videollamadas: la atención es por mensajes y no es un canal de urgencias.
 La supresión anonimiza también el motivo de las solicitudes; "Mis datos" las incluye.
 
+### 5.1 Videollamadas (telemedicina)
+- Solo el **profesional que atiende un caso abierto** puede iniciarla (`/videollamada/caso/<id>/iniciar`); solo sus
+  dos participantes pueden ver la sala, consultar su estado o enviar señales (cualquier otra persona recibe 404).
+- El cuidador debe **aceptar la atención por videollamada** para contestar; se guarda la fecha del consentimiento
+  (`videollamadas.consentimiento_fecha`) y queda en la auditoría.
+- El video y el audio viajan **directamente y cifrados entre los dos navegadores** (WebRTC, DTLS-SRTP). Si la red no
+  lo permite, pasan por un servidor TURN propio, que no puede descifrarlos. **No se graba nada.**
+- El servidor solo intercambia los mensajes técnicos de conexión (`senales_videollamada`, incluyen direcciones de
+  red) y **los borra al terminar** la llamada. Se guarda: fecha, duración, estado y consentimiento. En la
+  conversación queda una constancia con la duración.
+- Termina sola si nadie contesta en 60 s (perdida), si un lado deja de responder 45 s o si se cierra el caso.
+- Credenciales TURN temporales (3 h) firmadas con `TURN_SECRETO`, que nunca llega al navegador.
+- `Permissions-Policy: camera=(self), microphone=(self)`: ningún contenido de terceros puede pedir la cámara.
+- La supresión de datos desvincula las llamadas del cuidador y borra sus señales.
+- Pendiente legal: confirmar la habilitación de la clínica en telemedicina (Resolución 2654 de 2019) y, en la
+  próxima revisión jurídica, mencionar las videollamadas en la política de tratamiento de datos.
+- Pruebas: `tests/test_videollamadas.py`.
+
 ## 6. Recomendado antes de comercializar (no implementado)
 Se dejan documentados para decidir con el equipo; ninguno es necesario para operar un piloto controlado.
 

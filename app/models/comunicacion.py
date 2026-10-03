@@ -118,3 +118,68 @@ class AdjuntoMensaje(db.Model):
 
     def __repr__(self):
         return f'<AdjuntoMensaje {self.id} {self.tipo}>'
+
+
+class Videollamada(db.Model):
+    """Atención por video entre el profesional que tiene el caso y el cuidador (telemedicina).
+
+    La inicia solo el profesional, dentro de un caso abierto. El video viaja directamente entre los dos
+    dispositivos (WebRTC, cifrado) y NO se graba: aquí solo queda el registro de quién, cuándo, cuánto duró y el
+    consentimiento del cuidador. Ver services/videollamadas.py.
+    """
+    __tablename__ = 'videollamadas'
+    ESTADOS_ACTIVOS = ('llamando', 'en_curso')
+    __table_args__ = (
+        db.CheckConstraint("estado IN ('llamando', 'en_curso', 'finalizada', 'rechazada', 'perdida', 'cancelada')",
+                           name='ck_videollamadas_estado'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    solicitud_id = db.Column(db.Integer, db.ForeignKey('solicitudes_atencion.id'), nullable=False, index=True)
+    nino_id = db.Column(db.Integer, db.ForeignKey('ninos.id'), nullable=False, index=True)
+    profesional_id = db.Column(db.Integer, db.ForeignKey('profesionales.id'), nullable=False, index=True)
+    cuidador_id = db.Column(db.Integer, db.ForeignKey('cuidadores.id'), index=True)  # vacío si se anonimizó
+    estado = db.Column(db.String(12), nullable=False, default='llamando', server_default='llamando', index=True)
+    fecha_creacion = db.Column(db.DateTime, nullable=False, default=ahora_utc)
+    fecha_respuesta = db.Column(db.DateTime)
+    fecha_fin = db.Column(db.DateTime)
+    consentimiento_fecha = db.Column(db.DateTime)  # el cuidador aceptó la atención por video
+    # Última señal de vida de cada lado (para detectar una desconexión sin colgar).
+    pulso_profesional = db.Column(db.DateTime)
+    pulso_cuidador = db.Column(db.DateTime)
+
+    nino = db.relationship('Nino')
+    profesional = db.relationship('Profesional')
+    solicitud = db.relationship('SolicitudAtencion')
+
+    @property
+    def activa(self):
+        return self.estado in self.ESTADOS_ACTIVOS
+
+    @property
+    def duracion_segundos(self):
+        if self.fecha_respuesta and self.fecha_fin:
+            return max(0, int((self.fecha_fin - self.fecha_respuesta).total_seconds()))
+        return 0
+
+    def __repr__(self):
+        return f'<Videollamada {self.id} nino={self.nino_id} {self.estado}>'
+
+
+class SenalVideollamada(db.Model):
+    """Mensaje técnico para conectar los dos dispositivos (oferta, respuesta y candidatos de red de WebRTC).
+
+    Es temporal: contiene direcciones de red, así que se borra en cuanto termina la llamada.
+    """
+    __tablename__ = 'senales_videollamada'
+    __table_args__ = (
+        db.CheckConstraint("emisor IN ('profesional', 'cuidador')", name='ck_senales_videollamada_emisor'),
+        db.CheckConstraint("tipo IN ('oferta', 'respuesta', 'candidato')", name='ck_senales_videollamada_tipo'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    videollamada_id = db.Column(db.Integer, db.ForeignKey('videollamadas.id'), nullable=False, index=True)
+    emisor = db.Column(db.String(12), nullable=False)
+    tipo = db.Column(db.String(10), nullable=False)
+    datos = db.Column(db.Text, nullable=False)
+    fecha = db.Column(db.DateTime, nullable=False, default=ahora_utc)
