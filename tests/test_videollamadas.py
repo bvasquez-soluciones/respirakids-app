@@ -204,3 +204,10 @@ def test_la_camara_solo_se_permite_a_la_propia_aplicacion():
     finally:
         TestingConfig.TALISMAN_ENABLED = False
     assert 'camera=(self)' in cabecera and 'microphone=(self)' in cabecera and 'geolocation=()' in cabecera
+
+
+def test_politica_y_terminos_informan_la_videollamada(client, app):
+    politica = ' '.join(client.get('/privacidad/').get_data(as_text=True).split())
+    assert 'no se graban la imagen ni el sonido' in politica and 'Videollamadas:' in politica
+    terminos = ' '.join(client.get('/privacidad/terminos').get_data(as_text=True).split())
+    assert 'Resolución 2654 de 2019' in terminos and 'No se graban' in terminos

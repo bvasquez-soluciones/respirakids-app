@@ -231,6 +231,7 @@ def test_terminos_publicos_y_exigidos_al_cambiar_de_version(client, app):
     login(client, 'ana@test.com')
     assert client.get('/dashboard/cuidador').status_code == 200
     # Una nueva versión de los términos exige aceptarlos de nuevo.
+    vigente = app.config['TERMINOS_VERSION']
     app.config['TERMINOS_VERSION'] = '9.9'
     try:
         assert '/privacidad/aceptar' in client.get('/dashboard/cuidador').headers['Location']
@@ -238,7 +239,7 @@ def test_terminos_publicos_y_exigidos_al_cambiar_de_version(client, app):
         client.post('/privacidad/aceptar', data={'acepta_politica': 'y', 'acepta_terminos': 'y'})
         assert client.get('/dashboard/cuidador').status_code == 200
     finally:
-        app.config['TERMINOS_VERSION'] = '1.0'
+        app.config['TERMINOS_VERSION'] = vigente
 
 
 def test_politica_declara_no_venta_ia_y_sin_garantia_absoluta(client, app):

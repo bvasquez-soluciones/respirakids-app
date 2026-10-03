@@ -81,11 +81,11 @@ class Config:
     ZONA_HORARIA = os.environ.get('ZONA_HORARIA', 'America/Bogota')
 
     # Política de tratamiento de datos. Al cambiar la versión, todos los usuarios deben aceptarla de nuevo.
-    POLITICA_VERSION = '2.1'
-    POLITICA_FECHA = '2026-10-01'
+    POLITICA_VERSION = '2.2'  # 2.2: atención por videollamada
+    POLITICA_FECHA = '2026-10-03'
     # Términos y condiciones de uso: también se aceptan de nuevo al cambiar la versión.
-    TERMINOS_VERSION = '1.0'
-    TERMINOS_FECHA = '2026-10-01'
+    TERMINOS_VERSION = '1.1'  # 1.1: atención por videollamada
+    TERMINOS_FECHA = '2026-10-03'
     # Conservación: mientras la cuenta esté activa y hasta N años tras la última actividad (salvo deber legal).
     CONSERVACION_ANIOS_INACTIVIDAD = 2
 

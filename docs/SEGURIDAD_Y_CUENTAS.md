@@ -156,8 +156,10 @@ La supresión anonimiza también el motivo de las solicitudes; "Mis datos" las i
 - Credenciales TURN temporales (3 h) firmadas con `TURN_SECRETO`, que nunca llega al navegador.
 - `Permissions-Policy: camera=(self), microphone=(self)`: ningún contenido de terceros puede pedir la cámara.
 - La supresión de datos desvincula las llamadas del cuidador y borra sus señales.
-- Pendiente legal: confirmar la habilitación de la clínica en telemedicina (Resolución 2654 de 2019) y, en la
-  próxima revisión jurídica, mencionar las videollamadas en la política de tratamiento de datos.
+- La política de datos (v2.2) y los términos (v1.1) informan las videollamadas: no se graban, qué se registra,
+  cifrado y quién participa. Al subir la versión, cada usuario debe aceptarlas de nuevo al ingresar.
+- Pendiente legal: confirmar la habilitación de la clínica en telemedicina (Resolución 2654 de 2019) y que el
+  abogado revise estos textos.
 - Pruebas: `tests/test_videollamadas.py`.
 
 ## 6. Recomendado antes de comercializar (no implementado)
