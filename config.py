@@ -33,10 +33,27 @@ class Config:
     # Archivos subidos (fuera de git, ver .gitignore)
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'app', 'static', 'uploads')
+    # Adjuntos de los mensajes (datos de salud): carpeta PRIVADA, fuera de /static y de git.
+    ADJUNTOS_FOLDER = os.environ.get('ADJUNTOS_FOLDER', os.path.join(BASE_DIR, 'datos', 'adjuntos'))
+    ADJUNTO_MAX_MB = 5  # igual que MAX_CONTENT_LENGTH y client_max_body_size de Nginx
 
     # Seguridad de cuentas
     MAX_INTENTOS_LOGIN = 5
     MINUTOS_BLOQUEO = 15
+    # Vigencia de los enlaces enviados por correo (de un solo uso; se guardan solo como hash SHA-256).
+    MINUTOS_ENLACE_RECUPERACION = 60
+    HORAS_ENLACE_VERIFICACION = 48
+
+    # Correo saliente (Flask-Mail): recuperación de contraseña y verificación de correo.
+    # Sin MAIL_SERVER (solo desarrollo) los correos no se envían: se registran en el log.
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', '')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or None
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or None
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'RespiraKids <no-responder@localhost>'
+    MAIL_TIMEOUT = 10
 
     # Límite de peticiones (Flask-Limiter)
     RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
@@ -64,8 +81,27 @@ class Config:
     ZONA_HORARIA = os.environ.get('ZONA_HORARIA', 'America/Bogota')
 
     # Política de tratamiento de datos. Al cambiar la versión, todos los usuarios deben aceptarla de nuevo.
-    POLITICA_VERSION = '1.0'
-    POLITICA_FECHA = '2026-10-01'
+    POLITICA_VERSION = '2.2'  # 2.2: atención por videollamada
+    POLITICA_FECHA = '2026-10-03'
+    # Términos y condiciones de uso: también se aceptan de nuevo al cambiar la versión.
+    TERMINOS_VERSION = '1.1'  # 1.1: atención por videollamada
+    TERMINOS_FECHA = '2026-10-03'
+    # Conservación: mientras la cuenta esté activa y hasta N años tras la última actividad (salvo deber legal).
+    CONSERVACION_ANIOS_INACTIVIDAD = 2
+
+    # Atención por mensajes: casos abiertos que puede tener cada profesional antes de dejar de recibir solicitudes.
+    CUPO_CASOS_POR_PROFESIONAL = 15
+
+    # Videollamadas (WebRTC, sin grabación). El video va directo entre los dos dispositivos; en redes que no lo
+    # permiten pasa cifrado por un servidor TURN propio (coturn con `use-auth-secret`). Sin TURN, muchas llamadas
+    # por datos móviles no logran conectar.
+    VIDEOLLAMADA_TIMBRE_SEGUNDOS = 60      # sin respuesta en este tiempo: llamada perdida
+    VIDEOLLAMADA_SIN_PULSO_SEGUNDOS = 45   # sin señal de vida de un lado: la llamada se da por terminada
+    WEBRTC_STUN_URLS = [u.strip() for u in os.environ.get('WEBRTC_STUN_URLS', '').split(',') if u.strip()]
+    TURN_URLS = [u.strip() for u in os.environ.get('TURN_URLS', '').split(',') if u.strip()]
+    TURN_SECRETO = os.environ.get('TURN_SECRETO', '').strip()  # el mismo `static-auth-secret` de coturn
+    TURN_VIGENCIA_SEGUNDOS = 3 * 3600
+
     # Datos del responsable del tratamiento (Ley 1581 de 2012). Deben completarse antes de operar.
     RESPONSABLE_NOMBRE = os.environ.get('RESPONSABLE_NOMBRE', '[Razón social del responsable]')
     RESPONSABLE_ID = os.environ.get('RESPONSABLE_ID', '[NIT o documento]')
@@ -90,6 +126,8 @@ class TestingConfig(Config):
     TALISMAN_ENABLED = False
     ML_HABILITADO = False
     GEMINI_API_KEY = ''
+    MAIL_SERVER = 'localhost'
+    MAIL_SUPPRESS_SEND = True  # Flask-Mail guarda los mensajes en un buzón de prueba
 
 
 class ProductionConfig(Config):
@@ -104,7 +142,10 @@ class ProductionConfig(Config):
 
     @classmethod
     def validar(cls):
-        faltantes = [v for v in ('SECRET_KEY', 'DATABASE_URL') if not os.environ.get(v)]
+        # Sin correo saliente no hay recuperación de contraseña ni verificación de cuentas, y sin la clave del
+        # proveedor de IA el asistente solo puede mostrar fragmentos textuales de la guía.
+        faltantes = [v for v in ('SECRET_KEY', 'DATABASE_URL', 'MAIL_SERVER', 'MAIL_DEFAULT_SENDER', 'GEMINI_API_KEY')
+                     if not os.environ.get(v, '').strip()]
         if faltantes:
             raise RuntimeError(f'Faltan variables de entorno obligatorias en producción: {", ".join(faltantes)}')
         if len(os.environ['SECRET_KEY']) < 32:

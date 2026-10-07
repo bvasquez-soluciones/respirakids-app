@@ -48,7 +48,7 @@ endblock %} {% block content %}
           <form
             method="POST"
             action="{{ url_for('pacientes.eliminar_patologia', nino_id=nino.id, patologia_id=p.id) }}"
-            onsubmit="return confirm('¿Eliminar esta condición registrada?');"
+            data-confirmar="¿Eliminar esta condición registrada?"
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button type="submit" class="btn btn-sm btn-outline-danger">

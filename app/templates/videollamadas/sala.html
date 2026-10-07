@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar, foto_profesional %}
+{% from "macros/iconos.html" import icono %}
+{% block title %}Videollamada - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/videollamada.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+{% set profesional = llamada.profesional %}
+{% set nino = llamada.nino %}
+<div class="rk-video" id="videollamada" data-rol="{{ rol }}" data-estado="{{ llamada.estado }}"
+  data-estado-url="{{ url_for('videollamadas.estado', videollamada_id=llamada.id) }}"
+  data-senal-url="{{ url_for('videollamadas.senal', videollamada_id=llamada.id) }}"
+  data-colgar-url="{{ url_for('videollamadas.colgar', videollamada_id=llamada.id) }}"
+  data-volver="{{ volver }}" data-csrf="{{ csrf_token() }}" data-ice="{{ ice }}">
+  <a href="{{ volver }}" class="btn btn-link px-0">← Volver a la conversación</a>
+
+  {% if rol == 'cuidador' and llamada.estado == 'llamando' %}
+  {# ---------------------------------------------------------------- Llamada entrante: consentimiento #}
+  <section class="rk-panel rk-video__entrante" aria-labelledby="titulo-entrante">
+    <div class="rk-video__timbre" aria-hidden="true">{{ foto_profesional(profesional, 96) }}</div>
+    <h1 class="h4 mb-1" id="titulo-entrante">{{ profesional.nombre_con_titulo }} te está llamando por video</h1>
+    <p class="text-muted">{{ profesional.especialidad_texto }} · Sobre {{ nino.nombre }}</p>
+    <form method="POST" action="{{ url_for('videollamadas.responder', videollamada_id=llamada.id) }}" class="text-start">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <ul class="rk-video__condiciones small">
+        <li>🔒 La videollamada va cifrada entre tu dispositivo y el del profesional. <strong>No se graba</strong>:
+          solo queda registro de la fecha y la duración.</li>
+        <li>🚨 No reemplaza la atención de urgencias: ante signos de alarma, acude de inmediato a un servicio de
+          salud o llama al 123.</li>
+        <li>📹 Tu navegador te pedirá permiso para usar la cámara y el micrófono. Puedes colgar cuando quieras.</li>
+      </ul>
+      <div class="form-check rk-video__consentimiento">
+        <input class="form-check-input" type="checkbox" name="consentimiento" value="si" id="consentimiento" required />
+        <label class="form-check-label" for="consentimiento">Acepto ser atendido/a por videollamada por este
+          profesional de salud de la clínica, en las condiciones anteriores.</label>
+      </div>
+      <div class="rk-video__respuesta">
+        <button type="submit" name="respuesta" value="rechazar" class="btn btn-outline-danger" formnovalidate>Rechazar</button>
+        <button type="submit" name="respuesta" value="aceptar" class="btn btn-primary">{{ icono('video') }} Contestar</button>
+      </div>
+    </form>
+  </section>
+
+  {% elif llamada.activa %}
+  {# ---------------------------------------------------------------- Llamada en curso o llamando #}
+  <header class="rk-video__cabecera">
+    {% if rol == 'cuidador' %}{{ foto_profesional(profesional, 44) }}{% else %}{{ avatar(nino, None, 44) }}{% endif %}
+    <div>
+      <h1 class="h6 mb-0">{{ profesional.nombre_con_titulo if rol == 'cuidador' else nino.cuidador.nombre_completo }}</h1>
+      <p class="small text-muted mb-0">Videollamada sobre {{ nino.nombre }}</p>
+    </div>
+  </header>
+  <section class="rk-video__escenario" aria-label="Video de la llamada">
+    <video class="rk-video__remoto" id="video-remoto" autoplay playsinline></video>
+    <div class="rk-video__espera" id="video-espera">
+      {% if rol == 'cuidador' %}{{ foto_profesional(profesional, 88) }}{% else %}{{ avatar(nino, None, 88) }}{% endif %}
+      <p id="video-estado" role="status" aria-live="polite">
+        {% if llamada.estado == 'llamando' %}Llamando a {{ nino.cuidador.nombre }}…{% else %}Conectando…{% endif %}</p>
+    </div>
+    <video class="rk-video__local" id="video-local" autoplay playsinline muted></video>
+    <span class="rk-video__tiempo" id="video-tiempo" hidden>00:00</span>
+    <button type="button" class="btn btn-primary rk-video__reproducir" id="video-reproducir" hidden>▶️ Toca para ver y escuchar</button>
+  </section>
+  <div class="rk-video__controles" role="toolbar" aria-label="Controles de la videollamada">
+    <button type="button" class="rk-video__boton" data-accion="microfono" aria-pressed="false" aria-label="Silenciar micrófono">
+      <span data-icono-encendido>{{ icono('microfono') }}</span><span data-icono-apagado hidden>{{ icono('microfono-off') }}</span></button>
+    <button type="button" class="rk-video__boton" data-accion="camara" aria-pressed="false" aria-label="Apagar cámara">
+      <span data-icono-encendido>{{ icono('video') }}</span><span data-icono-apagado hidden>{{ icono('video-off') }}</span></button>
+    <button type="button" class="rk-video__boton" data-accion="voltear" aria-label="Cambiar de cámara" hidden>{{ icono('voltear') }}</button>
+    <button type="button" class="rk-video__boton rk-video__boton--colgar" data-accion="colgar" aria-label="Colgar">{{ icono('colgar') }}</button>
+  </div>
+  <p class="rk-video__nota">🔒 Cifrada entre los dos dispositivos · No se graba</p>
+
+  {% else %}
+  {# ---------------------------------------------------------------- Llamada terminada #}
+  <section class="rk-panel rk-video__fin">
+    <h1 class="h4 mb-2">
+      {% if llamada.estado == 'finalizada' %}La videollamada terminó
+      {% elif llamada.estado == 'perdida' %}La videollamada no fue contestada
+      {% elif llamada.estado == 'rechazada' %}La videollamada no fue aceptada
+      {% else %}La videollamada fue cancelada{% endif %}</h1>
+    {% if llamada.duracion_segundos %}
+    <p class="text-muted">Duración: {{ llamada.duracion_segundos // 60 }} min {{ '%02d'|format(llamada.duracion_segundos % 60) }} s</p>
+    {% endif %}
+    <a href="{{ volver }}" class="btn btn-primary">Volver a la conversación</a>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+{% if llamada.activa %}<script src="{{ url_for('static', filename='js/videollamada.js') }}"></script>{% endif %}
+{% endblock %}

@@ -1,54 +1,149 @@
-{% extends "base.html" %} {% block title %}Mensajes - RespiraKids{% endblock %}
+{% extends "base.html" %}
+{% from "macros/avatar.html" import foto_profesional %}
+{% from "macros/iconos.html" import icono %}
+{% block title %}Conversación - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
+{% endblock %}
 {% block content %}
-<h2>Conversación</h2>
-<p class="text-muted">Paciente: {{ nino.nombre_completo }}</p>
+{% set soy_profesional = current_user.tipo_usuario == 'profesional' %}
+<div class="rk-chat-wrap">
+  {% if soy_profesional %}
+  {% if expediente %}
+  <a href="{{ url_for('dashboard.profesional', paciente=nino.id) }}" class="btn btn-link px-0">← Expediente del paciente</a>
+  {% else %}
+  <a href="{{ url_for('mensajes.solicitudes') }}" class="btn btn-link px-0">← Solicitudes de atención</a>
+  {% endif %}
+  {% else %}
+  <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-link px-0">← Mensajes de {{ nino.nombre }}</a>
+  {% endif %}
 
-<div class="card shadow-sm mb-3" style="max-height: 400px; overflow-y: auto">
-  <div class="card-body">
-    {% if mensajes %} {% for m in mensajes %}
-    <div
-      class="mb-3 {{ 'text-end' if m.autor_tipo == current_user.rol or (m.autor_tipo == 'cuidador' and current_user.rol in ('cuidador','admin')) else '' }}"
-    >
-      <div
-        class="d-inline-block p-2 rounded {{ 'bg-primary text-white' if (m.autor_tipo == 'cuidador' and current_user.rol in ('cuidador','admin')) or (m.autor_tipo == 'profesional' and current_user.rol == 'profesional') else 'bg-light' }}"
-        style="max-width: 75%"
-      >
-        <div class="small fw-bold">{{ m.nombre_autor() }}</div>
-        <div>{{ m.contenido }}</div>
-        <div class="small text-muted">
-          {{ m.fecha|fecha_hora }}
-        </div>
+  <header class="mb-3">
+    {% if soy_profesional %}
+    <h1 class="h3 mb-1">Conversación con {{ nino.cuidador.nombre_completo }}</h1>
+    <p class="text-muted mb-2">Sobre {{ nino.nombre_completo }} · {{ nino.edad_texto() }} · Privada: los demás
+      profesionales no la ven.</p>
+    {# Resumen del semáforo: siempre visible para el profesional que atiende. #}
+    <div class="rk-estado rk-estado--{{ resumen.nivel }} mb-2">
+      <span class="rk-estado__icono">{{ icono_nivel(resumen.nivel) }}</span>
+      <div>
+        <p class="rk-estado__titulo">{{ resumen.info_nivel.titulo }}</p>
+        <p class="rk-estado__detalle">
+          {% if resumen.senales_del_nivel %}{{ resumen.senales_del_nivel|map(attribute='texto')|join(' · ') }} · {% endif %}
+          {% if resumen.ultima_evaluacion %}Última evaluación: {{ resumen.ultima_evaluacion.fecha|fecha_hora }}{% else %}Sin evaluaciones{% endif %}
+        </p>
       </div>
     </div>
-    {% endfor %} {% else %}
-    <p class="text-muted mb-0">Aún no hay mensajes. Escribe el primero.</p>
+    <div class="rk-caso">
+      <span class="small {{ 'text-success' if expediente else 'text-muted' }}">
+        {% if expediente %}✓ Tienes acceso al expediente completo
+        {% elif caso and caso.acceso is none %}Esperando que el cuidador responda si autoriza el expediente completo
+        {% else %}Sin acceso al expediente: atiendes con el semáforo y la conversación{% endif %}
+      </span>
+      <div class="d-flex flex-wrap gap-2">
+      {% if llamada %}
+      <a href="{{ url_for('videollamadas.sala', videollamada_id=llamada.id) }}" class="btn btn-primary btn-sm">
+        {{ icono('video') }} Volver a la videollamada</a>
+      {% elif puede_llamar %}
+      <form method="POST" action="{{ url_for('videollamadas.iniciar', nino_id=nino.id) }}" class="m-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-primary btn-sm">{{ icono('video') }} Videollamada</button>
+      </form>
+      {% endif %}
+      {% if caso %}
+      <form method="POST" action="{{ url_for('mensajes.cerrar', solicitud_id=caso.id) }}" class="m-0"
+        data-confirmar="¿Cerrar el caso de {{ nino.nombre }}? La conversación seguirá disponible.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-outline-primary btn-sm">Cerrar caso</button>
+      </form>
+      {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="rk-bandeja__cabecera mb-0">
+      {{ foto_profesional(profesional, 56) }}
+      <div>
+        <h1 class="h3 mb-1">{{ profesional.nombre_con_titulo }}</h1>
+        <p class="text-muted mb-0">{{ profesional.especialidad_texto }} · Sobre {{ nino.nombre }} ·
+          Privada: solo la ven tú y este profesional.</p>
+      </div>
+    </div>
+    {% if llamada and llamada.estado == 'llamando' %}
+    <a href="{{ url_for('videollamadas.sala', videollamada_id=llamada.id) }}" class="btn btn-primary mt-3">
+      {{ icono('video') }} {{ profesional.nombre_con_titulo }} te está llamando · Contestar</a>
+    {% elif llamada %}
+    <a href="{{ url_for('videollamadas.sala', videollamada_id=llamada.id) }}" class="btn btn-primary mt-3">
+      {{ icono('video') }} Volver a la videollamada</a>
     {% endif %}
-  </div>
+    {% endif %}
+  </header>
+
+  <section class="rk-chat-panel">
+    {% set url_nuevos = url_for('mensajes.nuevos_profesional', nino_id=nino.id) if soy_profesional
+         else url_for('mensajes.nuevos_cuidador', nino_id=nino.id, profesional_id=profesional.id) %}
+    <div class="rk-chat-messages" role="log" aria-label="Mensajes de la conversación" aria-live="polite"
+      data-nuevos-url="{{ url_nuevos }}" data-ultimo="{{ mensajes[-1].id if mensajes else 0 }}">
+      {% for m in mensajes %}
+      {% set propio = (m.autor_tipo == 'profesional') if soy_profesional else (m.autor_tipo == 'cuidador') %}
+      <div class="rk-msg-row {{ 'user' if propio }}">
+        <div class="rk-msg-bubble">
+          <div class="rk-msg-autor">{{ 'Tú' if propio else m.nombre_autor() }}</div>
+          {% for a in m.adjuntos %}
+          {% set url = url_for('mensajes.adjunto', adjunto_id=a.id) %}
+          {% if a.tipo == 'imagen' %}
+          <a href="{{ url }}" target="_blank" rel="noopener" class="rk-adjunto-imagen">
+            <img src="{{ url }}" alt="Foto enviada: {{ a.nombre_original }}" loading="lazy" /></a>
+          {% elif a.tipo == 'audio' %}
+          <audio class="rk-adjunto-audio" controls preload="none" src="{{ url }}" aria-label="Nota de voz"></audio>
+          {% else %}
+          <a href="{{ url }}" class="rk-adjunto-doc">{{ icono('ficha') }}
+            <span>{{ a.nombre_original }}<small>{{ a.tamano // 1024 }} KB · PDF</small></span></a>
+          {% endif %}
+          {% endfor %}
+          {% if m.contenido %}<div>{{ m.contenido }}</div>{% endif %}
+          <div class="rk-msg-fecha">{{ m.fecha|fecha_hora }}</div>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0" data-sin-mensajes>Aún no hay mensajes. Escribe el primero.</p>
+      {% endfor %}
+    </div>
+
+    {% if puede_escribir %}
+    <form method="POST" enctype="multipart/form-data" class="rk-chat-form" id="form-mensaje" data-max-mb="{{ config.ADJUNTO_MAX_MB }}">
+      {{ form.csrf_token }}
+      <div class="rk-adjunto-vista" id="adjunto-vista" hidden aria-live="polite">
+        <span id="adjunto-nombre"></span>
+        <audio id="adjunto-audio" controls hidden></audio>
+        <button type="button" class="btn btn-link btn-sm" id="adjunto-quitar">Quitar</button>
+      </div>
+      <div class="rk-chat-input-bar">
+        <label class="rk-icon-btn" for="adjunto-archivo" title="Adjuntar foto o PDF">{{ icono('clip') }}
+          <span class="visually-hidden">Adjuntar foto o documento PDF</span></label>
+        <input type="file" id="adjunto-archivo" name="adjunto" class="visually-hidden"
+          accept="image/jpeg,image/png,image/webp,application/pdf" />
+        <button type="button" class="rk-icon-btn" id="btn-grabar" aria-pressed="false"
+          aria-label="Grabar nota de voz" title="Grabar nota de voz" hidden>{{ icono('microfono') }}</button>
+        <label class="visually-hidden" for="contenido-mensaje">Mensaje</label>
+        <input type="text" id="contenido-mensaje" name="contenido" placeholder="Escribe un mensaje…"
+          maxlength="2000" autocomplete="off" />
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </div>
+      <p class="rk-grabando" id="estado-grabacion" role="status" hidden></p>
+    </form>
+    {% else %}
+    <p class="rk-chat-input-bar text-muted small mb-0">
+      La autorización de este profesional ya no está vigente: puedes leer la conversación, pero no enviar mensajes.
+    </p>
+    {% endif %}
+  </section>
+
+  <p class="rk-nota-fuente">Los mensajes no son un canal de urgencias. Ante signos de alarma, acude de inmediato a un
+    servicio de salud.</p>
 </div>
-
-<form method="POST">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-  <div class="input-group">
-    <input
-      type="text"
-      name="contenido"
-      class="form-control"
-      placeholder="Escribe un mensaje..."
-      required
-      autocomplete="off"
-    />
-    <button type="submit" class="btn btn-primary">Enviar</button>
-  </div>
-</form>
-
-{% if current_user.rol == 'profesional' %}
-<a
-  href="{{ url_for('dashboard.profesional', paciente=nino.id) }}"
-  class="btn btn-link mt-3"
-  >← Volver al detalle del paciente</a
->
-{% else %}
-<a href="{{ url_for('pacientes.listar') }}" class="btn btn-link mt-3"
-  >← Volver a mis niños</a
->
-{% endif %} {% endblock %}
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat_tiempo_real.js') }}"></script>
+<script src="{{ url_for('static', filename='js/adjuntos.js') }}"></script>
+{% endblock %}

@@ -1,4 +1,5 @@
-{# Texto de la Política de Tratamiento de Datos Personales. Requiere revisión jurídica antes de operar. #}
+{# Texto de la Política de Tratamiento de Datos Personales. Borrador técnico: requiere revisión jurídica antes
+   de operar. Al cambiar su contenido sustancial, subir POLITICA_VERSION (config.py) para pedir nueva aceptación. #}
 {% set cfg = config %}
 <p class="text-muted small mb-4">
   Versión {{ cfg.POLITICA_VERSION }} · Vigente desde {{ cfg.POLITICA_FECHA }}
@@ -8,59 +9,114 @@
 <p>
   {{ cfg.RESPONSABLE_NOMBRE }} ({{ cfg.RESPONSABLE_ID }}), con domicilio en {{ cfg.RESPONSABLE_DIRECCION }},
   correo {{ cfg.RESPONSABLE_CORREO }} y teléfono {{ cfg.RESPONSABLE_TELEFONO }}, es responsable del tratamiento
-  de los datos personales recolectados a través de RespiraKids, conforme a la Ley 1581 de 2012 y sus normas
-  reglamentarias.
+  de los datos personales recolectados a través de RespiraKids.
 </p>
 
-<h2 class="h5">2. Qué es RespiraKids y qué no es</h2>
+<h2 class="h5">2. Marco normativo</h2>
 <p>
-  RespiraKids es una plataforma de apoyo para la prevención, el registro y el seguimiento de síntomas
-  respiratorios en niños y niñas menores de 5 años, y para la comunicación entre cuidadores y profesionales
-  de salud autorizados.
+  Esta política se rige por la Constitución Política de Colombia (artículo 15), la Ley Estatutaria 1581 de 2012,
+  el Decreto 1377 de 2013 (compilado en el Decreto Único Reglamentario 1074 de 2015) y demás normas que las
+  modifiquen o complementen. La autoridad de vigilancia es la Superintendencia de Industria y Comercio (SIC).
+</p>
+
+<h2 class="h5">3. Qué es RespiraKids y qué no es</h2>
+<p>
+  RespiraKids es una plataforma de apoyo para el registro y seguimiento de síntomas respiratorios en niños y
+  niñas menores de 5 años, y para la comunicación entre cuidadores y profesionales de salud autorizados, por
+  mensajes y por videollamada.
   <strong>RespiraKids no constituye un diagnóstico médico y no reemplaza la valoración de un profesional de salud.</strong>
 </p>
 
-<h2 class="h5">3. Datos que tratamos</h2>
+<h2 class="h5">4. Datos que tratamos</h2>
 <ul>
-  <li><strong>Del cuidador:</strong> nombre, correo electrónico, teléfono y datos de acceso a la cuenta.</li>
+  <li><strong>Del cuidador:</strong> nombre, correo electrónico, teléfono y datos de acceso a la cuenta (la
+    contraseña nunca se guarda: solo un resumen cifrado irreversible).</li>
   <li><strong>Del niño o niña:</strong> nombre, fecha de nacimiento, sexo y, si se registran, peso y talla.</li>
-  <li><strong>Datos de salud (datos sensibles):</strong> síntomas y signos registrados, evaluaciones de riesgo,
-    condiciones de base, mensajes con profesionales e indicaciones de medicamentos registradas por un profesional.</li>
+  <li><strong>Datos de salud (datos sensibles):</strong> síntomas y signos registrados, evaluaciones orientativas,
+    seguimiento de la evolución, condiciones de base, mensajes con profesionales e indicaciones de medicamentos
+    registradas por un profesional.</li>
   <li><strong>Del profesional de salud:</strong> nombre, correo, profesión, especialidad y datos de acreditación.</li>
+  <li><strong>Consultas al asistente virtual:</strong> ver la sección 9.</li>
+  <li><strong>Videollamadas:</strong> <strong>no se graban la imagen ni el sonido</strong>. Solo se registran la
+    fecha, la duración, quiénes participaron y el consentimiento del cuidador. Para conectar los dos dispositivos se
+    intercambian temporalmente datos técnicos de red (como direcciones IP), que se eliminan al terminar la llamada.</li>
   <li><strong>Datos técnicos:</strong> dirección IP, navegador y registro de accesos, con fines de seguridad y trazabilidad.</li>
 </ul>
 
-<h2 class="h5">4. Finalidades</h2>
+<h2 class="h5">5. Finalidades</h2>
 <ul>
   <li>Permitir el registro de síntomas y la clasificación orientativa del nivel de riesgo.</li>
   <li>Llevar el historial y la evolución de cada niño o niña.</li>
   <li>Compartir la información con los profesionales de salud que el cuidador autorice expresamente.</li>
+  <li>Permitir la atención por videollamada (telemedicina) entre el cuidador y el profesional de salud que
+    atiende su caso, cuando el cuidador la acepta.</li>
   <li>Ofrecer información educativa general mediante el asistente virtual.</li>
-  <li>Garantizar la seguridad de la plataforma, auditar accesos y atender solicitudes de los titulares.</li>
+  <li>Proteger la seguridad de la plataforma, auditar accesos y atender las solicitudes de los titulares.</li>
+  <li>Enviar mensajes necesarios para el servicio (confirmación de correo, recuperación de contraseña,
+    avisos sobre su cuenta). No enviamos publicidad.</li>
   <li>Solo si el representante lo autoriza de forma independiente: uso de datos <strong>anonimizados</strong>
     para investigación y mejora del servicio.</li>
 </ul>
 
-<h2 class="h5">5. Datos sensibles y datos de niños y niñas</h2>
+<h2 class="h5">6. Datos sensibles y datos de niños y niñas</h2>
 <p>
   Los datos de salud son datos sensibles. Su suministro es <strong>facultativo</strong>: nadie está obligado a
   entregarlos, pero sin ellos no es posible usar las funciones de registro y evaluación. El tratamiento de
-  datos de niños y niñas se realiza respetando su interés superior y sus derechos fundamentales, y requiere
-  la autorización de su representante legal.
+  datos de niños y niñas se realiza respetando su interés superior y la prevalencia de sus derechos fundamentales
+  (artículo 7 de la Ley 1581 de 2012), y solo con la autorización previa, expresa e informada de su representante
+  legal, que se solicita por separado para cada niño o niña.
 </p>
 
-<h2 class="h5">6. Con quién se comparte la información</h2>
+<h2 class="h5">7. No vendemos sus datos</h2>
+<p>
+  <strong>RespiraKids no vende, alquila ni comercializa datos personales ni datos de salud</strong>, ni los
+  entrega a terceros con fines publicitarios o comerciales. Solo se comparten en los casos descritos en la
+  sección 8.
+</p>
+
+<h2 class="h5">8. Con quién se comparte la información</h2>
 <ul>
-  <li>Con los profesionales de salud que el cuidador autorice para cada niño o niña. La autorización puede
-    revocarse en cualquier momento.</li>
-  <li>Con proveedores tecnológicos que actúan como encargados del tratamiento (alojamiento de la plataforma y
-    servicio de inteligencia artificial del asistente virtual). Las preguntas al asistente se envían a un
-    proveedor externo (Google) que puede procesarlas fuera de Colombia; antes de enviarlas, RespiraKids retira
-    nombres de los niños registrados, correos y números de identificación.</li>
+  <li><strong>Profesionales de salud de la clínica:</strong> todos pueden consultar el <strong>semáforo</strong> de
+    los niños y niñas registrados (nombre, edad, nivel de la última evaluación, señales identificadas y evolución
+    reportada), con el fin de priorizar la atención.</li>
+  <li><strong>Expediente completo</strong> (historial de síntomas, evaluaciones, ficha, condiciones de base y
+    medicamentos): solo lo ven los profesionales que el cuidador autorice para cada niño o niña. La autorización
+    puede revocarse en cualquier momento.</li>
+  <li><strong>Solicitudes de atención:</strong> cuando el cuidador pide hablar con un profesional, su mensaje y el
+    semáforo del niño o niña los ven los profesionales disponibles hasta que uno acepta la solicitud. Después el
+    cuidador decide si autoriza a ese profesional a ver el expediente completo, o puede autorizarlo de antemano
+    (opcional, al registrar al niño o niña o en "Autorización de datos") para que no se le pregunte cada vez. Las conversaciones son privadas
+    entre el cuidador y cada profesional.</li>
+  <li><strong>Videollamadas:</strong> solo puede iniciarlas el profesional de salud que atiende al niño o niña
+    (porque el cuidador pidió atención y él la tomó, o porque el cuidador lo autorizó), y solo participan él y el
+    cuidador, que debe aceptarla expresamente cada vez. La imagen y el sonido viajan
+    cifrados directamente entre los dos dispositivos; cuando la red no lo permite, pasan cifrados por un servidor
+    de retransmisión de RespiraKids, que no puede ver ni escuchar su contenido. Ninguna otra persona tiene acceso a
+    la llamada.</li>
+  <li>Con proveedores tecnológicos que actúan como encargados del tratamiento, bajo contrato y solo para prestar
+    el servicio: alojamiento de la plataforma, envío de correos y el servicio de inteligencia artificial del
+    asistente virtual.</li>
   <li>Con autoridades, cuando una norma lo exija.</li>
 </ul>
 
-<h2 class="h5">7. Derechos del titular</h2>
+<h2 class="h5">9. Asistente virtual (inteligencia artificial) y modelo de aprendizaje automático</h2>
+<ul>
+  <li><strong>Qué se envía:</strong> las preguntas al asistente se envían a un proveedor externo de inteligencia
+    artificial (Google), que puede procesarlas fuera de Colombia (transmisión internacional de datos). Antes de
+    enviarlas, RespiraKids retira automáticamente los nombres de los niños registrados, correos y números de
+    identificación; aun así, le pedimos no escribir datos personales en las preguntas.</li>
+  <li><strong>Qué se guarda:</strong> la pregunta ya sin esos datos, la respuesta y las fuentes citadas, asociadas
+    a su cuenta, para auditoría y mejora de la calidad de las respuestas. Se incluyen en la descarga de "Mis datos"
+    y se eliminan en una supresión.</li>
+  <li><strong>Qué no hace:</strong> el asistente no diagnostica, no recomienda medicamentos y no cambia la
+    clasificación de riesgo; responde solo con la información de la fuente clínica oficial.</li>
+  <li><strong>Modelo de aprendizaje automático:</strong> RespiraKids puede usar un modelo experimental, entrenado
+    únicamente con datos sintéticos (inventados), que muestra a los profesionales una estimación complementaria.
+    No se entrena con los datos de los usuarios, no lo ven los cuidadores y nunca reemplaza la clasificación
+    basada en criterios clínicos.</li>
+</ul>
+
+<h2 class="h5">10. Derechos del titular</h2>
 <p>Como titular, o representante del titular, usted puede:</p>
 <ul>
   <li>Conocer, actualizar y rectificar sus datos personales.</li>
@@ -72,7 +128,7 @@
   <li>Acceder de forma gratuita a sus datos personales.</li>
 </ul>
 
-<h2 class="h5">8. Cómo ejercer sus derechos</h2>
+<h2 class="h5">11. Cómo ejercer sus derechos</h2>
 <p>
   Desde la sección <strong>Mis datos</strong> de su cuenta puede descargar una copia de su información y
   radicar consultas, solicitudes de rectificación o supresión, revocatorias y reclamos. También puede escribir a
@@ -80,15 +136,36 @@
   en un máximo de quince (15) días hábiles, prorrogables en los términos de la Ley 1581 de 2012.
 </p>
 
-<h2 class="h5">9. Seguridad y conservación</h2>
+<h2 class="h5">12. Supresión de datos</h2>
 <p>
-  RespiraKids aplica medidas técnicas y administrativas para proteger la información: control de acceso por
-  roles, autorización expresa para profesionales, cifrado en tránsito, registro de auditoría de accesos y
-  bloqueo de cuentas ante intentos fallidos. Los datos se conservarán durante [período de conservación por
-  definir] o mientras sean necesarios para las finalidades descritas y el cumplimiento de obligaciones legales.
+  Cuando se aprueba una solicitud de supresión, RespiraKids <strong>anonimiza</strong> la información de forma
+  irreversible: elimina nombres, apellidos, correo, teléfono, documentos, fotografías, mensajes, notas de texto
+  libre y consultas al asistente, y desvincula los registros de la persona. La cuenta queda cerrada. Los registros
+  clínicos que quedan no permiten identificar a nadie y pueden usarse solo con fines estadísticos.
+  Se conservan únicamente la constancia de las autorizaciones otorgadas y de la propia solicitud, y los registros
+  de seguridad, para demostrar el cumplimiento de la ley.
 </p>
 
-<h2 class="h5">10. Cambios a esta política</h2>
+<h2 class="h5">13. Seguridad de la información</h2>
+<p>
+  RespiraKids aplica medidas técnicas, humanas y administrativas razonables para proteger la información contra
+  acceso no autorizado, pérdida o alteración, entre ellas: cifrado de las comunicaciones (HTTPS) y de las
+  videollamadas (que no se graban), contraseñas
+  almacenadas con funciones de resumen irreversibles, control de acceso por roles, autorización expresa para
+  profesionales, registro de auditoría de accesos, bloqueo de cuentas ante intentos fallidos y copias de seguridad
+  cifradas con acceso restringido. Ningún sistema es completamente infalible; por eso, si ocurriera un incidente de
+  seguridad que afecte sus datos, se informará a la Superintendencia de Industria y Comercio y a los titulares
+  afectados, conforme a la ley.
+</p>
+
+<h2 class="h5">14. Conservación</h2>
+<p>
+  Los datos se conservan mientras la cuenta esté activa y hasta {{ cfg.CONSERVACION_ANIOS_INACTIVIDAD }} años
+  después de la última actividad, salvo que una norma exija conservarlos por más tiempo. Cumplido ese plazo, la
+  información se anonimiza de la misma forma descrita en la sección 12.
+</p>
+
+<h2 class="h5">15. Cambios a esta política</h2>
 <p>
   Cualquier cambio sustancial se informará en la plataforma y se solicitará nuevamente su aceptación antes de
   continuar usando el servicio.

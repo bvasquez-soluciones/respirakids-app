@@ -24,7 +24,9 @@ from app.services.administracion import (
     ESTADOS_PROFESIONAL, cambiar_estado_profesional, crear_profesional, desbloquear, indicadores,
     responder_solicitud, restablecer_password,
 )
-from app.services.auditoria import registrar_actividad
+from app.services.auditoria import registrar_actividad, registrar_seguridad
+from app.services.correo import enviar
+from app.services.supresion import anonimizar_nino, anonimizar_titular, esta_anonimizado
 from app.services.plazos import dias_restantes, fecha_limite
 
 POR_PAGINA = 25
@@ -179,6 +181,48 @@ def solicitud(solicitud_id):
                            limite=fecha_limite(item), restantes=dias_restantes(item, _hoy_local())), codigo
 
 
+CONFIRMACION_SUPRESION = 'ANONIMIZAR'
+
+
+@admin_bp.route('/solicitudes/<int:solicitud_id>/suprimir', methods=['POST'])
+def ejecutar_supresion(solicitud_id):
+    """Ejecuta una solicitud de supresión anonimizando los datos (irreversible). Ver services/supresion.py."""
+    item = db.session.get(SolicitudDerechos, solicitud_id) or abort(404)
+    titular = _titular(item)
+    if item.tipo != 'supresion' or item.estado in ('resuelta', 'rechazada') or titular is None \
+            or esta_anonimizado(titular):
+        abort(400)
+    if request.form.get('confirmacion', '').strip().upper() != CONFIRMACION_SUPRESION:
+        flash(f'Para ejecutar la supresión escribe {CONFIRMACION_SUPRESION} en la casilla de confirmación.', 'warning')
+        return redirect(url_for('admin.solicitud', solicitud_id=item.id))
+
+    alcance = 'nino' if item.nino_id else 'cuenta'
+    if alcance == 'nino' and (item.usuario_tipo != 'cuidador' or item.nino.cuidador_id != titular.id):
+        abort(400)  # el niño/a debe pertenecer a quien hizo la solicitud
+    correo, nombre = titular.correo, titular.nombre
+    nombre_nino = item.nino.nombre if alcance == 'nino' else None
+    try:
+        if alcance == 'nino':
+            anonimizar_nino(item.nino)
+        else:
+            anonimizar_titular(item.usuario_tipo, item.usuario_id)
+    except ValueError as error:
+        db.session.rollback()
+        flash(str(error), 'danger')
+        return redirect(url_for('admin.solicitud', solicitud_id=item.id))
+
+    respuesta = ('Supresión ejecutada: los datos personales se anonimizaron de forma irreversible. '
+                 + (f'Se anonimizó la información de {nombre_nino}.' if nombre_nino
+                    else 'La cuenta quedó cerrada y se anonimizó la información de sus niños y niñas.'))
+    responder_solicitud(item, 'resuelta', respuesta)  # guarda todo en una sola transacción
+    enviar(correo, 'Tu solicitud de supresión fue atendida - RespiraKids', 'supresion',
+           usuario={'nombre': nombre}, alcance=alcance, nombre_nino=nombre_nino)
+    registrar_actividad('ejecutar_supresion', 'solicitud_derechos', item.id, detalles={'alcance': alcance})
+    registrar_seguridad('supresion_ejecutada', descripcion=f'solicitud {item.id} ({alcance})')
+    flash('Supresión ejecutada y solicitud resuelta. Se envió la constancia al titular.', 'success')
+    return redirect(url_for('admin.solicitudes'))
+
+
 # ---------------------------------------------------------------- Auditoría
 
 @admin_bp.route('/auditoria')
@@ -273,6 +317,8 @@ def configuracion():
         ('Modelo ML complementario', 'Activado' if cfg.get('ML_HABILITADO') else 'Desactivado', None),
         ('Asistente IA: clave configurada', 'Sí' if cfg.get('GEMINI_API_KEY') else 'No', bool(cfg.get('GEMINI_API_KEY'))),
         ('Asistente IA: modelo', cfg.get('GEMINI_MODEL'), None),
+        ('Videollamadas: servidor TURN', 'Configurado' if cfg.get('TURN_URLS') and cfg.get('TURN_SECRETO')
+         else 'No configurado', bool(cfg.get('TURN_URLS') and cfg.get('TURN_SECRETO'))),
         ('Versión de la política de datos', cfg.get('POLITICA_VERSION'), None),
         ('Datos del responsable del tratamiento', 'Completos' if responsable_completo else 'Incompletos',
          responsable_completo),

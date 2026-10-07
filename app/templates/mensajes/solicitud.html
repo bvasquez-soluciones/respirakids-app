@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar, foto_profesional %}
+{% block title %}Atención para {{ nino.nombre }} - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-chat-wrap">
+  <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-link px-0">← Mensajes de {{ nino.nombre }}</a>
+
+  {% if solicitud.estado == 'pendiente' %}
+  {# Pantalla de espera: atencion.js consulta el estado y recarga cuando un profesional se conecta. #}
+  <section class="rk-panel rk-conectando" data-estado-url="{{ url_for('mensajes.solicitud_estado', solicitud_id=solicitud.id) }}"
+    role="status" aria-live="polite">
+    <span class="rk-pulso rk-pulso--grande" aria-hidden="true"></span>
+    <h1 class="h4 mt-3">Conectando con un profesional de salud…</h1>
+    <p class="text-muted">Tu solicitud sobre {{ nino.nombre }} llegó a los profesionales de la clínica disponibles.
+      Te atenderá el primero que se conecte. Te avisaremos aquí y con una notificación.</p>
+    <blockquote class="rk-motivo">“{{ solicitud.motivo }}”</blockquote>
+    {% if resumen.nivel == 'rojo' %}
+    <div class="alert alert-danger small text-start" role="alert">
+      La última evaluación identificó posibles señales de alarma. <strong>Acude a un servicio de salud de inmediato</strong>;
+      no esperes la respuesta por mensajes.
+    </div>
+    {% else %}
+    <p class="small text-muted">Si mientras esperas aparece algún signo de alarma, acude de inmediato a un servicio de salud.</p>
+    {% endif %}
+    <form method="POST" action="{{ url_for('mensajes.cancelar', solicitud_id=solicitud.id) }}"
+      data-confirmar="¿Cancelar la solicitud?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn-link btn-sm">Cancelar solicitud</button>
+    </form>
+  </section>
+
+  {% elif solicitud.estado == 'asignada' %}
+  {# Conectado: el cuidador decide si autoriza el acceso al expediente completo. #}
+  {% set p = solicitud.profesional %}
+  <section class="rk-panel rk-conectado" aria-labelledby="titulo-conectado">
+    <p class="rk-conectado__etiqueta">✓ Conectado</p>
+    <div class="rk-bandeja__cabecera mb-3">
+      {{ foto_profesional(p, 56) }}
+      <div>
+        <h1 class="h4 mb-0" id="titulo-conectado">{{ p.nombre_con_titulo }}</h1>
+        <p class="text-muted mb-0">{{ p.especialidad_texto }} · Profesional de la clínica</p>
+      </div>
+    </div>
+    <h2 class="h5">¿Autorizas que {{ p.nombre_con_titulo }} acceda a toda la información de {{ nino.nombre }}?</h2>
+    <p class="small text-muted">Podrá ver su historial de síntomas, evaluaciones, ficha, condiciones de base y
+      medicamentos, para orientarte mejor. Si no lo autorizas, te atenderá solo con el resumen del semáforo y lo que
+      le escribas. Puedes revocar el acceso cuando quieras en "Profesionales autorizados".</p>
+    <form method="POST" action="{{ url_for('mensajes.acceso', solicitud_id=solicitud.id) }}" class="d-flex flex-wrap gap-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" name="respuesta" value="si" class="btn btn-primary">Sí, autorizo</button>
+      <button type="submit" name="respuesta" value="no" class="btn btn-outline-secondary">No, solo conversar</button>
+    </form>
+  </section>
+
+  {% else %}
+  <section class="rk-panel">
+    <h1 class="h5">Esta solicitud ya no está activa</h1>
+    <p class="text-muted mb-0">Estado: {{ solicitud.estado }}.</p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/atencion.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{# Texto de los Términos y Condiciones de Uso. Borrador técnico: requiere revisión jurídica antes de operar.
+   Al cambiar su contenido sustancial, subir TERMINOS_VERSION (config.py) para pedir nueva aceptación. #}
+{% set cfg = config %}
+<p class="text-muted small mb-4">
+  Versión {{ cfg.TERMINOS_VERSION }} · Vigentes desde {{ cfg.TERMINOS_FECHA }}
+</p>
+
+<h2 class="h5">1. Aceptación</h2>
+<p>
+  Estos términos regulan el uso de RespiraKids, ofrecido por {{ cfg.RESPONSABLE_NOMBRE }} ({{ cfg.RESPONSABLE_ID }}).
+  Al crear una cuenta o usar la plataforma, usted declara haberlos leído y aceptarlos. Si no está de acuerdo,
+  no debe usar el servicio. El tratamiento de datos personales se rige además por la
+  <a href="{{ url_for('privacidad.politica') }}">Política de tratamiento de datos personales</a>.
+</p>
+
+<h2 class="h5">2. Qué es RespiraKids y qué no es</h2>
+<ul>
+  <li>RespiraKids es una herramienta de apoyo para registrar y dar seguimiento a síntomas respiratorios de niños y
+    niñas menores de 5 años, y para comunicarse con los profesionales de salud que el cuidador autorice.</li>
+  <li><strong>RespiraKids no constituye un diagnóstico médico, no prescribe tratamientos y no reemplaza la
+    valoración de un profesional de salud.</strong> La clasificación por colores es una orientación basada en
+    criterios de la estrategia AIEPI del Ministerio de Salud y Protección Social, calculada con la información que
+    usted registra.</li>
+  <li><strong>No es un servicio de urgencias.</strong> Ante signos de alarma (dificultad para respirar, coloración
+    azulada, convulsiones, somnolencia excesiva, imposibilidad de beber, entre otros) acuda de inmediato a un
+    servicio de salud o llame a la línea de emergencias, sin esperar una respuesta de la plataforma.</li>
+</ul>
+
+<h2 class="h5">3. Cuentas y usuarios</h2>
+<ul>
+  <li><strong>Cuidadores:</strong> deben ser mayores de edad y padres, madres o representantes legales de los niños
+    y niñas que registran, o contar con su autorización.</li>
+  <li><strong>Profesionales de salud:</strong> su acceso lo aprueba RespiraKids tras verificar su identidad
+    profesional, y solo pueden ver la información de los pacientes cuyo cuidador los haya autorizado.</li>
+  <li>Cada persona es responsable de la veracidad de la información que registra y de mantener la
+    confidencialidad de su contraseña. Debe avisarnos de inmediato si sospecha de un uso no autorizado de su cuenta.</li>
+</ul>
+
+<h2 class="h5">4. Uso adecuado</h2>
+<p>Al usar RespiraKids usted se compromete a no:</p>
+<ul>
+  <li>Registrar información falsa o de niños y niñas sobre los que no tiene representación ni autorización.</li>
+  <li>Intentar acceder a información de otras personas, eludir los controles de seguridad o afectar el
+    funcionamiento de la plataforma.</li>
+  <li>Usar el servicio con fines distintos al cuidado de la salud de los niños y niñas registrados.</li>
+</ul>
+
+<h2 class="h5">5. Profesionales de salud, indicaciones y videollamadas</h2>
+<p>
+  Las indicaciones de medicamentos, los mensajes y la atención por videollamada de los profesionales son de su
+  exclusiva responsabilidad profesional; RespiraKids solo ofrece el medio técnico para comunicarse. RespiraKids no
+  propone medicamentos ni dosis.
+</p>
+<ul>
+  <li><strong>Videollamadas:</strong> solo las inicia el profesional que atiende al niño o niña (con una solicitud
+    de atención abierta o con autorización del cuidador), y el cuidador decide en cada ocasión si la acepta. No se graban. Se prestan dentro de los servicios de telemedicina que la
+    institución de salud tenga habilitados (Resolución 2654 de 2019) y lo relevante de la atención se registra en
+    su historia clínica.</li>
+  <li>La videollamada <strong>no es un servicio de urgencias</strong> y puede verse afectada por la calidad de la
+    conexión a internet. Si el profesional lo considera necesario, indicará una valoración presencial.</li>
+  <li>Durante una videollamada, use un lugar privado y no grabe ni comparta la llamada sin el consentimiento de
+    la otra persona.</li>
+</ul>
+
+<h2 class="h5">6. Asistente virtual</h2>
+<p>
+  El asistente responde con información general de la fuente clínica oficial y cita sus fuentes. Puede cometer
+  errores, no conoce el estado completo del niño o niña y no reemplaza una consulta. No escriba datos personales en
+  sus preguntas.
+</p>
+
+<h2 class="h5">7. Seguridad</h2>
+<p>
+  RespiraKids aplica medidas técnicas y organizativas razonables, acordes con la sensibilidad de los datos de
+  salud, para proteger la información (descritas en la Política de tratamiento de datos). Ningún sistema
+  conectado a internet puede garantizar una seguridad absoluta; por eso también le pedimos usar una contraseña
+  propia y robusta, no compartir su cuenta y cerrar la sesión en dispositivos compartidos.
+</p>
+
+<h2 class="h5">8. Disponibilidad del servicio</h2>
+<p>
+  Procuramos que la plataforma esté disponible de forma continua, pero puede haber interrupciones por
+  mantenimiento, fallas técnicas o causas ajenas. Por ello no debe depender de RespiraKids para decisiones urgentes.
+</p>
+
+<h2 class="h5">9. Responsabilidad</h2>
+<p>
+  Las decisiones sobre la salud del niño o niña corresponden a sus representantes y a los profesionales de salud
+  que lo atienden. En la medida permitida por la ley colombiana, RespiraKids no responde por decisiones tomadas
+  únicamente con base en la orientación de la plataforma, sin consultar a un profesional de salud.
+  Nada de lo aquí dispuesto limita los derechos que la ley reconoce a los usuarios.
+</p>
+
+<h2 class="h5">10. Suspensión y cierre de la cuenta</h2>
+<p>
+  Usted puede solicitar el cierre de su cuenta y la supresión de sus datos desde "Mis datos". RespiraKids puede
+  suspender cuentas que incumplan estos términos o pongan en riesgo la información de otras personas.
+</p>
+
+<h2 class="h5">11. Propiedad intelectual</h2>
+<p>
+  La plataforma, su diseño, marca e ilustraciones pertenecen a sus titulares. Las fuentes clínicas citadas
+  pertenecen a sus autores (Ministerio de Salud y Protección Social y demás entidades indicadas).
+</p>
+
+<h2 class="h5">12. Cambios y ley aplicable</h2>
+<p>
+  Cualquier cambio sustancial a estos términos se informará en la plataforma y se solicitará nuevamente su
+  aceptación. Estos términos se rigen por las leyes de la República de Colombia.
+</p>

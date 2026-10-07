@@ -1,0 +1,16 @@
+{% extends "correo/_base.html" %}
+{% block cuerpo %}
+    <p style="margin:0 0 16px;">Atendimos tu solicitud de supresión de datos personales.</p>
+    <p style="margin:0 0 16px;">
+      {% if alcance == 'nino' %}
+      La información de <strong>{{ nombre_nino }}</strong> fue anonimizada de forma irreversible: ya no es posible
+      identificarla ni asociarla contigo.
+      {% else %}
+      Tu cuenta fue cerrada y tu información, junto con la de tus niños y niñas, fue anonimizada de forma
+      irreversible: ya no es posible identificarla ni asociarla contigo.
+      {% endif %}
+    </p>
+    <p style="margin:0;font-size:14px;color:#334155;">Conservamos únicamente la constancia de las autorizaciones que
+      otorgaste y de esta solicitud, como exige la ley. Si tienes preguntas, responde a través del correo de
+      contacto indicado en nuestra política de tratamiento de datos.</p>
+{% endblock %}

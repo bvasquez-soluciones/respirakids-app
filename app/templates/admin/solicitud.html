@@ -20,11 +20,10 @@
 
   <section class="rk-panel">
     <h2 class="h6">Responder</h2>
-    {% if solicitud.tipo in ('supresion', 'revocatoria') %}
+    {% if solicitud.tipo == 'revocatoria' %}
     <div class="alert alert-info small">
-      Para atender una supresión o revocatoria, verifica primero si existe un deber legal de conservar los datos
-      (p. ej. información clínica). RespiraKids no borra datos automáticamente: cualquier eliminación debe hacerse de
-      forma controlada por el equipo técnico y quedar registrada.
+      Una revocatoria deja sin efecto la autorización. Si el titular también quiere que se eliminen sus datos,
+      debe tramitarse como supresión.
     </div>
     {% endif %}
     <form method="POST" novalidate>
@@ -37,4 +36,30 @@
     </form>
   </section>
 </div>
+
+{% if solicitud.tipo == 'supresion' and solicitud.estado not in ('resuelta', 'rechazada') and titular
+      and not titular.correo.endswith('@anonimizado.invalid') %}
+<section class="rk-panel rk-zona-peligro mt-3" aria-labelledby="titulo-supresion">
+  <h2 class="h6" id="titulo-supresion">Ejecutar la supresión (irreversible)</h2>
+  <p class="small mb-2">
+    {% if solicitud.nino %}
+    Se anonimizará la información de <strong>{{ solicitud.nino.nombre_completo }}</strong>:
+    {% else %}
+    Se anonimizará la <strong>cuenta completa</strong> de {{ titular.nombre_completo }}
+    {% if solicitud.usuario_tipo == 'cuidador' %}y la de sus {{ titular.ninos|length }} niño(s)/niña(s){% endif %}:
+    {% endif %}
+    se eliminan nombres, documentos, datos de contacto, mensajes, notas y consultas al asistente, y los registros
+    quedan desvinculados de la persona. Se conservan sin identificar los registros clínicos (estadística), los
+    consentimientos y esta solicitud. Al terminar se marca la solicitud como resuelta y se envía la constancia
+    al correo del titular.
+  </p>
+  <form method="POST" action="{{ url_for('admin.ejecutar_supresion', solicitud_id=solicitud.id) }}"
+    data-confirmar="Esta acción es irreversible. ¿Anonimizar los datos ahora?" class="rk-supresion-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <label class="form-label" for="confirmacion">Escribe <strong>ANONIMIZAR</strong> para confirmar <span class="rk-requerido">*</span></label>
+    <input class="form-control" id="confirmacion" name="confirmacion" autocomplete="off" required />
+    <button type="submit" class="btn btn-outline-danger">Anonimizar datos</button>
+  </form>
+</section>
+{% endif %}
 {% endblock %}

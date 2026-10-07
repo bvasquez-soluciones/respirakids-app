@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/formularios.html" import campo, opcion, resumen_errores %}
+{% from "macros/formularios.html" import campo, opcion_tarjeta, resumen_errores %}
 {% from "macros/avatar.html" import avatar %}
 {% block title %}Registrar síntomas de {{ nino.nombre }} - RespiraKids{% endblock %}
 {% block extra_css %}
@@ -15,25 +15,50 @@
     </div>
   </header>
 
+  {% set reevaluacion = request.args.get('reevaluacion') %}
+  {% if reevaluacion == 'mejoro' %}
+  <div class="alert alert-info mb-0" role="status">
+    <strong>¡Qué bueno que {{ nino.nombre }} mejoró!</strong> Para actualizar su estado, marca solo lo que observas
+    <strong>hoy</strong> y guarda. Si ya no tiene ningún síntoma, puedes guardar sin marcar nada.
+    El semáforo se recalculará con los criterios clínicos de AIEPI.
+  </div>
+  {% elif reevaluacion == 'empeoro' %}
+  <div class="alert alert-warning mb-0" role="alert">
+    <strong>Indicaste que {{ nino.nombre }} empeoró.</strong> Marca los síntomas que observas ahora para actualizar
+    su estado. Si ves algún signo de alarma, busca atención en un servicio de salud de inmediato.
+  </div>
+  {% endif %}
+
   <div class="alert alert-danger small mb-0" id="aviso-alarma" role="alert" hidden>
     <strong>Marcaste un signo de alarma.</strong> Busca atención en un servicio de salud de inmediato;
     no es necesario terminar este registro primero.
   </div>
 
-  <form method="POST" novalidate class="rk-form-sintomas">
+  <form method="POST" novalidate class="rk-form-sintomas" id="form-sintomas">
     {{ form.csrf_token }}
-    <p class="rk-nota-obligatorios">Ningún campo es obligatorio: responde solo lo que hayas observado.</p>
+    <p class="rk-nota-obligatorios">Toca lo que observes en {{ nino.nombre }}. Ningún campo es obligatorio: responde solo
+      lo que hayas visto.</p>
     {{ resumen_errores(form) }}
 
+    {# Atajos a cada sección con el número de opciones marcadas (static/js/sintomas.js) #}
+    <nav class="rk-secciones" data-guia="secciones" aria-label="Secciones del registro">
+      {% for clave, titulo, ayuda, campos in form.GRUPOS %}
+      <a href="#grupo-{{ clave }}" class="rk-secciones__item{{ ' rk-secciones__item--alarma' if clave == 'alarma' }}">
+        <span aria-hidden="true">{{ EMOJIS_GRUPOS[clave] }}</span> {{ titulo }}
+        <span class="rk-secciones__cuenta" data-cuenta="{{ clave }}" hidden></span>
+      </a>
+      {% endfor %}
+    </nav>
+
     {% for clave, titulo, ayuda, campos in form.GRUPOS %}
-    <fieldset class="rk-panel rk-grupo-sintomas{{ ' rk-grupo-sintomas--alarma' if clave == 'alarma' }}" id="grupo-{{ clave }}">
-      <legend class="h6">{{ titulo }}</legend>
+    <fieldset class="rk-panel rk-grupo-sintomas{{ ' rk-grupo-sintomas--alarma' if clave == 'alarma' }}" id="grupo-{{ clave }}" data-guia="grupo-{{ clave }}">
+      <legend class="h6"><span aria-hidden="true">{{ EMOJIS_GRUPOS[clave] }}</span> {{ titulo }}</legend>
       {% if ayuda %}<p class="small text-muted">{{ ayuda }}</p>{% endif %}
-      <div class="rk-opciones">
+      <div class="rk-tarjetas-sintomas" data-grupo="{{ clave }}">
         {% for nombre in campos %}
           {% set field = form[nombre] %}
           {% if field.type == 'BooleanField' %}
-            {{ opcion(field) }}
+            {{ opcion_tarjeta(field, EMOJIS_SINTOMAS.get(nombre, '')) }}
           {% endif %}
         {% endfor %}
       </div>
@@ -58,49 +83,18 @@
     </fieldset>
     {% endfor %}
 
-    <div class="d-flex flex-wrap gap-2">
-      <button type="submit" class="btn btn-primary">Guardar y ver orientación</button>
-      <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link">Cancelar</a>
+    {# Barra fija: siempre a la mano el resumen y el botón de guardar #}
+    <div class="rk-barra-envio">
+      <span class="rk-barra-envio__resumen" id="resumen-marcados" aria-live="polite">Aún no has marcado nada</span>
+      <span class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('pacientes.ficha', nino_id=nino.id) }}" class="btn btn-link btn-sm">Cancelar</a>
+        <button type="submit" class="btn btn-primary" data-guia="guardar-sintomas">Guardar y ver orientación</button>
+      </span>
     </div>
   </form>
 </div>
 
-<script>
-  (function () {
-    // Aviso inmediato si se marca cualquier signo de alarma.
-    const aviso = document.getElementById("aviso-alarma");
-    const alarmas = document.querySelectorAll("#grupo-alarma input[type=checkbox]");
-    const revisar = () => { aviso.hidden = ![...alarmas].some((c) => c.checked); };
-    alarmas.forEach((c) => c.addEventListener("change", revisar));
-    revisar();
-
-    // Contador de 60 segundos: la fuente indica medir la frecuencia respiratoria durante 1 minuto.
-    const boton = document.getElementById("btn-contador");
-    const estado = document.getElementById("estado-contador");
-    const campo = document.getElementById("frecuencia_respiratoria");
-    let intervalo = null;
-    boton.addEventListener("click", () => {
-      if (intervalo) {
-        clearInterval(intervalo); intervalo = null;
-        boton.textContent = "⏱️ Contar respiraciones durante 1 minuto";
-        estado.textContent = "Conteo cancelado.";
-        return;
-      }
-      let restantes = 60;
-      boton.textContent = "Cancelar conteo";
-      estado.textContent = "Cuenta cada vez que el pecho sube. Quedan 60 s.";
-      intervalo = setInterval(() => {
-        restantes -= 1;
-        if (restantes > 0) {
-          estado.textContent = "Cuenta cada vez que el pecho sube. Quedan " + restantes + " s.";
-          return;
-        }
-        clearInterval(intervalo); intervalo = null;
-        boton.textContent = "⏱️ Contar de nuevo";
-        estado.textContent = "¡Tiempo! Escribe cuántas respiraciones contaste.";
-        campo.focus();
-      }, 1000);
-    });
-  })();
-</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/sintomas.js') }}"></script>
 {% endblock %}

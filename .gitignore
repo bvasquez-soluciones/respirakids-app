@@ -19,3 +19,5 @@ _recuperacion_bytecode/
 
 # Configuración local del asistente de desarrollo (rutas de este equipo)
 .claude/
+# Adjuntos de mensajes (datos de salud)
+datos/

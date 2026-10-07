@@ -30,7 +30,7 @@
   {% endif %}
 {% endfor %}
 {% if errores %}
-<div class="alert alert-danger rk-resumen-errores" role="alert" tabindex="-1" id="resumen-errores">
+<div class="alert alert-danger rk-resumen-errores" role="alert" tabindex="-1" id="resumen-errores" data-enfocar>
   <p class="fw-semibold mb-1">Revisa {{ 'el siguiente campo' if errores|length == 1 else 'los siguientes campos' }}:</p>
   <ul class="mb-0">
     {% for field, etiqueta in errores %}
@@ -38,7 +38,6 @@
     {% endfor %}
   </ul>
 </div>
-<script>document.getElementById('resumen-errores').focus();</script>
 {% endif %}
 {%- endmacro %}
 
@@ -92,6 +91,19 @@
 
 
 {#- Opción de una lista de "marca lo que observes" (casilla con su texto de ayuda, sin marca de obligatoriedad). -#}
+{#- Síntoma como tarjeta que se toca: la casilla real sigue dentro (teclado, lector de pantalla y envío). -#}
+{% macro opcion_tarjeta(field, emoji='') -%}
+<label class="rk-tarjeta-sintoma" for="{{ field.id }}">
+  {{ field(**atributos_campo(field, None, 'rk-tarjeta-sintoma__casilla')) }}
+  {% if emoji %}<span class="rk-tarjeta-sintoma__emoji" aria-hidden="true">{{ emoji }}</span>{% endif %}
+  <span class="rk-tarjeta-sintoma__texto">
+    <span class="rk-tarjeta-sintoma__titulo">{{ field.label.text }}</span>
+    {% if field.description %}<span id="{{ field.id }}-ayuda" class="rk-tarjeta-sintoma__ayuda">{{ field.description }}</span>{% endif %}
+  </span>
+  <span class="rk-tarjeta-sintoma__marca" aria-hidden="true">✓</span>
+</label>
+{%- endmacro %}
+
 {% macro opcion(field) -%}
 <div class="form-check rk-opcion">
   {{ field(**atributos_campo(field, None, 'form-check-input')) }}

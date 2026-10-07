@@ -5,7 +5,7 @@
 <form method="GET" class="d-flex flex-wrap gap-2 align-items-end mb-3">
   <div>
     <label class="form-label small mb-0" for="tipo">Registro</label>
-    <select class="form-select form-select-sm" id="tipo" name="tipo" onchange="this.form.evento.value=''; this.form.submit()">
+    <select class="form-select form-select-sm" id="tipo" name="tipo" data-autoenviar data-limpiar="evento">
       <option value="seguridad" {{ 'selected' if tipo == 'seguridad' }}>Seguridad (accesos, sesiones)</option>
       <option value="actividad" {{ 'selected' if tipo == 'actividad' }}>Actividad sobre datos</option>
     </select>

@@ -241,6 +241,9 @@ def test_produccion_exige_reglas_validadas(monkeypatch):
     monkeypatch.setenv('SECRET_KEY', 'x' * 40)
     monkeypatch.setenv('DATABASE_URL', 'postgresql://x')
     monkeypatch.setenv('RATELIMIT_STORAGE_URI', 'redis://localhost:6379/0')
+    monkeypatch.setenv('MAIL_SERVER', 'smtp.respirakids.test')
+    monkeypatch.setenv('MAIL_DEFAULT_SENDER', 'RespiraKids <no-responder@respirakids.test>')
+    monkeypatch.setenv('GEMINI_API_KEY', 'clave-ficticia-de-pruebas')
     monkeypatch.delenv('REGLAS_CLINICAS_VALIDADAS', raising=False)
     with pytest.raises(RuntimeError, match='no están validadas'):
         ProductionConfig.validar()

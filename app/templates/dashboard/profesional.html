@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% from "macros/avatar.html" import avatar %}
+{% from "macros/avatar.html" import avatar, pareja_ninos %}
+{% from "macros/iconos.html" import icono %}
 {% block title %}Panel Profesional - RespiraKids{% endblock %}
 
 {% block extra_css %}
@@ -10,85 +11,137 @@
 {% block content %}
 <div class="rk-pro-layout">
   <!-- PANEL IZQUIERDO -->
-  <aside class="rk-pro-sidebar">
+  <aside class="rk-pro-sidebar" data-guia="lista-pacientes">
     <div class="rk-pro-sidebar-head">
-      <h5 class="mb-0">Mis Pacientes</h5>
-      <div class="rk-pro-search-icons">
-        <button type="button" class="rk-pro-icon-btn" title="Filtrar" id="btn-toggle-filter">
-          ⚲
-        </button>
-        <button type="button" class="rk-pro-icon-btn" title="Buscar" id="btn-toggle-search">
-          🔍
-        </button>
+      <h1 class="h5 mb-0">Pacientes <span class="text-muted small fw-normal">({{ pacientes|length }})</span></h1>
+      <div class="rk-pro-search-icons" data-guia="filtros">
+        <button type="button" class="rk-icon-btn" id="btn-toggle-filter" aria-label="Filtrar por nivel"
+          aria-expanded="false" aria-controls="filter-bar">{{ icono('filtro') }}</button>
+        <button type="button" class="rk-icon-btn" id="btn-toggle-search" aria-label="Buscar paciente"
+          aria-expanded="false" aria-controls="search-bar">{{ icono('buscar') }}</button>
       </div>
     </div>
 
     <div class="rk-search-bar" id="search-bar">
-      <input type="text" id="input-buscar-paciente" placeholder="Buscar paciente por nombre..." />
+      <label class="visually-hidden" for="input-buscar-paciente">Buscar paciente por nombre</label>
+      <input type="search" id="input-buscar-paciente" placeholder="Buscar paciente por nombre…" autocomplete="off" />
     </div>
-    <div class="rk-filter-bar" id="filter-bar">
-      <button type="button" class="rk-filter-chip active" data-filtro="todos">
-        Todos
+    <div class="rk-filter-bar" id="filter-bar" role="group" aria-label="Filtrar pacientes por nivel">
+      <button type="button" class="rk-filter-chip active" data-filtro="todos" aria-pressed="true">Todos</button>
+      <button type="button" class="rk-filter-chip" data-filtro="mios" aria-pressed="false">Mis pacientes</button>
+      {% for nivel_filtro in ('rojo', 'amarillo', 'verde') %}
+      <button type="button" class="rk-filter-chip" data-filtro="{{ nivel_filtro }}" aria-pressed="false">
+        {{ icono_nivel(nivel_filtro) }} {{ nivel_info(nivel_filtro).nombre }}
       </button>
-      <button type="button" class="rk-filter-chip" data-filtro="rojo">
-        🔴
-      </button>
-      <button type="button" class="rk-filter-chip" data-filtro="amarillo">
-        🟡
-      </button>
-      <button type="button" class="rk-filter-chip" data-filtro="verde">
-        🟢
-      </button>
+      {% endfor %}
     </div>
 
     <div class="rk-pro-sidebar-list">
-      {% if autorizaciones %}
-        {% for a in autorizaciones %}
-          {% set ultima_eval = a.nino.evaluaciones|sort(attribute='fecha')|last if a.nino.evaluaciones else None %}
+      {% for paciente in pacientes %}
+          {% set ultima_eval = paciente.evaluaciones|sort(attribute='fecha')|last if paciente.evaluaciones else None %}
           {% set nivel = ultima_eval.nivel_riesgo if ultima_eval else 'neutro' %}
           {% set info = nivel_info(nivel) %}
-          {% set patologias_activas = a.nino.patologias_base|selectattr('activa')|list %}
-          {% set seleccionado = nino_seleccionado and nino_seleccionado.id == a.nino.id %}
+          {% set mio = paciente.id in autorizados %}
+          {% set seleccionado = nino_seleccionado and nino_seleccionado.id == paciente.id %}
           <a
-            href="{{ url_for('dashboard.profesional', paciente=a.nino.id, rango=rango_actual) }}"
+            href="{{ url_for('dashboard.profesional', paciente=paciente.id, rango=rango_actual) }}"
             class="rk-patient-card riesgo-{{ nivel }} {{ 'rk-patient-selected' if seleccionado }}"
-            data-nombre="{{ a.nino.nombre_completo|lower }}"
-            data-riesgo="{{ nivel }}"
+            data-nombre="{{ paciente.nombre_completo|lower }}"
+            data-riesgo="{{ nivel }}" data-mio="{{ 'si' if mio else 'no' }}"
           >
             <div class="rk-patient-top">
               <div class="d-flex align-items-center gap-2">
-                {{ avatar(a.nino, nivel, 44) }}
+                {{ avatar(paciente, nivel, 44) }}
                 <div>
-                  <div class="name">{{ a.nino.nombre_completo }}</div>
-                  <div class="meta">
-                    {{ a.nino.edad_texto() }}{% if patologias_activas %} · {{ patologias_activas[0].nombre }}{% endif %}
-                  </div>
+                  <div class="name">{{ paciente.nombre_completo }}</div>
+                  <div class="meta">{{ paciente.edad_texto() }}</div>
                 </div>
               </div>
-              <span class="rk-status-icon" aria-hidden="true">{{ info.icono }}</span>
+              <span class="rk-status-icon">{{ icono_nivel(nivel) }}</span>
             </div>
             <div class="rk-tags">
               <span class="rk-tag-pill {{ nivel }}">{{ info.titulo }}</span>
+              {% if mio %}<span class="rk-tag-pill rk-tag-pill--mio">Mi paciente</span>{% endif %}
             </div>
           </a>
-        {% endfor %}
       {% else %}
-        <p class="text-muted small px-2">Aún no tienes pacientes autorizados.</p>
-      {% endif %}
-      <p class="rk-no-results" id="no-results">No se encontraron pacientes.</p>
+        <p class="text-muted small px-2">Aún no hay pacientes registrados en la clínica.</p>
+      {% endfor %}
+      <p class="rk-no-results" id="no-results" hidden>No se encontraron pacientes.</p>
     </div>
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="rk-pro-main">
-    {% if nino_seleccionado %}
+  <section class="rk-pro-main" aria-label="Detalle del paciente" data-guia="detalle-paciente">
+    {% if nino_seleccionado and sin_expediente %}
       {% set nino = nino_seleccionado %}
       {% set info = resumen.info_nivel %}
       <div class="rk-patient-header-card riesgo-{{ resumen.nivel }}">
         <div class="info">
-          {{ avatar(nino, resumen.nivel, 56) }}
+          {{ avatar(nino, resumen.nivel, 56, resumen.seguimiento.estado if resumen.seguimiento else None) }}
           <div>
-            <h1 class="h4 mb-0">{{ nino.nombre_completo }}</h1>
+            <h2 class="h4 mb-0">{{ nino.nombre_completo }}</h2>
+            <p class="text-muted small mb-0">{{ nino.edad_texto() }} · {{ 'Masculino' if nino.sexo == 'M' else 'Femenino' }}</p>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          {% if solicitud_en_espera %}
+          <form method="POST" action="{{ url_for('mensajes.atender', solicitud_id=solicitud_en_espera.id) }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-primary">Atender solicitud en espera</button>
+          </form>
+          {% endif %}
+          {% if puede_llamar %}
+          <form method="POST" action="{{ url_for('videollamadas.iniciar', nino_id=nino.id) }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ icono('video') }} Videollamada</button>
+          </form>
+          {% endif %}
+          {% if puede_conversar %}
+          <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Mensajes</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <section class="rk-estado rk-estado--{{ resumen.nivel }} mb-3" role="status">
+        <span class="rk-estado__icono">{{ icono_nivel(resumen.nivel) }}</span>
+        <div>
+          <p class="rk-estado__titulo"><span class="visually-hidden">Estado actual: </span>{{ info.titulo }}</p>
+          <p class="rk-estado__detalle">
+            {% if resumen.ultima_evaluacion %}Última evaluación: {{ resumen.ultima_evaluacion.fecha|fecha_hora }}
+            {% else %}Sin evaluaciones registradas.{% endif %}
+          </p>
+          {% if resumen.seguimiento %}
+          {% set evo = EVOLUCION[resumen.seguimiento.estado] %}
+          <p class="rk-estado__detalle mt-1"><strong>Evolución reportada por el cuidador:</strong>
+            <span aria-hidden="true">{{ evo.emoji }}</span> {{ evo.texto }} · {{ resumen.seguimiento.fecha|fecha_hora }}</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <div class="rk-panel mb-3">
+        <h2 class="h6">Señales de la última evaluación</h2>
+        {% if resumen.senales %}
+        <ul class="rk-lista-senales mb-0">
+          {% for s in resumen.senales %}<li>{{ icono_nivel(s.nivel) }} {{ s.texto }}</li>{% endfor %}
+        </ul>
+        {% else %}
+        <p class="small text-muted mb-0">No se identificaron señales.</p>
+        {% endif %}
+      </div>
+
+      <div class="alert alert-info small" role="status">
+        Ves el resumen del semáforo. El expediente completo (historial, ficha, condiciones de base y medicamentos)
+        solo está disponible si el cuidador te autoriza; se le pregunta cuando atiendes una solicitud suya.
+      </div>
+    {% elif nino_seleccionado %}
+      {% set nino = nino_seleccionado %}
+      {% set info = resumen.info_nivel %}
+      <div class="rk-patient-header-card riesgo-{{ resumen.nivel }}">
+        <div class="info">
+          {{ avatar(nino, resumen.nivel, 56, resumen.seguimiento.estado if resumen.seguimiento else None) }}
+          <div>
+            <h2 class="h4 mb-0">{{ nino.nombre_completo }}</h2>
             <p class="text-muted small mb-0">
               {{ nino.edad_texto() }} · {{ 'Masculino' if nino.sexo == 'M' else 'Femenino' }}
               {% if nino.peso_kg %} · {{ '%.1f'|format(nino.peso_kg) }} kg{% endif %}
@@ -98,14 +151,18 @@
           </div>
         </div>
         <div class="d-flex flex-wrap gap-2">
-          <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">💬 Mensajes</a>
-          <a href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">💊 Medicamentos</a>
+          <form method="POST" action="{{ url_for('videollamadas.iniciar', nino_id=nino.id) }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ icono('video') }} Videollamada</button>
+          </form>
+          <a href="{{ url_for('mensajes.conversacion', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Mensajes</a>
+          <a href="{{ url_for('medicamentos.plan', nino_id=nino.id) }}" class="btn btn-sm btn-outline-secondary">Medicamentos</a>
           <a href="{{ url_for('medicamentos.nueva', nino_id=nino.id) }}" class="btn btn-sm btn-primary">+ Indicación</a>
         </div>
       </div>
 
       <section class="rk-estado rk-estado--{{ resumen.nivel }} mb-3" role="status">
-        <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+        <span class="rk-estado__icono">{{ icono_nivel(resumen.nivel) }}</span>
         <div>
           <p class="rk-estado__titulo"><span class="visually-hidden">Estado actual: </span>{{ info.titulo }}</p>
           <p class="rk-estado__detalle">
@@ -115,6 +172,13 @@
               <a href="{{ url_for('dashboard.profesional_evaluacion', evaluacion_id=resumen.ultima_evaluacion.id) }}">ver detalle clínico</a>
             {% else %}Sin evaluaciones registradas.{% endif %}
           </p>
+          {% if resumen.seguimiento %}
+          {% set evo = EVOLUCION[resumen.seguimiento.estado] %}
+          <p class="rk-estado__detalle mt-1">
+            <strong>Evolución reportada por el cuidador:</strong>
+            <span aria-hidden="true">{{ evo.emoji }}</span> {{ evo.texto }} · {{ resumen.seguimiento.fecha|fecha_hora }}
+          </p>
+          {% endif %}
         </div>
       </section>
 
@@ -125,7 +189,7 @@
           <ul class="rk-lista-senales mb-2">
             {% for s in resumen.senales %}
             <li>
-              <span aria-hidden="true">{{ nivel_info(s.nivel).icono }}</span>
+              {{ icono_nivel(s.nivel) }}
               {% if s.regla_id %}<code>{{ s.regla_id }}</code>{% endif %} {{ s.texto }}
               {% if s.origen == 'salvaguarda' %}<span class="badge text-bg-light border">Salvaguarda</span>{% endif %}
             </li>
@@ -134,7 +198,7 @@
           {% else %}
           <p class="small text-muted mb-2">No se identificaron señales.</p>
           {% endif %}
-          {% for a in avisos %}<p class="small text-muted mb-1">ℹ️ {{ a }}</p>{% endfor %}
+          {% for a in avisos %}<p class="small text-muted mb-1">{{ a }}</p>{% endfor %}
           {% if resumen.hallazgos %}
           <p class="small mb-0"><strong>Registrado:</strong> {{ resumen.hallazgos|join(' · ') }}</p>
           {% endif %}
@@ -163,7 +227,7 @@
 
       <div class="rk-chart-panel">
         <div class="rk-chart-panel-head">
-          <h2 class="h6 mb-0">📈 Evolución del nivel de riesgo y la temperatura</h2>
+          <h2 class="h6 mb-0">Evolución del nivel de riesgo y la temperatura</h2>
           <label class="visually-hidden" for="select-rango">Periodo</label>
           <select class="rk-chart-range-select" id="select-rango">
             <option value="7" {{ 'selected' if rango_actual == '7' }}>Últimos 7 días</option>
@@ -182,14 +246,25 @@
       </div>
 
       <div class="rk-panel">
-        <h2 class="h6">🕐 Historial</h2>
+        <h2 class="h6">Historial</h2>
         {% if registros %}
-          {% for r in registros %}
+          {% for evento in linea %}
+            {% if evento.tipo == 'seguimiento' %}
+            {% set evo = EVOLUCION[evento.item.estado] %}
+            <div class="rk-symptom-log-item">
+              <div class="rk-symptom-log-dot" aria-hidden="true">{{ evo.emoji }}</div>
+              <div class="flex-grow-1">
+                <div class="title">Evolución reportada: {{ evo.texto }}</div>
+                <div class="sub">{{ evento.fecha|fecha_hora }} · Percepción del cuidador (no es una evaluación)</div>
+              </div>
+            </div>
+            {% else %}
+            {% set r = evento.item %}
             {% set nivel_item = r.evaluacion.nivel_riesgo if r.evaluacion else 'neutro' %}
             {% set hallazgos = hallazgos_registrados(r) %}
             <div class="rk-symptom-log-item">
               <div class="rk-symptom-log-dot {{ nivel_item }}">
-                <span aria-hidden="true">{{ nivel_info(nivel_item).icono }}</span>
+                {{ icono_nivel(nivel_item) }}
               </div>
               <div class="flex-grow-1">
                 <div class="title">{{ nivel_info(nivel_item).titulo }}
@@ -203,77 +278,31 @@
                 {% endif %}
               </div>
             </div>
+            {% endif %}
           {% endfor %}
         {% else %}
           <p class="text-muted small mb-0">Este paciente aún no tiene registros de síntomas.</p>
         {% endif %}
       </div>
 
-      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-      <script src="{{ url_for('static', filename='js/grafico_evolucion.js') }}"></script>
     {% else %}
       <div class="rk-pro-empty-state">
-        <div style="font-size: 3rem" aria-hidden="true">🧒</div>
-        <h1 class="h5 mt-2">Selecciona un paciente</h1>
+        {{ pareja_ninos(140) }}
+        <h2 class="h5">Selecciona un paciente</h2>
         <p class="text-muted small">
           Elige un paciente del panel izquierdo para ver su información detallada.
         </p>
       </div>
     {% endif %}
-  </main>
+  </section>
 </div>
 
-<script>
-  const selectRango = document.getElementById("select-rango");
-  if (selectRango) {
-    selectRango.addEventListener("change", () => {
-      const params = new URLSearchParams(window.location.search);
-      params.set("rango", selectRango.value);
-      window.location.search = params.toString();
-    });
-  }
-
-  document.getElementById("btn-toggle-search").addEventListener("click", () => {
-    document.getElementById("search-bar").classList.toggle("rk-search-open");
-  });
-  document.getElementById("btn-toggle-filter").addEventListener("click", () => {
-    document.getElementById("filter-bar").classList.toggle("rk-filter-open");
-  });
-
-  const tarjetas = document.querySelectorAll(".rk-patient-card");
-  const noResults = document.getElementById("no-results");
-  let filtroActivo = "todos";
-
-  function aplicarFiltros() {
-    const q = document
-      .getElementById("input-buscar-paciente")
-      .value.trim()
-      .toLowerCase();
-    let visibles = 0;
-    tarjetas.forEach((card) => {
-      const nombre = card.dataset.nombre || "";
-      const coincideTexto = nombre.includes(q);
-      const coincideFiltro =
-        filtroActivo === "todos" || card.dataset.riesgo === filtroActivo;
-      const visible = coincideTexto && coincideFiltro;
-      card.classList.toggle("rk-hidden", !visible);
-      if (visible) visibles++;
-    });
-    noResults.style.display = visibles === 0 ? "block" : "none";
-  }
-
-  document
-    .getElementById("input-buscar-paciente")
-    .addEventListener("input", aplicarFiltros);
-  document.querySelectorAll(".rk-filter-chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      document
-        .querySelectorAll(".rk-filter-chip")
-        .forEach((c) => c.classList.remove("active"));
-      chip.classList.add("active");
-      filtroActivo = chip.dataset.filtro;
-      aplicarFiltros();
-    });
-  });
-</script>
+{% endblock %}
+{% block scripts %}
+{% if nino_seleccionado %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/graficos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/grafico_evolucion.js') }}"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/profesional.js') }}"></script>
 {% endblock %}

@@ -7,7 +7,7 @@
 {% endblock %} {% block content %}
 <div class="rk-chat-wrap">
   <div class="rk-chat-warning">
-    <span class="icon">⚠️</span>
+    <span class="icon" aria-hidden="true">⚠️</span>
     <div>
       <strong>Aviso importante:</strong> El asistente responde solo con la información de la
       Herramienta Clínica de primera infancia (AIEPI) del Ministerio de Salud y Protección Social y cita
@@ -21,9 +21,9 @@
   </div>
 
   <div class="rk-chat-panel">
-    <div class="rk-chat-messages" id="chat-box">
+    <div class="rk-chat-messages" id="chat-box" role="log" aria-live="polite" aria-label="Conversación con el asistente">
       <div class="rk-msg-row">
-        <div class="rk-msg-avatar">🤖</div>
+        <div class="rk-msg-avatar" aria-hidden="true">🤖</div>
         <div class="rk-msg-bubble">
           {% if contexto %}
           Hola. Puedes preguntarme sobre la evaluación de nivel <strong>{{ contexto.nivel }}</strong>
@@ -45,33 +45,34 @@
           class="rk-quick-card"
           data-pregunta="¿Cuándo debo consultar por fiebre?"
         >
-          <span class="icon">🌡️</span>¿Cuándo consultar por fiebre?
+          <span class="icon" aria-hidden="true">🌡️</span>¿Cuándo consultar por fiebre?
         </button>
         <button
           type="button"
           class="rk-quick-card"
           data-pregunta="¿Cuáles son los signos de alarma de la neumonía?"
         >
-          <span class="icon">😮‍💨</span>Signos de alarma respiratorios
+          <span class="icon" aria-hidden="true">😮‍💨</span>Signos de alarma respiratorios
         </button>
         <button
           type="button"
           class="rk-quick-card"
           data-pregunta="¿Qué es la bronquiolitis?"
         >
-          <span class="icon">🫁</span>¿Qué es la bronquiolitis?
+          <span class="icon" aria-hidden="true">🫁</span>¿Qué es la bronquiolitis?
         </button>
         <button
           type="button"
           class="rk-quick-card"
           data-pregunta="¿Qué medidas de prevención describe la fuente?"
         >
-          <span class="icon">🛡️</span>Medidas de prevención
+          <span class="icon" aria-hidden="true">🛡️</span>Medidas de prevención
         </button>
       </div>
     </div>
 
-    <form id="form-chat" class="rk-chat-input-bar">
+    <form id="form-chat" class="rk-chat-input-bar"
+      data-url="{{ url_for('asistente.preguntar') }}" data-csrf="{{ csrf_token() }}">
       <input
         type="text"
         id="input-pregunta"
@@ -86,162 +87,7 @@
   </div>
 </div>
 
-<script>
-  const chatBox = document.getElementById("chat-box");
-  const form = document.getElementById("form-chat");
-  const input = document.getElementById("input-pregunta");
-  const btnEnviar = document.getElementById("btn-enviar");
-  const quickWrap = document.getElementById("quick-suggestions-wrap");
-
-  function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  function formatearRespuesta(texto) {
-    const lineas = texto
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-    let html = "";
-    let dentroLista = false;
-
-    lineas.forEach((linea) => {
-      if (linea.startsWith("⚠️ Atención:") || linea.startsWith("⚠️Atención:")) {
-        if (dentroLista) {
-          html += "</ul>";
-          dentroLista = false;
-        }
-        const contenido = escapeHtml(linea.replace(/^⚠️\s*Atención:\s*/, ""));
-        html += `<div class="rk-msg-attention"><strong>⚠️ Atención:</strong> ${contenido}</div>`;
-      } else if (linea.startsWith("- ")) {
-        if (!dentroLista) {
-          html += "<ul>";
-          dentroLista = true;
-        }
-        html += `<li>${negritas(escapeHtml(linea.slice(2)))}</li>`;
-      } else {
-        if (dentroLista) {
-          html += "</ul>";
-          dentroLista = false;
-        }
-        html += `<p class="mb-1">${negritas(escapeHtml(linea))}</p>`;
-      }
-    });
-    if (dentroLista) html += "</ul>";
-    return html;
-  }
-
-  function negritas(texto) {
-    return texto.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  }
-
-  function agregarFuentes(bubble, fuentes) {
-    if (!fuentes || !fuentes.length) return;
-    const lista = document.createElement("div");
-    lista.className = "rk-msg-fuentes";
-    lista.innerHTML = "<strong>Fuentes:</strong>";
-    const ul = document.createElement("ol");
-    fuentes.forEach((f) => {
-      const li = document.createElement("li");
-      li.value = f.n;
-      if (f.url) {
-        const a = document.createElement("a");
-        a.href = f.url; a.target = "_blank"; a.rel = "noopener";
-        a.textContent = f.titulo;
-        li.appendChild(a);
-      } else {
-        li.textContent = f.titulo;
-      }
-      ul.appendChild(li);
-    });
-    lista.appendChild(ul);
-    bubble.appendChild(lista);
-  }
-
-  function agregarMensaje(texto, esUsuario, fuentes) {
-    const row = document.createElement("div");
-    row.className = "rk-msg-row" + (esUsuario ? " user" : "");
-
-    const avatar = document.createElement("div");
-    avatar.className = "rk-msg-avatar";
-    avatar.textContent = esUsuario ? "🧑" : "🤖";
-
-    const bubble = document.createElement("div");
-    bubble.className = "rk-msg-bubble";
-    bubble.innerHTML = esUsuario
-      ? escapeHtml(texto)
-      : formatearRespuesta(texto);
-
-    if (!esUsuario) agregarFuentes(bubble, fuentes);
-    row.appendChild(avatar);
-    row.appendChild(bubble);
-    chatBox.appendChild(row);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  function mostrarEscribiendo() {
-    const row = document.createElement("div");
-    row.className = "rk-msg-row";
-    row.id = "typing-row";
-    row.innerHTML = `<div class="rk-msg-avatar">🤖</div><div class="rk-msg-bubble rk-typing-dots"><span></span><span></span><span></span></div>`;
-    chatBox.appendChild(row);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-  function quitarEscribiendo() {
-    const row = document.getElementById("typing-row");
-    if (row) row.remove();
-  }
-
-  async function enviarPregunta(pregunta) {
-    agregarMensaje(pregunta, true);
-    quickWrap.style.display = "none";
-    btnEnviar.disabled = true;
-    mostrarEscribiendo();
-
-    try {
-      const res = await fetch("{{ url_for('asistente.preguntar') }}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": "{{ csrf_token() }}",
-        },
-        body: JSON.stringify({ pregunta: pregunta }),
-      });
-      quitarEscribiendo();
-      if (res.status === 429) {
-        agregarMensaje("⚠️ Has hecho muchas preguntas seguidas. Espera un momento e inténtalo de nuevo.", false);
-        btnEnviar.disabled = false;
-        return;
-      }
-      const data = await res.json();
-
-      if (data.error) {
-        agregarMensaje("⚠️ " + data.error, false);
-      } else {
-        agregarMensaje(data.respuesta, false, data.fuentes);
-      }
-    } catch (err) {
-      quitarEscribiendo();
-      agregarMensaje("⚠️ Error de conexión. Intenta de nuevo.", false);
-    }
-
-    btnEnviar.disabled = false;
-  }
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const pregunta = input.value.trim();
-    if (!pregunta) return;
-    input.value = "";
-    enviarPregunta(pregunta);
-  });
-
-  document.querySelectorAll(".rk-quick-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      enviarPregunta(card.dataset.pregunta);
-    });
-  });
-</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from app.clinica.motor import evaluar_v0
 from app.fechas import fecha_hora_corta
-from app.models import Evaluacion, MedicamentoRecetado, Receta, RegistroSintomas
+from app.models import Evaluacion, MedicamentoRecetado, Receta, RegistroSintomas, SeguimientoEvolucion
 from app.presentacion import hallazgos_registrados, nivel_info
 
 
@@ -16,6 +16,7 @@ class ResumenNino:
     hallazgos: list = field(default_factory=list)
     medicamentos_activos: list = field(default_factory=list)
     total_registros: int = 0
+    seguimiento: object = None  # evolución reportada por el cuidador desde la última evaluación
 
     @property
     def nivel(self):
@@ -61,6 +62,25 @@ def medicamentos_activos(nino):
     )
 
 
+def seguimiento_actual(nino, ultima_evaluacion):
+    """Último seguimiento del cuidador posterior a la última evaluación (una evaluación nueva lo reinicia)."""
+    if ultima_evaluacion is None:
+        return None
+    return (
+        SeguimientoEvolucion.query
+        .filter(SeguimientoEvolucion.nino_id == nino.id, SeguimientoEvolucion.fecha >= ultima_evaluacion.fecha)
+        .order_by(SeguimientoEvolucion.fecha.desc(), SeguimientoEvolucion.id.desc())
+        .first()
+    )
+
+
+def linea_de_tiempo(registros, seguimientos):
+    """Registros de síntomas y seguimientos del cuidador en un solo historial, del más reciente al más antiguo."""
+    eventos = [{'tipo': 'registro', 'fecha': r.fecha, 'item': r} for r in registros]
+    eventos += [{'tipo': 'seguimiento', 'fecha': s.fecha, 'item': s} for s in seguimientos]
+    return sorted(eventos, key=lambda e: e['fecha'], reverse=True)
+
+
 def resumir(nino):
     ultima = (
         Evaluacion.query.filter_by(nino_id=nino.id)
@@ -80,6 +100,7 @@ def resumir(nino):
         hallazgos=hallazgos_registrados(ultimo_registro) if ultimo_registro else [],
         medicamentos_activos=medicamentos_activos(nino),
         total_registros=RegistroSintomas.query.filter_by(nino_id=nino.id).count(),
+        seguimiento=seguimiento_actual(nino, ultima),
     )
 
 

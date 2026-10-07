@@ -4,14 +4,15 @@ import pytest
 
 from app import create_app, db
 from app.models import Autorizacion, Consentimiento, Cuidador, Nino, PatologiaBase, Profesional, ahora_utc
-from app.models.privacidad import POLITICA_DATOS
+from app.models.privacidad import POLITICA_DATOS, TERMINOS_USO
 
 PASSWORD = 'Clave1234'
 
 
 @pytest.fixture
-def app():
+def app(tmp_path):
     app = create_app('testing')
+    app.config['ADJUNTOS_FOLDER'] = str(tmp_path / 'adjuntos')  # cada prueba con su carpeta temporal
     with app.app_context():
         db.create_all()
         yield app
@@ -25,10 +26,15 @@ def client(app):
 
 
 def aceptar_politica(usuario, version=None):
+    """Simula la aceptación de la política (versión indicada o vigente) y de los términos de uso vigentes."""
     from flask import current_app
     db.session.add(Consentimiento(
         usuario_id=usuario.id, usuario_tipo=usuario.tipo_usuario, tipo=POLITICA_DATOS, otorgado=True,
         version_politica=version or current_app.config['POLITICA_VERSION'],
+    ))
+    db.session.add(Consentimiento(
+        usuario_id=usuario.id, usuario_tipo=usuario.tipo_usuario, tipo=TERMINOS_USO, otorgado=True,
+        version_politica=current_app.config['TERMINOS_VERSION'],
     ))
     db.session.commit()
 

@@ -1,0 +1,234 @@
+/* =============================================================================
+   RespiraKids · Tokens del sistema de diseño
+   Fuente única de color, tipografía, espaciado, radios, sombras y superficies.
+   Ningún otro archivo debe usar colores literales: siempre var(--rk-*).
+
+   Roles de color (no se mezclan):
+   - Azul celeste .... acción principal, enlaces, foco; tomado del logo (#0070C8 / #38C8F8).
+   - Verde médico .... confirmaciones y estados correctos de la interfaz.
+   - Morado .......... exclusivo de IA y del modelo ML (información complementaria).
+   - Semáforo ........ rojo / ámbar / verde reservados a la clasificación clínica,
+                       siempre acompañados de icono con forma propia y texto.
+
+   Tema oscuro por defecto; tema claro con [data-theme="light"] (ver static/js/tema.js).
+   Los pares texto/fondo cumplen WCAG 2.1 AA (verificado en tests/test_diseno.py).
+   ========================================================================== */
+
+:root {
+  /* ---- Tipografía ---- */
+  --rk-font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rk-font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  --rk-text-xs: 0.75rem;    /* 12px: notas legales, metadatos */
+  --rk-text-sm: 0.875rem;   /* 14px: texto secundario */
+  --rk-text-md: 1rem;       /* 16px: texto base (nunca menor en campos de formulario) */
+  --rk-text-lg: 1.125rem;
+  --rk-text-xl: 1.375rem;
+  --rk-text-2xl: 1.75rem;
+  --rk-text-3xl: 2.25rem;
+  --rk-leading: 1.55;
+  --rk-leading-tight: 1.25;
+
+  /* ---- Espaciado (escala de 4px) ---- */
+  --rk-space-1: 0.25rem;
+  --rk-space-2: 0.5rem;
+  --rk-space-3: 0.75rem;
+  --rk-space-4: 1rem;
+  --rk-space-5: 1.25rem;
+  --rk-space-6: 1.5rem;
+  --rk-space-8: 2rem;
+  --rk-space-10: 2.5rem;
+
+  /* ---- Radios ---- */
+  --rk-radius-sm: 8px;
+  --rk-radius-md: 12px;
+  --rk-radius-lg: 18px;
+  --rk-radius-xl: 24px;
+  --rk-radius-pill: 999px;
+
+  /* ---- Movimiento ---- */
+  --rk-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --rk-dur: 160ms;
+
+  /* ---- Capas ---- */
+  --rk-z-nav: 1030;
+  --rk-z-guia: 1090;  /* guía interactiva: sobre la barra y los menús */
+  --rk-blur: 18px;
+  /* Oscurecido de la guía interactiva (igual en ambos temas: resalta el elemento iluminado) */
+  --rk-scrim: rgba(2, 6, 23, 0.66);
+}
+
+/* -----------------------------------------------------------------------------
+   Tema oscuro (por defecto): azul noche profundo, superficies de cristal.
+   -------------------------------------------------------------------------- */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Fondo y superficies */
+  --rk-bg: #0a1220;
+  --rk-bg-glow-1: rgba(56, 189, 248, 0.10);
+  --rk-bg-glow-2: rgba(167, 139, 250, 0.08);
+  --rk-surface: rgba(19, 30, 50, 0.72);        /* cristal sobre el fondo */
+  --rk-surface-solid: #131e32;                   /* equivalente opaco (contraste, impresión) */
+  --rk-surface-2: #1a273f;                       /* elevada: campos, filas, chips */
+  --rk-surface-3: #22314c;                       /* hover */
+  --rk-nav: rgba(10, 18, 32, 0.78);
+  --rk-border: rgba(148, 163, 184, 0.16);
+  --rk-border-strong: rgba(148, 163, 184, 0.34);
+  --rk-highlight: rgba(255, 255, 255, 0.05);     /* brillo superior (neomorfismo sutil) */
+
+  /* Texto */
+  --rk-text: #e8eef7;
+  --rk-text-2: #b6c3d6;
+  --rk-muted: #94a6bf;
+
+  /* Marca y acentos */
+  --rk-primary: #38bdf8;
+  --rk-primary-hover: #7dd3fc;
+  --rk-on-primary: #04213a;
+  --rk-primary-text: #7dd3fc;
+  --rk-primary-soft: rgba(56, 189, 248, 0.14);
+  --rk-primary-rgb: 56, 189, 248;
+
+  --rk-success: #34d399;
+  --rk-success-text: #6ee7b7;
+  --rk-success-soft: rgba(52, 211, 153, 0.14);
+
+  --rk-ia: #a78bfa;
+  --rk-ia-text: #c4b5fd;
+  --rk-ia-soft: rgba(167, 139, 250, 0.14);
+  --rk-ia-border: rgba(167, 139, 250, 0.40);
+
+  --rk-danger: #f87171;
+  --rk-danger-text: #fca5a5;
+  --rk-danger-soft: rgba(248, 113, 113, 0.13);
+  --rk-on-danger: #2a0707;
+
+  --rk-warning: #fbbf24;
+  --rk-warning-text: #fcd34d;
+  --rk-warning-soft: rgba(251, 191, 36, 0.13);
+  --rk-on-warning: #2a1c00;
+
+  /* Semáforo clínico */
+  --rk-sem-rojo: #f87171;
+  --rk-sem-rojo-text: #fca5a5;
+  --rk-sem-rojo-bg: rgba(248, 113, 113, 0.12);
+  --rk-sem-rojo-border: rgba(248, 113, 113, 0.45);
+  --rk-sem-amarillo: #fbbf24;
+  --rk-sem-amarillo-text: #fcd34d;
+  --rk-sem-amarillo-bg: rgba(251, 191, 36, 0.11);
+  --rk-sem-amarillo-border: rgba(251, 191, 36, 0.42);
+  --rk-sem-verde: #4ade80;
+  --rk-sem-verde-text: #86efac;
+  --rk-sem-verde-bg: rgba(74, 222, 128, 0.10);
+  --rk-sem-verde-border: rgba(74, 222, 128, 0.38);
+  --rk-sem-neutro: #94a3b8;
+  --rk-sem-neutro-text: #cbd5e1;
+  --rk-sem-neutro-bg: rgba(148, 163, 184, 0.10);
+  --rk-sem-neutro-border: rgba(148, 163, 184, 0.32);
+
+  /* Sombras y foco */
+  --rk-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --rk-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--rk-highlight);
+  --rk-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 var(--rk-highlight);
+  --rk-focus: 0 0 0 3px rgba(56, 189, 248, 0.55);
+}
+
+/* -----------------------------------------------------------------------------
+   Tema claro: para pleno sol o preferencia personal. Mismos roles, tonos más profundos.
+   -------------------------------------------------------------------------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --rk-bg: #f2f6fa;
+  --rk-bg-glow-1: rgba(3, 105, 161, 0.08);
+  --rk-bg-glow-2: rgba(109, 40, 217, 0.05);
+  --rk-surface: rgba(255, 255, 255, 0.82);
+  --rk-surface-solid: #ffffff;
+  --rk-surface-2: #f1f5f9;
+  --rk-surface-3: #e5ecf3;
+  --rk-nav: rgba(255, 255, 255, 0.85);
+  --rk-border: rgba(15, 23, 42, 0.10);
+  --rk-border-strong: rgba(15, 23, 42, 0.22);
+  --rk-highlight: rgba(255, 255, 255, 0.9);
+
+  --rk-text: #0f1b2d;
+  --rk-text-2: #334155;
+  --rk-muted: #526175;
+
+  --rk-primary: #0369a1;
+  --rk-primary-hover: #075985;
+  --rk-on-primary: #ffffff;
+  --rk-primary-text: #0369a1;
+  --rk-primary-soft: rgba(3, 105, 161, 0.10);
+  --rk-primary-rgb: 3, 105, 161;
+
+  --rk-success: #047857;
+  --rk-success-text: #047857;
+  --rk-success-soft: rgba(4, 120, 87, 0.10);
+
+  --rk-ia: #6d28d9;
+  --rk-ia-text: #6d28d9;
+  --rk-ia-soft: rgba(109, 40, 217, 0.08);
+  --rk-ia-border: rgba(109, 40, 217, 0.30);
+
+  --rk-danger: #b91c1c;
+  --rk-danger-text: #b91c1c;
+  --rk-danger-soft: rgba(185, 28, 28, 0.08);
+  --rk-on-danger: #ffffff;
+
+  --rk-warning: #b45309;
+  --rk-warning-text: #92400e;
+  --rk-warning-soft: rgba(217, 119, 6, 0.10);
+  --rk-on-warning: #ffffff;
+
+  --rk-sem-rojo: #dc2626;
+  --rk-sem-rojo-text: #b91c1c;
+  --rk-sem-rojo-bg: #fef2f2;
+  --rk-sem-rojo-border: #fca5a5;
+  --rk-sem-amarillo: #d97706;
+  --rk-sem-amarillo-text: #92400e;
+  --rk-sem-amarillo-bg: #fffbeb;
+  --rk-sem-amarillo-border: #fcd34d;
+  --rk-sem-verde: #16a34a;
+  --rk-sem-verde-text: #166534;
+  --rk-sem-verde-bg: #f0fdf4;
+  --rk-sem-verde-border: #86efac;
+  --rk-sem-neutro: #64748b;
+  --rk-sem-neutro-text: #334155;
+  --rk-sem-neutro-bg: #f1f5f9;
+  --rk-sem-neutro-border: #cbd5e1;
+
+  --rk-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --rk-shadow: 0 8px 24px rgba(15, 23, 42, 0.07), inset 0 1px 0 var(--rk-highlight);
+  --rk-shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12), inset 0 1px 0 var(--rk-highlight);
+  --rk-focus: 0 0 0 3px rgba(3, 105, 161, 0.45);
+}
+
+/* -----------------------------------------------------------------------------
+   Puente con Bootstrap 5.3: sus componentes heredan los tokens.
+   La especificidad (:root[...]) supera a [data-bs-theme] de Bootstrap.
+   -------------------------------------------------------------------------- */
+:root[data-theme] {
+  --bs-body-font-family: var(--rk-font);
+  --bs-body-bg: var(--rk-bg);
+  --bs-body-color: var(--rk-text);
+  --bs-emphasis-color: var(--rk-text);
+  --bs-secondary-color: var(--rk-muted);
+  --bs-tertiary-color: var(--rk-muted);
+  --bs-secondary-bg: var(--rk-surface-2);
+  --bs-tertiary-bg: var(--rk-surface-2);
+  --bs-border-color: var(--rk-border-strong);
+  --bs-border-color-translucent: var(--rk-border);
+  --bs-heading-color: var(--rk-text);
+  --bs-link-color: var(--rk-primary-text);
+  --bs-link-color-rgb: var(--rk-primary-rgb);
+  --bs-link-hover-color: var(--rk-primary-hover);
+  --bs-code-color: var(--rk-ia-text);
+  --bs-primary: var(--rk-primary);
+  --bs-primary-rgb: var(--rk-primary-rgb);
+  --bs-border-radius: var(--rk-radius-md);
+  --bs-border-radius-sm: var(--rk-radius-sm);
+  --bs-border-radius-lg: var(--rk-radius-lg);
+  --bs-focus-ring-color: rgba(var(--rk-primary-rgb), 0.45);
+}

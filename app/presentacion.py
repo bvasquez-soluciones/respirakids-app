@@ -3,6 +3,7 @@
 Este módulo NO clasifica: solo describe en lenguaje claro lo que decidió el motor clínico
 (`app/clinica`) y lo que registró el cuidador. Nunca usa lenguaje de diagnóstico.
 """
+from markupsafe import Markup
 
 AVISO_NO_DIAGNOSTICO = (
     'RespiraKids no constituye un diagnóstico médico y no reemplaza la valoración de un profesional de salud.'
@@ -52,6 +53,81 @@ NIVELES = {
 def nivel_info(nivel):
     """Textos y estilos de un nivel de riesgo ('verde', 'amarillo', 'rojo' o None)."""
     return NIVELES.get(nivel or 'neutro', NIVELES['neutro'])
+
+
+# Icono del semáforo con una FORMA distinta por nivel, para que se distinga sin depender del color
+# (daltonismo, pantallas monocromáticas, impresión): octágono de pare, triángulo de precaución,
+# círculo con visto bueno y círculo con guion. Siempre se acompaña del texto del nivel.
+_FORMAS_NIVEL = {
+    'rojo': '<path d="M8.1 2h7.8L22 8.1v7.8L15.9 22H8.1L2 15.9V8.1z"/>'
+            '<path class="rk-glifo" d="M12 7v6.2M12 16.6v.1"/>',
+    'amarillo': '<path d="M12 2.2 23 21.3H1z" stroke-linejoin="round"/>'
+                '<path class="rk-glifo" d="M12 9v5.6M12 17.6v.1"/>',
+    'verde': '<circle cx="12" cy="12" r="10.5"/><path class="rk-glifo" d="m7.2 12.4 3.2 3.2 6.4-6.8"/>',
+    'neutro': '<circle cx="12" cy="12" r="10.5"/><path class="rk-glifo" d="M7.5 12h9"/>',
+}
+
+
+def icono_nivel(nivel):
+    """SVG decorativo (aria-hidden) del nivel; el nombre del nivel debe mostrarse como texto al lado."""
+    clave = nivel if nivel in _FORMAS_NIVEL else 'neutro'
+    return Markup(
+        f'<svg class="rk-icono-nivel rk-icono-nivel--{clave}" viewBox="0 0 24 24" fill="currentColor" '
+        f'aria-hidden="true" focusable="false">{_FORMAS_NIVEL[clave]}</svg>'
+    )
+
+
+# Seguimiento de evolución que reporta el cuidador desde la última evaluación. Es su percepción, no una
+# evaluación clínica: no cambia el nivel. Los colores son neutros a propósito (no compiten con el semáforo).
+EVOLUCION = {
+    'mejoro': {
+        'emoji': '😊', 'texto': 'Mejoró',
+        'mensaje': 'Gracias. Sigue observando su evolución y registra los síntomas si aparece algo nuevo.',
+    },
+    'igual': {
+        'emoji': '😐', 'texto': 'Sigue igual',
+        'mensaje': 'Gracias. Si los síntomas continúan o aparece algún signo de alarma, registra los síntomas '
+                   'de nuevo o consulta a un profesional de salud.',
+    },
+    'empeoro': {
+        'emoji': '😟', 'texto': 'Empeoró',
+        'mensaje': 'Registra los síntomas de nuevo para obtener una orientación actualizada. Si observas signos '
+                   'de alarma, consulta de inmediato a un servicio de salud.',
+    },
+}
+
+
+def expresion_avatar(nivel, evolucion=None):
+    """Expresión del avatar: la del nivel clínico, ajustada por la evolución que reportó el cuidador después de la
+    última evaluación. Solo cambia la ilustración; el nivel (aro de color, icono y texto) sigue siendo el del motor.
+    Con "mejoró" se muestra una expresión tranquila (no de celebración) mientras el nivel siga en rojo o amarillo:
+    la mejoría la confirma un nuevo registro de síntomas."""
+    if evolucion == 'empeoro':
+        return 'enfermo'
+    if evolucion == 'mejoro':
+        return 'normal' if nivel in ('rojo', 'amarillo') else 'feliz'
+    return nivel_info(nivel)['avatar']
+
+
+# Emojis del formulario de síntomas: solo ayudan a reconocer cada opción de un vistazo; el texto sigue siendo lo
+# que la describe. No se usan círculos rojo/amarillo/verde: esos colores son exclusivos del semáforo.
+EMOJIS_GRUPOS = {'alarma': '🚨', 'respiracion': '🫁', 'tos_fiebre': '🌡️', 'otros': '🤧', 'antecedentes': '📋'}
+EMOJIS_SINTOMAS = {
+    # Signos de alarma
+    'incapacidad_beber_liquidos': '🍼', 'convulsion': '⚡', 'alteracion_conciencia': '😴', 'cianosis': '👄',
+    'tiraje_subcostal': '🫁', 'quejido': '😣', 'aleteo_nasal': '👃', 'apnea': '⏸️', 'estridor': '🔊',
+    'rigidez_cuello': '🧣', 'abombamiento_fontanela': '👶', 'petequias': '🔎', 'edema_retroauricular': '👂',
+    # Respiración
+    'dificultad_respiratoria': '😮‍💨', 'respiracion_rapida': '💨', 'sibilancias': '🎵',
+    # Tos y fiebre
+    'tos': '😷', 'tos_paroxistica': '🌀', 'vomito_tras_tos': '🤢',
+    # Otros síntomas
+    'congestion_nasal': '😪', 'secrecion_nasal': '🧻', 'estornudos': '🤧', 'dolor_garganta': '🗣️',
+    'decaimiento': '😔', 'disminucion_actividad': '🧸', 'perdida_apetito': '🍽️', 'perdida_peso': '⚖️',
+    'irritabilidad': '😠', 'vomito': '🤮', 'diarrea': '🚽',
+    # Antecedentes y contexto
+    'contacto_tuberculosis': '🏠', 'factor_riesgo_bar': '📋', 'condicion_asma': '🌬️', 'condicion_alergias': '🌼',
+}
 
 
 # Etiquetas de lo que el cuidador puede registrar, en el orden en que se muestran.

@@ -10,7 +10,7 @@ def _preparar(client):
     autorizar(nino, dra)
     login(client, 'ana@test.com')
     client.post(f'/sintomas/nino/{nino.id}/nuevo', data={'quejido': 'on', 'temperatura': '39.2'})
-    client.post(f'/mensajes/nino/{nino.id}', data={'contenido': 'Hola doctora'})
+    client.post(f'/mensajes/nino/{nino.id}/profesional/{dra.id}', data={'contenido': 'Hola doctora'})
     return nino
 
 
@@ -28,7 +28,7 @@ def test_pantallas_del_cuidador(client, app):
 
 def test_pantallas_del_profesional(client, app):
     nino = _preparar(client)
-    client.get('/auth/logout')
+    client.post('/auth/logout')
     login(client, 'dra@test.com')
     for ruta in (
         '/dashboard/profesional', f'/dashboard/profesional?paciente={nino.id}',

@@ -5,6 +5,7 @@ from flask import Flask, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, current_user
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
@@ -18,14 +19,17 @@ migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address)
+mail = Mail()
 
 # Orígenes externos permitidos para recursos estáticos (Bootstrap, Chart.js, fuentes).
+# Sin 'unsafe-inline': todo el JS y el CSS viven en /static (lo verifica tests/test_diseno.py).
 CSP = {
     'default-src': "'self'",
-    'script-src': ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
-    'style-src': ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
+    'script-src': ["'self'", 'https://cdn.jsdelivr.net'],
+    'style-src': ["'self'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
     'font-src': ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-    'img-src': ["'self'", 'data:'],
+    'img-src': ["'self'", 'data:', 'blob:'],
+    'media-src': ["'self'", 'blob:'],  # notas de voz (vista previa de la grabación antes de enviarla)
     'connect-src': "'self'",
     'frame-ancestors': "'none'",
     'form-action': "'self'",
@@ -47,6 +51,7 @@ def create_app(nombre_config=None):
     migrate.init_app(app, db)
     csrf.init_app(app)
     limiter.init_app(app)
+    mail.init_app(app)
 
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -61,6 +66,9 @@ def create_app(nombre_config=None):
             force_https=app.config['FORCE_HTTPS'],
             strict_transport_security=app.config['FORCE_HTTPS'],
             session_cookie_secure=app.config['SESSION_COOKIE_SECURE'],
+            # Solo la propia aplicación puede pedir micrófono (notas de voz y videollamadas) y cámara
+            # (videollamadas); el resto de sensores, bloqueados.
+            permissions_policy={'microphone': '(self)', 'camera': '(self)', 'geolocation': '()', 'payment': '()'},
         )
 
     from app import models  # noqa: F401  (registra los modelos en SQLAlchemy)
@@ -74,52 +82,72 @@ def create_app(nombre_config=None):
     from app.privacidad import privacidad_bp
     from app.medicamentos import medicamentos_bp
     from app.admin import admin_bp
+    from app.ayuda import ayuda_bp
+    from app.videollamadas import videollamadas_bp
     from app.sistema import asignar_id_peticion, devolver_id_peticion, sistema_bp
 
     app.before_request(asignar_id_peticion)
     app.after_request(devolver_id_peticion)
 
     for bp in (auth_bp, dashboard_bp, pacientes_bp, sintomas_bp, mensajes_bp, asistente_bp, privacidad_bp,
-               medicamentos_bp, admin_bp, sistema_bp):
+               medicamentos_bp, admin_bp, ayuda_bp, videollamadas_bp, sistema_bp):
         app.register_blueprint(bp)
 
     @app.route('/')
     def home():
         return render_template('home.html')
 
+    from app.ayuda.routes import manuales_para
     from app.fechas import FILTROS
     from app.models import ahora_utc
     from app.forms import atributos_campo
     app.jinja_env.filters.update(FILTROS)
-    from app.presentacion import AVISO_NO_DIAGNOSTICO, hallazgos_registrados, nivel_info
+    from app.presentacion import (
+        AVISO_NO_DIAGNOSTICO, EMOJIS_GRUPOS, EMOJIS_SINTOMAS, EVOLUCION, expresion_avatar, hallazgos_registrados,
+        icono_nivel, nivel_info,
+    )
     app.jinja_env.globals.update(
         hoy_iso=lambda: date.today().isoformat(),
         atributos_campo=atributos_campo,
         nivel_info=nivel_info,
+        icono_nivel=icono_nivel,
+        expresion_avatar=expresion_avatar,
         hallazgos_registrados=hallazgos_registrados,
         ahora_utc=ahora_utc,
+        manuales_ayuda=manuales_para,
         AVISO_NO_DIAGNOSTICO=AVISO_NO_DIAGNOSTICO,
+        EVOLUCION=EVOLUCION,
+        EMOJIS_SINTOMAS=EMOJIS_SINTOMAS,
+        EMOJIS_GRUPOS=EMOJIS_GRUPOS,
     )
+
+    @app.context_processor
+    def inyectar_guia():
+        from flask import has_request_context
+        if not has_request_context():
+            return {}
+        from app.services.guia import pasos_de_la_pagina
+        return {'guia_datos': pasos_de_la_pagina(current_user)}
 
     @app.context_processor
     def inyectar_contadores():
         if not current_user.is_authenticated:
-            return {'alertas_count': 0, 'notificaciones_count': 0}
-        from app.services.notificaciones import contar_no_leidas
-        contadores = {'alertas_count': 0, 'notificaciones_count': contar_no_leidas(current_user)}
-        if current_user.rol == 'profesional':
-            from app.services.alertas import contar_alertas_rojas
-            contadores['alertas_count'] = contar_alertas_rojas(current_user.id)
-        return contadores
+            return {'alertas_count': 0, 'notificaciones_count': 0, 'solicitudes_count': 0}
+        from app.services.notificaciones import contadores
+        datos = contadores(current_user)
+        return {'alertas_count': datos['alertas'], 'notificaciones_count': datos['notificaciones'],
+                'solicitudes_count': datos['solicitudes']}
 
     from app.admin.cli import admin_cli
     from app.asistente.conocimiento import conocimiento_cli
     from app.clinica.documentacion import reglas_cli
     from app.ml.cli import ml_cli
+    from app.privacidad.cli import privacidad_cli
     app.cli.add_command(reglas_cli)
     app.cli.add_command(conocimiento_cli)
     app.cli.add_command(admin_cli)
     app.cli.add_command(ml_cli)
+    app.cli.add_command(privacidad_cli)
 
     _registrar_manejadores_error(app)
     return app
@@ -171,16 +199,20 @@ def _registrar_manejadores_error(app):
 
 @login_manager.user_loader
 def load_user(user_id):
+    """Carga el usuario de la sesión: '<tipo>-<id>-<huella de la contraseña>'."""
+    import hmac
     from app.models import Cuidador, Profesional
     try:
-        tipo, id_real = user_id.split('-', 1)
+        tipo, id_real, huella = user_id.split('-', 2)
         id_real = int(id_real)
     except (ValueError, AttributeError):
+        return None  # incluye sesiones con el formato anterior: se pide iniciar sesión de nuevo
+    modelo = {'cuidador': Cuidador, 'profesional': Profesional}.get(tipo)
+    usuario = db.session.get(modelo, id_real) if modelo else None
+    # Tras un cambio de contraseña la huella no coincide: la sesión de otros dispositivos se cierra.
+    if usuario is None or not hmac.compare_digest(huella, usuario.huella_sesion()):
         return None
-    if tipo == 'cuidador':
-        return db.session.get(Cuidador, id_real)
-    if tipo == 'profesional':
-        profesional = db.session.get(Profesional, id_real)
-        # Un profesional suspendido pierde la sesión inmediatamente.
-        return profesional if profesional and profesional.aprobado else None
-    return None
+    # Un profesional suspendido pierde la sesión inmediatamente.
+    if tipo == 'profesional' and not usuario.aprobado:
+        return None
+    return usuario

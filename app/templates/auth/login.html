@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/iconos.html" import marca %}
 {% from "macros/formularios.html" import campo_auth, nota_obligatorios %}
 {% block title %}Iniciar sesión - RespiraKids{% endblock %}
 {% block extra_css %}
@@ -11,7 +12,7 @@
     <div class="rk-auth-blob b"></div>
 
     <div class="rk-auth-header">
-      <div class="rk-auth-logo" aria-hidden="true">🫁</div>
+      <div class="rk-auth-logo">{{ marca(52) }}</div>
       <h1>Iniciar sesión</h1>
       <p>Bienvenido de nuevo a RespiraKids</p>
     </div>
@@ -21,6 +22,7 @@
       {{ nota_obligatorios() }}
       {{ campo_auth(form.correo, '✉️') }}
       {{ campo_auth(form.password, '🔒', mostrar_password=True, placeholder='••••••••') }}
+      <a class="rk-auth-forgot" href="{{ url_for('auth.recuperar') }}">¿Olvidaste tu contraseña?</a>
       <button type="submit" class="rk-auth-submit">→ Iniciar sesión</button>
     </form>
 

@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 from flask import current_app
 
-from app.models import Mensaje, SolicitudDerechos
+from app.models import ConsultaIA, Mensaje, SolicitudAtencion, SolicitudDerechos
 from app.services.consentimiento import historial_consentimientos
 
 # Campos que nunca se exportan (secretos de la cuenta).
@@ -38,11 +38,18 @@ def exportar_datos_cuidador(cuidador):
                 {**_fila(r), 'evaluacion': _fila(r.evaluacion) if r.evaluacion else None}
                 for r in registros
             ],
+            'seguimientos_de_evolucion': [_fila(s) for s in nino.seguimientos],
+            'solicitudes_de_atencion': [
+                {**_fila(s), 'profesional': s.profesional.nombre_completo if s.profesional else None}
+                for s in SolicitudAtencion.query.filter_by(nino_id=nino.id).order_by(SolicitudAtencion.id).all()
+            ],
             'profesionales_autorizados': [
                 {**_fila(a), 'profesional': a.profesional.nombre_completo} for a in nino.autorizaciones
             ],
             'mensajes': [
-                {'fecha': _serializar(m.fecha), 'autor': m.nombre_autor(), 'contenido': m.contenido}
+                {'fecha': _serializar(m.fecha), 'autor': m.nombre_autor(), 'contenido': m.contenido,
+                 'adjuntos': [{'tipo': a.tipo, 'nombre': a.nombre_original, 'tamano_bytes': a.tamano}
+                              for a in m.adjuntos]}
                 for m in Mensaje.query.filter_by(nino_id=nino.id).order_by(Mensaje.fecha).all()
             ],
             'indicaciones_de_medicamentos': [
@@ -61,6 +68,9 @@ def exportar_datos_cuidador(cuidador):
         'cuenta': _fila(cuidador),
         'consentimientos': [_fila(c) for c in historial_consentimientos(cuidador)],
         'solicitudes_de_derechos': [_fila(s) for s in solicitudes],
+        'consultas_al_asistente': [
+            _fila(c) for c in ConsultaIA.query.filter_by(cuidador_id=cuidador.id).order_by(ConsultaIA.id).all()
+        ],
         'ninos': ninos,
     }
 

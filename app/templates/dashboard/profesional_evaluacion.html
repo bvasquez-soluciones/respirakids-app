@@ -19,7 +19,7 @@
   </header>
 
   <section class="rk-estado rk-estado--{{ evaluacion.nivel_riesgo }}" role="status">
-    <span class="rk-estado__icono" aria-hidden="true">{{ info.icono }}</span>
+    <span class="rk-estado__icono">{{ icono_nivel(evaluacion.nivel_riesgo) }}</span>
     <div>
       <p class="rk-estado__titulo">Clasificación {{ info.nombre }}: {{ info.titulo }}</p>
       <p class="rk-estado__detalle">
@@ -43,7 +43,7 @@
           {% set regla = reglas.get(s.regla_id) if s.regla_id else None %}
           <tr>
             <td><code>{{ s.regla_id or 'v0' }}</code></td>
-            <td><span aria-hidden="true">{{ nivel_info(s.nivel).icono }}</span> {{ nivel_info(s.nivel).nombre }}</td>
+            <td>{{ icono_nivel(s.nivel) }} {{ nivel_info(s.nivel).nombre }}</td>
             <td>{{ s.texto }}{% if s.origen == 'salvaguarda' %} <span class="badge text-bg-light border">Salvaguarda</span>{% endif %}</td>
             <td class="small">
               {% if regla %}{{ regla.criterio }}{% endif %}

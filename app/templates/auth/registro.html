@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/iconos.html" import marca %}
 {% from "macros/formularios.html" import campo_auth, casilla, nota_obligatorios, resumen_errores %}
 {% block title %}Crear cuenta - RespiraKids{% endblock %}
 {% block extra_css %}
@@ -11,7 +12,7 @@
     <div class="rk-auth-blob b"></div>
 
     <div class="rk-auth-header">
-      <div class="rk-auth-logo" aria-hidden="true">🫁</div>
+      <div class="rk-auth-logo">{{ marca(52) }}</div>
       <h1>Crear cuenta</h1>
       <p>Regístrate como cuidador en RespiraKids</p>
     </div>
@@ -41,6 +42,11 @@
         He leído y acepto la
         <a href="{{ url_for('privacidad.politica') }}" target="_blank" rel="noopener">política de tratamiento de datos personales</a>
         y autorizo el tratamiento de mis datos para las finalidades allí descritas.
+      {% endcall %}
+      {% call casilla(form.acepta_terminos, 'form-check mb-3 text-start small') %}
+        He leído y acepto los
+        <a href="{{ url_for('privacidad.terminos') }}" target="_blank" rel="noopener">términos y condiciones de uso</a>,
+        y entiendo que RespiraKids no constituye un diagnóstico médico.
       {% endcall %}
 
       <button type="submit" class="rk-auth-submit">→ Crear cuenta</button>

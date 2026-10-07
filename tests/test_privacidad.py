@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from app import db
 from app.models import Autorizacion, Consentimiento, Nino, SolicitudDerechos
-from app.models.privacidad import INVESTIGACION_NINO, POLITICA_DATOS, TRATAMIENTO_NINO
+from app.models.privacidad import INVESTIGACION_NINO, POLITICA_DATOS, TERMINOS_USO, TRATAMIENTO_NINO
 from app.services.anonimizacion import anonimizar
 from tests.conftest import (
     PASSWORD, aceptar_politica, autorizar, crear_cuidador, crear_nino, crear_profesional, login,
@@ -24,10 +24,14 @@ def test_registro_exige_aceptar_politica(client, app):
              'password': PASSWORD, 'confirmar_password': PASSWORD}
     assert client.post('/auth/registro', data=datos).status_code == 400
 
-    assert client.post('/auth/registro', data={**datos, 'acepta_politica': 'y'}).status_code == 302
-    consentimiento = Consentimiento.query.one()
-    assert consentimiento.tipo == POLITICA_DATOS and consentimiento.otorgado
-    assert consentimiento.version_politica == app.config['POLITICA_VERSION']
+    # Sin aceptar los términos tampoco se crea la cuenta.
+    assert client.post('/auth/registro', data={**datos, 'acepta_politica': 'y'}).status_code == 400
+    assert client.post('/auth/registro', data={**datos, 'acepta_politica': 'y',
+                                               'acepta_terminos': 'y'}).status_code == 302
+    politica = Consentimiento.query.filter_by(tipo=POLITICA_DATOS).one()
+    terminos = Consentimiento.query.filter_by(tipo=TERMINOS_USO).one()
+    assert politica.otorgado and politica.version_politica == app.config['POLITICA_VERSION']
+    assert terminos.otorgado and terminos.version_politica == app.config['TERMINOS_VERSION']
 
 
 def test_usuario_sin_politica_aceptada_es_redirigido(client, app):
@@ -39,7 +43,7 @@ def test_usuario_sin_politica_aceptada_es_redirigido(client, app):
     assert client.post('/asistente/preguntar', json={'pregunta': 'hola'}).status_code == 403
 
     assert client.post('/privacidad/aceptar').status_code == 400  # sin marcar la casilla
-    respuesta = client.post('/privacidad/aceptar?next=/pacientes/', data={'acepta_politica': 'y'})
+    respuesta = client.post('/privacidad/aceptar?next=/pacientes/', data={'acepta_politica': 'y', 'acepta_terminos': 'y'})
     assert respuesta.headers['Location'].endswith('/pacientes/')
     assert client.get('/dashboard/cuidador').status_code == 200
 
@@ -93,8 +97,23 @@ def test_sin_autorizacion_no_se_comparte_con_profesionales(client, app):
     nino = crear_nino(crear_cuidador('ana@test.com'), consentimiento=False)
     crear_profesional('dra@test.com')
     login(client, 'ana@test.com')
-    client.post(f'/pacientes/{nino.id}/autorizaciones', data={'correo_profesional': 'dra@test.com'})
+    client.post(f'/pacientes/{nino.id}/autorizaciones', data={'correo_profesional': 'dra@test.com', 'confirmar': 'si'})
     assert Autorizacion.query.count() == 0
+
+
+def test_autorizar_muestra_al_profesional_y_pide_confirmacion(client, app):
+    nino = crear_nino(crear_cuidador('ana@test.com'))
+    dra = crear_profesional('dra@test.com')
+    dra.especialidad = 'Pediatría'
+    login(client, 'ana@test.com')
+    ruta = f'/pacientes/{nino.id}/autorizaciones'
+    html = client.post(ruta, data={'correo_profesional': 'dra@test.com'}).get_data(as_text=True)
+    # Paso 1: solo muestra quién es; todavía no comparte nada.
+    assert '¿Es este el profesional que quieres autorizar?' in html and 'Pediatría' in html
+    assert Autorizacion.query.count() == 0
+    # Paso 2: al confirmar se otorga el acceso.
+    client.post(ruta, data={'correo_profesional': 'dra@test.com', 'confirmar': 'si'})
+    assert Autorizacion.query.filter_by(nino_id=nino.id, profesional_id=dra.id, activa=True).count() == 1
 
 
 def test_profesional_no_ve_nino_sin_autorizacion_de_tratamiento(client, app):
@@ -202,3 +221,31 @@ def test_anonimizar_texto():
 
 def test_anonimizar_no_toca_palabras_que_contienen_el_nombre():
     assert anonimizar('Ana tiene tos, la analgesia no ayuda', ['Ana']) == '[nombre] tiene tos, la analgesia no ayuda'
+
+
+# ---------------------------------------------------------------- Términos y política v2
+
+def test_terminos_publicos_y_exigidos_al_cambiar_de_version(client, app):
+    assert 'Términos y condiciones de uso' in client.get('/privacidad/terminos').get_data(as_text=True)
+    crear_cuidador('ana@test.com')
+    login(client, 'ana@test.com')
+    assert client.get('/dashboard/cuidador').status_code == 200
+    # Una nueva versión de los términos exige aceptarlos de nuevo.
+    vigente = app.config['TERMINOS_VERSION']
+    app.config['TERMINOS_VERSION'] = '9.9'
+    try:
+        assert '/privacidad/aceptar' in client.get('/dashboard/cuidador').headers['Location']
+        assert client.post('/privacidad/aceptar', data={'acepta_politica': 'y'}).status_code == 400
+        client.post('/privacidad/aceptar', data={'acepta_politica': 'y', 'acepta_terminos': 'y'})
+        assert client.get('/dashboard/cuidador').status_code == 200
+    finally:
+        app.config['TERMINOS_VERSION'] = vigente
+
+
+def test_politica_declara_no_venta_ia_y_sin_garantia_absoluta(client, app):
+    politica = client.get('/privacidad/').get_data(as_text=True)
+    assert 'no vende, alquila ni comercializa' in politica
+    assert 'Decreto 1377 de 2013' in politica and 'artículo 7 de la Ley 1581' in politica
+    assert 'Qué se guarda' in politica and 'datos sintéticos' in politica
+    assert 'anonimiza' in politica and 'Ningún sistema es completamente infalible' in politica
+    assert 'Garantizar la seguridad' not in politica and '[período de conservación por definir]' not in politica

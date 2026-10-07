@@ -1,0 +1,10 @@
+{% extends "correo/_base.html" %}
+{% block cuerpo %}
+    <p style="margin:0 0 16px;">Gracias por crear tu cuenta en RespiraKids. Confirma que este es tu correo para
+      poder recuperar tu cuenta si algún día olvidas la contraseña.</p>
+    <p style="text-align:center;margin:28px 0;">
+      <a href="{{ enlace }}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:bold;">Confirmar mi correo</a>
+    </p>
+    <p style="margin:0;font-size:14px;color:#334155;">El enlace vence en {{ horas }} horas.
+      Si no creaste esta cuenta, ignora este mensaje.</p>
+{% endblock %}

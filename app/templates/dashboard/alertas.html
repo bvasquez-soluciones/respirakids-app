@@ -16,13 +16,13 @@
     >
       <div class="rk-patient-top">
         <div class="d-flex align-items-center gap-2">
-          <div class="rk-patient-avatar">🧒</div>
+          <div class="rk-patient-avatar" aria-hidden="true">🧒</div>
           <div>
             <div class="name">{{ nino.nombre_completo }}</div>
             <div class="meta">{{ eval.motivo }}</div>
           </div>
         </div>
-        <span class="rk-status-icon">🔴</span>
+        <span class="rk-status-icon">{{ icono_nivel('rojo') }}<span class="visually-hidden">Rojo</span></span>
       </div>
     </a>
     {% endfor %}

@@ -14,7 +14,7 @@
           {{ resumen_errores(form) }}
           {% include "pacientes/_campos_nino.html" %}
           {% include "pacientes/_textos_consentimiento.html" %}
-          <button type="submit" class="btn btn-primary w-100 mt-4">Guardar</button>
+          <button type="submit" class="btn btn-primary w-100 mt-4" data-guia="guardar-nino">Guardar</button>
           <a href="{{ url_for('pacientes.listar') }}" class="btn btn-link w-100">Cancelar</a>
         </form>
       </div>

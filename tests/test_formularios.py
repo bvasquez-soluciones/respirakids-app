@@ -9,7 +9,7 @@ from tests.conftest import PASSWORD, crear_cuidador, login
 
 REGISTRO_VALIDO = {
     'nombre': 'Ana María', 'apellido': 'Torres Gómez', 'correo': 'ana@test.com', 'telefono': '',
-    'password': PASSWORD, 'confirmar_password': PASSWORD, 'acepta_politica': 'y',
+    'password': PASSWORD, 'confirmar_password': PASSWORD, 'acepta_politica': 'y', 'acepta_terminos': 'y',
 }
 
 
@@ -37,11 +37,12 @@ def test_registro_marca_obligatorios_y_opcionales(client, app):
     ('telefono', '12ab', 'Escribe un teléfono válido'),
     ('confirmar_password', 'OtraClave99', 'Las contraseñas no coinciden.'),
     ('acepta_politica', '', 'Debes aceptar la política'),
+    ('acepta_terminos', '', 'Debes aceptar los términos'),
 ])
 def test_registro_muestra_error_junto_al_campo(client, app, campo, valor, mensaje):
     datos = {**REGISTRO_VALIDO, campo: valor}
-    if campo == 'acepta_politica':
-        datos.pop('acepta_politica')
+    if campo in ('acepta_politica', 'acepta_terminos'):
+        datos.pop(campo)
     respuesta = client.post('/auth/registro', data=datos)
     html = respuesta.get_data(as_text=True)
 

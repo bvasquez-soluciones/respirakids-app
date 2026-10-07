@@ -1,249 +1,209 @@
+{% from "macros/iconos.html" import marca, icono %}
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="dark" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0a1220" />
     <title>{% block title %}RespiraKids{% endblock %}</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}" />
+    {# Aplica el tema guardado antes de pintar la página (evita el destello del tema equivocado). #}
+    <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='css/base.css') }}"
-      rel="stylesheet"
-    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/tokens.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet" />
     {% block extra_css %}{% endblock %}
   </head>
-  <body>
-    {% if request.endpoint not in ('auth.login', 'auth.registro') %}
-    <nav class="navbar navbar-expand-lg rk-navbar">
-      <div class="container">
-        {% set inicio_usuario = 'dashboard.cuidador' if
-        current_user.is_authenticated and current_user.rol in
-        ('cuidador','admin') else ('dashboard.profesional' if
-        current_user.is_authenticated and current_user.rol == 'profesional' else
-        'home') %}
-        <a class="navbar-brand" href="{{ url_for(inicio_usuario) }}">
-          <span class="rk-logo-badge">🫁</span> RespiraKids {% if
-          current_user.is_authenticated and current_user.rol == 'profesional' %}
-          <span class="rk-pro-brand-badge">PRO</span>
-          {% endif %}
+  {% set es_cuidador = current_user.is_authenticated and current_user.rol in ('cuidador', 'admin') %}
+  {% set es_profesional = current_user.is_authenticated and current_user.rol == 'profesional' %}
+  <body class="{{ 'rk-con-nav-inferior' if es_cuidador }}{{ 'rk-con-nav-inferior-pro' if es_profesional }} {% block body_class %}{% endblock %}"
+    {% if current_user.is_authenticated %}data-estado-url="{{ url_for('dashboard.estado') }}" data-pagina="{{ request.endpoint }}"{% endif %}>
+    <a class="rk-saltar" href="#contenido">Saltar al contenido</a>
+
+    {% block navbar %}{% if request.endpoint not in ('auth.login', 'auth.registro') %}
+    <header class="rk-navbar">
+      <nav class="container d-flex align-items-center gap-2" aria-label="Principal">
+        {% set inicio_usuario = 'dashboard.cuidador' if es_cuidador else ('dashboard.profesional' if es_profesional else 'home') %}
+        <a class="rk-marca" href="{{ url_for(inicio_usuario) }}" aria-label="RespiraKids, inicio">
+          {{ marca(40, alt='') }}
+          {% if es_profesional %}<span class="rk-pro-brand-badge">PRO</span>{% endif %}
         </a>
 
-        {% if current_user.is_authenticated and current_user.rol ==
-        'profesional' %}
+        {% if es_profesional %}
         <div class="rk-pro-nav-links d-none d-lg-flex">
-          <a
-            href="{{ url_for('dashboard.profesional') }}"
-            class="rk-pro-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('dashboard.') and request.endpoint != 'dashboard.perfil' }}"
-            >👤 Pacientes</a
-          >
-          <a
-            href="{{ url_for('dashboard.reportes') }}"
-            class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.reportes' }}"
-            >📊 Reportes</a
-          >
-          <a
-            href="{{ url_for('dashboard.ajustes') }}"
-            class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.ajustes' }}"
-            >⚙️ Ajustes</a
-          >
+          {% set en_pacientes = request.endpoint and request.endpoint.startswith('dashboard.') and request.endpoint not in ('dashboard.perfil', 'dashboard.reportes', 'dashboard.ajustes', 'dashboard.semaforo') %}
+          <a href="{{ url_for('dashboard.profesional') }}" class="rk-pro-nav-link {{ 'active' if en_pacientes }}"
+            {% if en_pacientes %}aria-current="page"{% endif %}>Pacientes</a>
+          <a href="{{ url_for('mensajes.solicitudes') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'mensajes.solicitudes' }}"
+            {% if request.endpoint == 'mensajes.solicitudes' %}aria-current="page"{% endif %} data-guia="nav-solicitudes" data-contador="solicitudes" data-clase-contador="rk-contador">Solicitudes{% if solicitudes_count %}
+            <span class="rk-contador">{{ solicitudes_count }}</span>{% endif %}</a>
+          <a href="{{ url_for('dashboard.semaforo') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.semaforo' }}"
+            {% if request.endpoint == 'dashboard.semaforo' %}aria-current="page"{% endif %} data-guia="nav-semaforo">Semáforo</a>
+          <a href="{{ url_for('dashboard.reportes') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.reportes' }}"
+            {% if request.endpoint == 'dashboard.reportes' %}aria-current="page"{% endif %}>Reportes</a>
+          <a href="{{ url_for('dashboard.ajustes') }}" class="rk-pro-nav-link {{ 'active' if request.endpoint == 'dashboard.ajustes' }}"
+            {% if request.endpoint == 'dashboard.ajustes' %}aria-current="page"{% endif %} data-guia="nav-ajustes">Ajustes</a>
         </div>
         {% endif %}
 
         <div class="ms-auto d-flex align-items-center gap-2">
-          {% if current_user.is_authenticated %} {% if current_user.rol ==
-          'profesional' %}
-          <a
-            href="{{ url_for('dashboard.alertas') }}"
-            class="rk-bell-btn"
-            title="Pacientes en rojo"
-            aria-label="Pacientes con alerta roja{{ ': ' ~ alertas_count if alertas_count }}"
-          >
-            🔔 {% if alertas_count and alertas_count > 0 %}
-            <span class="rk-bell-badge">{{ alertas_count }}</span>
-            {% endif %}
+          <button type="button" class="rk-icon-btn" data-cambiar-tema aria-label="Cambiar entre tema oscuro y claro">
+            <span class="rk-tema-oscuro">{{ icono('sol') }}</span><span class="rk-tema-claro">{{ icono('luna') }}</span>
+          </button>
+
+          {% if es_profesional %}
+          <a href="{{ url_for('ayuda.profesionales') }}" class="rk-bell-btn" title="Ayuda" aria-label="Manual para profesionales" data-guia="ayuda-pro">
+            {{ icono('ayuda') }}</a>
+          <a href="{{ url_for('dashboard.alertas') }}" class="rk-bell-btn" title="Pacientes en rojo" data-guia="alertas" data-contador="alertas"
+            aria-label="Pacientes con señales de alarma{{ ': ' ~ alertas_count if alertas_count }}">
+            {{ icono('alerta') }}
+            {% if alertas_count and alertas_count > 0 %}<span class="rk-bell-badge">{{ alertas_count }}</span>{% endif %}
           </a>
-          <a href="{{ url_for('dashboard.notificaciones') }}" class="rk-bell-btn" title="Notificaciones"
+          <a href="{{ url_for('dashboard.notificaciones') }}" class="rk-bell-btn" title="Notificaciones" data-contador="notificaciones"
             aria-label="Notificaciones{{ ': ' ~ notificaciones_count ~ ' sin leer' if notificaciones_count }}">
-            ✉️ {% if notificaciones_count %}<span class="rk-bell-badge">{{ notificaciones_count }}</span>{% endif %}
+            {{ icono('campana') }}
+            {% if notificaciones_count %}<span class="rk-bell-badge">{{ notificaciones_count }}</span>{% endif %}
           </a>
           {% if current_user.foto %}
-          <img
-            src="{{ url_for('static', filename=current_user.foto) }}"
-            class="rk-navbar-avatar"
-            alt="{{ current_user.nombre }}"
-          />
+          <img src="{{ url_for('static', filename=current_user.foto) }}" class="rk-navbar-avatar" alt="" />
           {% endif %}
-          <span class="text-white me-1 d-none d-md-inline"
-            >{{ current_user.nombre }}</span
-          >
-          <a
-            class="btn btn-outline-light btn-sm"
-            href="{{ url_for('auth.logout') }}"
-            >Cerrar sesión</a
-          >
-          {% elif current_user.rol in ('cuidador', 'admin') %}
-          <span class="text-white me-2 d-none d-md-inline"
-            >Hola, {{ current_user.nombre }}</span
-          >
-          <a href="{{ url_for('dashboard.notificaciones') }}" class="rk-bell-btn" title="Notificaciones"
+          <span class="rk-usuario d-none d-md-inline">{{ current_user.nombre }}</span>
+          <form method="POST" action="{{ url_for('auth.logout') }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
+          </form>
+
+          {% elif es_cuidador %}
+          <span class="rk-usuario d-none d-md-inline">Hola, {{ current_user.nombre }}</span>
+          <a href="{{ url_for('dashboard.notificaciones') }}" class="rk-bell-btn" title="Notificaciones" data-contador="notificaciones"
             aria-label="Notificaciones{{ ': ' ~ notificaciones_count ~ ' sin leer' if notificaciones_count }}">
-            🔔 {% if notificaciones_count %}<span class="rk-bell-badge">{{ notificaciones_count }}</span>{% endif %}
+            {{ icono('campana') }}
+            {% if notificaciones_count %}<span class="rk-bell-badge">{{ notificaciones_count }}</span>{% endif %}
           </a>
           <div class="dropdown">
-            <button
-              class="rk-hamburger-btn"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              aria-label="Abrir menú"
-            >
+            <button class="rk-hamburger-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Abrir menú" data-guia="menu-ayuda">
               <span></span><span></span><span></span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end rk-hamburger-menu">
-              <li>
-                <a
-                  class="dropdown-item"
-                  href="{{ url_for('dashboard.cuidador') }}"
-                  >🏠 Inicio</a
-                >
-              </li>
-              <li>
-                <a
-                  class="dropdown-item"
-                  href="{{ url_for('pacientes.listar') }}"
-                  >👶 Mis niños</a
-                >
-              </li>
-              <li>
-                <a class="dropdown-item" href="{{ url_for('asistente.chat') }}"
-                  >🤖 Asistente IA</a
-                >
-              </li>
-              <li>
-                <a
-                  class="dropdown-item"
-                  href="{{ url_for('dashboard.perfil') }}"
-                  >👤 Perfil</a
-                >
-              </li>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ url_for('dashboard.cuidador') }}">{{ icono('inicio') }} Inicio</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('pacientes.listar') }}">{{ icono('nino') }} Mis niños</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('asistente.chat') }}">{{ icono('ia') }} Asistente IA</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('dashboard.perfil') }}">{{ icono('usuario') }} Perfil</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('ayuda.cuidadores') }}">{{ icono('ayuda') }} Ayuda</a></li>
               {% if current_user.rol == 'admin' %}
-              <li><a class="dropdown-item" href="{{ url_for('admin.inicio') }}">⚙️ Administración</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('admin.inicio') }}">{{ icono('ajustes') }} Administración</a></li>
               {% endif %}
               <li><hr class="dropdown-divider" /></li>
               <li>
-                <a class="dropdown-item" href="{{ url_for('auth.logout') }}"
-                  >🚪 Cerrar sesión</a
-                >
+                <form method="POST" action="{{ url_for('auth.logout') }}" class="m-0">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit" class="dropdown-item">{{ icono('salir') }} Cerrar sesión</button>
+                </form>
               </li>
             </ul>
           </div>
+
+          {% elif current_user.is_authenticated %}
+          <form method="POST" action="{{ url_for('auth.logout') }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
+          </form>
           {% else %}
-          <a
-            class="btn btn-outline-light btn-sm"
-            href="{{ url_for('auth.logout') }}"
-            >Cerrar sesión</a
-          >
-          {% endif %} {% else %}
-          <a
-            class="btn btn-outline-light btn-sm"
-            href="{{ url_for('auth.login') }}"
-            >Iniciar sesión</a
-          >
+          <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
           {% endif %}
         </div>
-      </div>
-    </nav>
-    {% endif %}
+      </nav>
+    </header>
+    {% endif %}{% endblock %}
 
-    <div class="container mt-4">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %} {% for category, message in messages %}
-      <div
-        class="alert alert-{{ 'danger' if category == 'danger' else category }} alert-dismissible fade show"
-        role="alert"
-      >
+    <main id="contenido" class="rk-main {% block main_class %}container{% endblock %}" tabindex="-1">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category in ('danger', 'error') else category }} alert-dismissible fade show"
+        role="{{ 'alert' if category in ('danger', 'error', 'warning') else 'status' }}">
         {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar aviso"></button>
       </div>
-      {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
-    </div>
+      {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
 
-    <footer class="rk-footer container small text-muted text-center py-4 mt-4">
+    {% block footer %}
+    <footer class="rk-footer container text-center py-4">
       <p class="mb-1">
         RespiraKids no constituye un diagnóstico médico y no reemplaza la valoración de un profesional de salud.
         Ante signos de alarma, consulta de inmediato a un servicio de salud.
       </p>
-      <a href="{{ url_for('privacidad.politica') }}">Política de tratamiento de datos</a>
+      <a href="{{ url_for('privacidad.politica') }}">Política de tratamiento de datos</a> ·
+      <a href="{{ url_for('privacidad.terminos') }}">Términos y condiciones</a>
+      {% if manuales_ayuda(current_user) %} · <a href="{{ url_for('ayuda.indice') }}">Ayuda</a>{% endif %}
       {% if current_user.is_authenticated %} · <a href="{{ url_for('privacidad.mis_datos') }}">Mis datos</a>{% endif %}
     </footer>
+    {% endblock %}
 
-    {% if current_user.is_authenticated and current_user.rol in ('cuidador',
-    'admin') %}
-    <nav class="rk-bottom-nav">
-      <a
-        href="{{ url_for('dashboard.cuidador') }}"
-        class="rk-nav-item {{ 'active' if request.endpoint == 'dashboard.cuidador' }}"
-      >
-        <span class="rk-nav-icon">🏠</span> Inicio
+    {% if es_cuidador %}
+    <nav class="rk-bottom-nav" aria-label="Navegación inferior">
+      {% set items = [
+        ('dashboard.cuidador', 'inicio', 'Inicio', request.endpoint == 'dashboard.cuidador'),
+        ('pacientes.listar', 'nino', 'Mis niños', request.endpoint and (request.endpoint.startswith('pacientes.') or request.endpoint.startswith('sintomas.'))),
+        ('asistente.chat', 'ia', 'Asistente', request.endpoint and request.endpoint.startswith('asistente.')),
+        ('dashboard.perfil', 'usuario', 'Perfil', request.endpoint == 'dashboard.perfil'),
+      ] %}
+      {% for endpoint, nombre_icono, texto, activo in items %}
+      <a href="{{ url_for(endpoint) }}" class="rk-nav-item {{ 'active' if activo }}" {% if activo %}aria-current="page"{% endif %}>
+        <span class="rk-nav-icon">{{ icono(nombre_icono) }}</span> {{ texto }}
       </a>
-      <a
-        href="{{ url_for('pacientes.listar') }}"
-        class="rk-nav-item {{ 'active' if request.endpoint and (request.endpoint.startswith('pacientes.') or request.endpoint.startswith('sintomas.')) }}"
-      >
-        <span class="rk-nav-icon" aria-hidden="true">👶</span> Mis niños
+      {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if es_profesional %}
+    {# Navegación inferior del profesional en celular y tableta (en pantallas grandes está la barra superior) #}
+    <nav class="rk-bottom-nav rk-bottom-nav--pro" aria-label="Navegación inferior">
+      {% set en_pacientes_movil = request.endpoint in ('dashboard.profesional', 'dashboard.profesional_evaluacion', 'dashboard.alertas') %}
+      {% set items_pro = [
+        ('dashboard.profesional', 'pacientes', 'Pacientes', en_pacientes_movil, ''),
+        ('mensajes.solicitudes', 'mensaje', 'Solicitudes', request.endpoint == 'mensajes.solicitudes', 'nav-solicitudes'),
+        ('dashboard.semaforo', 'semaforo', 'Semáforo', request.endpoint == 'dashboard.semaforo', 'nav-semaforo'),
+        ('dashboard.reportes', 'reportes', 'Reportes', request.endpoint == 'dashboard.reportes', ''),
+        ('dashboard.ajustes', 'ajustes', 'Ajustes', request.endpoint == 'dashboard.ajustes', 'nav-ajustes'),
+      ] %}
+      {% for endpoint, nombre_icono, texto, activo, guia in items_pro %}
+      <a href="{{ url_for(endpoint) }}" class="rk-nav-item {{ 'active' if activo }}" {% if activo %}aria-current="page"{% endif %}
+        {% if guia %}data-guia="{{ guia }}"{% endif %}
+        {% if endpoint == 'mensajes.solicitudes' %}data-contador="solicitudes" data-clase-contador="rk-nav-insignia"{% endif %}>
+        <span class="rk-nav-icon">{{ icono(nombre_icono) }}</span> {{ texto }}
+        {% if endpoint == 'mensajes.solicitudes' and solicitudes_count %}<span class="rk-nav-insignia">{{ solicitudes_count }}</span>{% endif %}
       </a>
-      <a
-        href="{{ url_for('asistente.chat') }}"
-        class="rk-nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('asistente.') }}"
-      >
-        <span class="rk-nav-icon">🤖</span> IA
-      </a>
-      <a
-        href="{{ url_for('dashboard.perfil') }}"
-        class="rk-nav-item {{ 'active' if request.endpoint == 'dashboard.perfil' }}"
-      >
-        <span class="rk-nav-icon">👤</span> Perfil
-      </a>
+      {% endfor %}
     </nav>
     {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const reveals = document.querySelectorAll(".rk-reveal");
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add("rk-visible");
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.15 },
-        );
-        reveals.forEach((el) => observer.observe(el));
-
-        // Botones "mostrar contraseña" de cualquier formulario.
-        document.querySelectorAll("[data-mostrar-password]").forEach((boton) => {
-          boton.addEventListener("click", () => {
-            const input = document.getElementById(boton.dataset.mostrarPassword);
-            input.type = input.type === "password" ? "text" : "password";
-          });
-        });
-      });
-    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% if current_user.is_authenticated %}
+    <div class="rk-aviso-flotante" id="aviso-flotante" role="status" aria-live="polite" hidden></div>
+    {% if es_cuidador %}
+    <div class="rk-llamada-entrante" id="llamada-entrante" role="alert" hidden>
+      <span class="rk-llamada-entrante__icono" aria-hidden="true">{{ icono('video') }}</span>
+      <p class="rk-llamada-entrante__texto" id="llamada-entrante-texto"></p>
+      <a class="btn btn-primary btn-sm" id="llamada-entrante-ir" href="#">Contestar</a>
+    </div>
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/tiempo_real.js') }}"></script>
+    {% endif %}
+    {% block scripts %}{% endblock %}
+    {% if guia_datos %}
+    {# Guía interactiva para cuidadores nuevos (app/services/guia.py): datos JSON, no ejecutables #}
+    <script type="application/json" id="rk-guia-datos">{{ guia_datos|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/guia.js') }}"></script>
+    {% endif %}
   </body>
 </html>

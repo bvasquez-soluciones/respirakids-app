@@ -37,6 +37,9 @@
     <a href="{{ url_for('privacidad.mis_datos') }}" class="btn btn-outline-secondary btn-sm">Mis datos y privacidad</a>
   </section>
 
-  <a href="{{ url_for('auth.logout') }}" class="rk-cta-pill">Cerrar sesión</a>
+  <form method="POST" action="{{ url_for('auth.logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="btn btn-outline-secondary w-100">Cerrar sesión</button>
+  </form>
 </div>
 {% endblock %}

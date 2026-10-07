@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Semáforo de la clínica - RespiraKids{% endblock %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/professional.css') }}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="rk-pro-wrap">
+  <header class="rk-encabezado">
+    <div>
+      <h1 class="h3 mb-1">Semáforo de la clínica</h1>
+      <p class="text-muted mb-0">Nivel de la última evaluación de cada niño/a, para priorizar la atención. El expediente
+        completo solo está disponible si el cuidador te autorizó.</p>
+    </div>
+  </header>
+
+  <section class="rk-kpis mb-4" aria-label="Niños por nivel">
+    {% for nivel in ('rojo', 'amarillo', 'verde', 'neutro') %}
+    <div class="rk-kpi-nivel rk-kpi-nivel--{{ nivel }}">
+      <span class="rk-kpi-nivel__nombre">{{ icono_nivel(nivel) }} {{ nivel_info(nivel).nombre }}</span>
+      <span class="rk-kpi-nivel__valor">{{ conteo.get(nivel, 0) }}</span>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% for r in resumenes %}
+  {% set nino = r.nino %}
+  <article class="rk-solicitud rk-solicitud--{{ r.nivel }}">
+    {{ avatar(nino, r.nivel, 52, r.seguimiento.estado if r.seguimiento else None) }}
+    <div class="rk-solicitud__texto">
+      <p class="mb-1"><strong>{{ nino.nombre_completo }}</strong>
+        <span class="text-muted small">· {{ nino.edad_texto() }}
+        {% if r.ultima_evaluacion %}· evaluado el {{ r.ultima_evaluacion.fecha|fecha_hora }}{% endif %}</span></p>
+      <span class="rk-badge-nivel rk-badge-nivel--{{ r.nivel }}">{{ icono_nivel(r.nivel) }} {{ r.info_nivel.titulo }}</span>
+      {% if r.senales_del_nivel %}<p class="small text-muted mb-0 mt-1">{{ r.senales_del_nivel|map(attribute='texto')|join(' · ') }}</p>{% endif %}
+      {% if r.seguimiento %}<p class="small mb-0 mt-1">Evolución reportada: {{ EVOLUCION[r.seguimiento.estado].emoji }}
+        {{ EVOLUCION[r.seguimiento.estado].texto }}</p>{% endif %}
+    </div>
+    <div class="d-flex flex-column gap-1 align-items-end">
+      {% if nino.id in en_espera %}
+      <a href="{{ url_for('mensajes.solicitudes') }}" class="btn btn-primary btn-sm">Solicitud en espera</a>
+      {% endif %}
+      {% if nino.id in autorizados %}
+      <a href="{{ url_for('dashboard.profesional', paciente=nino.id) }}" class="btn btn-outline-secondary btn-sm">Ver expediente</a>
+      {% endif %}
+    </div>
+  </article>
+  {% else %}
+  <p class="text-muted">No hay niños con evaluaciones registradas.</p>
+  {% endfor %}
+</div>
+{% endblock %}
