@@ -25,7 +25,8 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/srv/respirakids/app/static/uploads
+# Fotos de perfil y adjuntos privados de los mensajes (fotos, PDF y notas de voz).
+ReadWritePaths=/srv/respirakids/app/static/uploads /srv/respirakids/datos
 ProtectKernelTunables=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true

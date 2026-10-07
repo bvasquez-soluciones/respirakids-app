@@ -96,3 +96,11 @@ def test_produccion_redirige_http_a_https(monkeypatch):
     # Detrás de Nginx la petición llega marcada como HTTPS y se atiende normalmente.
     assert cliente.get('/auth/login', base_url='http://respirakids.test',
                        headers={'X-Forwarded-Proto': 'https'}).status_code == 200
+
+
+def test_servicio_puede_escribir_fotos_y_adjuntos():
+    """Con ProtectSystem=strict el servicio solo escribe donde se le permite: fotos de perfil y adjuntos privados."""
+    with open('deploy/systemd/respirakids.service', encoding='utf-8') as archivo:
+        servicio = archivo.read()
+    linea = next(l for l in servicio.splitlines() if l.startswith('ReadWritePaths='))
+    assert '/srv/respirakids/app/static/uploads' in linea and '/srv/respirakids/datos' in linea
