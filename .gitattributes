@@ -3,3 +3,5 @@
 deploy/**       text eol=lf
 gunicorn.conf.py text eol=lf
 *.py            text eol=lf
+.github/**       text eol=lf
+docs/**         text eol=lf
