@@ -145,6 +145,11 @@
       <a href="{{ url_for('privacidad.terminos') }}">Términos y condiciones</a>
       {% if manuales_ayuda(current_user) %} · <a href="{{ url_for('ayuda.indice') }}">Ayuda</a>{% endif %}
       {% if current_user.is_authenticated %} · <a href="{{ url_for('privacidad.mis_datos') }}">Mis datos</a>{% endif %}
+      <p class="rk-footer__credito mt-3 mb-0">
+        <strong>Alex Pájaro de Ávila</strong> · Investigador principal del Semillero de Investigación de Enfermería
+        SINENFER · Universidad del Sinú, Seccional Cartagena ·
+        <a href="mailto:alexpajaro033@icloud.com">alexpajaro033@icloud.com</a>
+      </p>
     </footer>
     {% endblock %}
 

@@ -160,3 +160,9 @@ def test_cuidador_no_recibe_la_navegacion_del_profesional(client, app):
     crear_cuidador('ana@test.com')
     login(client, 'ana@test.com')
     assert 'rk-bottom-nav--pro' not in client.get('/dashboard/cuidador').get_data(as_text=True)
+
+
+def test_pie_de_pagina_con_credito_del_investigador_principal(client):
+    html = ' '.join(client.get('/').get_data(as_text=True).split())
+    assert 'Alex Pájaro de Ávila' in html and 'SINENFER' in html and 'Universidad del Sinú, Seccional Cartagena' in html
+    assert 'href="mailto:alexpajaro033@icloud.com"' in html
