@@ -125,7 +125,7 @@ jobs:
       - name: Nginx con HTTPS delante de Gunicorn
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq nginx > /dev/null
-          DOMINIO=respirakids.example.co
+          DOMINIO=respirakids.com
           sudo mkdir -p /etc/letsencrypt/live/$DOMINIO /var/www/certbot
           sudo openssl req -x509 -nodes -newkey rsa:2048 -days 1 -subj "/CN=$DOMINIO" \
             -keyout /etc/letsencrypt/live/$DOMINIO/privkey.pem -out /etc/letsencrypt/live/$DOMINIO/fullchain.pem
