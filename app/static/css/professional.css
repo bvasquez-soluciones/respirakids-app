@@ -108,6 +108,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  /* Dentro de la lista con altura fija (celular) no debe encogerse ni recortar su contenido. */
+  flex-shrink: 0;
   gap: var(--rk-space-2);
   padding: var(--rk-space-3) var(--rk-space-4) var(--rk-space-3) var(--rk-space-5);
   color: var(--rk-text);
