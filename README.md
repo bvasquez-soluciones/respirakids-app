@@ -114,8 +114,8 @@ Pensada para datos de salud de menores bajo la Ley 1581 de 2012 (Colombia). El i
 Requisitos: Python 3.14 y PostgreSQL.
 
 ```bash
-git clone https://github.com/jovenesdevanguardia/respirakids.git
-cd respirakids
+git clone https://github.com/jovenesdevanguardia/respirakids-app.git
+cd respirakids-app
 python -m venv venv
 # Windows: venv\Scripts\activate    ·    Linux/macOS: source venv/bin/activate
 pip install -r requirements-dev.txt
