@@ -152,6 +152,7 @@ Guía paso a paso para un VPS Linux (Nginx, Gunicorn, systemd, PostgreSQL, Redis
 
 ## Estado y límites
 
+- Está desplegado en producción en [respirakids.com](https://respirakids.com) y se prepara una prueba con usuarios reales; todavía no hay resultados de uso.
 - Es un proyecto de grado. Las 26 reglas clínicas fueron revisadas por un médico general (acta con pendientes, ver arriba), pero la plataforma no ha pasado por una validación clínica con pacientes reales ni cumple (aún) los requisitos regulatorios de un dispositivo médico.
 - El modelo de aprendizaje automático es experimental y usa datos sintéticos.
 - Antes de operar con usuarios reales deben completarse los datos del responsable del tratamiento (variables `RESPONSABLE_*`).
