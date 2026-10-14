@@ -68,7 +68,7 @@ app/
 ├── models/         # SQLAlchemy: identidad, niños, clínica, comunicación, privacidad, auditoría
 ├── services/       # acceso, consentimiento, atención, auditoría, supresión, anonimización...
 └── templates/ static/
-migrations/         # Alembic (14 versiones)
+migrations/         # Alembic (13 versiones)
 deploy/             # Nginx, systemd, scripts de respaldo y actualización
 docs/               # reglas clínicas, seguridad, despliegue, acta de validación
 ml/                 # ficha y datos del modelo experimental
