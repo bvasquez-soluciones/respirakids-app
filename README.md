@@ -34,7 +34,7 @@ Ante una infección respiratoria, muchos cuidadores no saben si el cuadro de su 
 - Control de privacidad: autoriza o retira el acceso de cada profesional por niño, descarga o solicita la supresión de sus datos.
 
 **Para profesionales**
-- Lista de pacientes ordenada por nivel de riesgo y semáforo de toda la clínica.
+- Lista de pacientes con el nivel de cada uno, filtrable por nivel (rojo, amarillo, verde), y semáforo de toda la clínica.
 - Expediente con evolución, detalle clínico de cada evaluación y señales identificadas.
 - Solicitudes de atención con cupo por profesional, mensajería y videollamada.
 - Indicación de medicamentos, reportes y alertas.
@@ -114,7 +114,7 @@ Pensada para datos de salud de menores bajo la Ley 1581 de 2012 (Colombia). El i
 Requisitos: Python 3.14 y PostgreSQL.
 
 ```bash
-git clone https://github.com/jovenesdevanguardia/respirakids-app.git
+git clone https://github.com/bvasquez-soluciones/respirakids-app.git
 cd respirakids-app
 python -m venv venv
 # Windows: venv\Scripts\activate    ·    Linux/macOS: source venv/bin/activate

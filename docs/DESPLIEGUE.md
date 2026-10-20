@@ -32,7 +32,7 @@ Internet ──HTTPS──> Nginx (443) ──HTTP local──> Gunicorn (127.0.
 sudo adduser --system --group --home /srv/respirakids respirakids
 sudo mkdir -p /etc/respirakids /var/backups/respirakids /var/log/respirakids
 sudo chown respirakids:respirakids /var/backups/respirakids /var/log/respirakids
-sudo -u respirakids git clone https://github.com/jovenesdevanguardia/respirakids-app.git /srv/respirakids
+sudo -u respirakids git clone https://github.com/bvasquez-soluciones/respirakids-app.git /srv/respirakids
 ```
 
 ### 3.2 Base de datos (usuario con permisos mínimos)
